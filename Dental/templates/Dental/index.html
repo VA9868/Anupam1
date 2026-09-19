@@ -1,0 +1,714 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anupam Dental Clinic | Advanced Dental Care & Implant Center by Dr. Anoop</title>
+  <meta name="description" content="Anupam Dental Clinic led by Dr. Anoop offers painless root canals, laser teeth whitening, lifetime dental implants, clear aligners & comprehensive oral healthcare.">
+  
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="{% static 'Dental/css/style.css' %}">
+</head>
+<body>
+
+  <!-- TOP ANNOUNCEMENT BAR -->
+  <div class="top-bar">
+    <div class="top-bar-container">
+      <div class="top-info">
+        <div class="top-info-item">
+          <i class="fas fa-phone-alt"></i>
+          <span>Emergency / Call: <strong>+91 9446046868</strong></span>
+        </div>
+        <div class="top-info-item">
+          <i class="fas fa-clock"></i>
+          <span>Mon - Sun: 10:00 AM - 8:00 PM | Tuesday Holiday</span>
+        </div>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=Dr.Anoop%27s+Anupam+Dental+Clinic" target="_blank" rel="noopener noreferrer" class="top-info-item" style="color: inherit; text-decoration: none;">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Anupam Dental Clinic, West Gate Vaikom, Kottayam Dist</span>
+        </a>
+      </div>
+      <div class="top-badge">
+        <i class="fas fa-shield-virus"></i> 100% Sterilized & Painless Care
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION BAR -->
+  <header class="navbar-header" id="navbar">
+    <div class="nav-container">
+      <!-- BRAND LOGO -->
+      <a href="#home" class="brand-logo">
+        <div class="logo-icon-wrap">
+          <img src="{% static 'Dental/images/logo.png' %}" alt="Anupam Dental Clinic Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text-wrap">
+          <span class="brand-title"><i>Dr.Anoop's</i> ANUPAM </span>
+          <span class="brand-subtitle">DENTAL CLINIC</span>
+        </div>
+      </a>
+
+      <!-- NAV LINKS -->
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home" class="active">Home</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#symptom-checker">Symptom Checker</a></li>
+        <li><a href="#doctors">Team</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+      </ul>
+
+      <!-- CTA ACTION BUTTONS -->
+      <div class="nav-actions">
+        <button class="btn-primary open-appointment-modal">
+          <i class="fas fa-calendar-check"></i> Book Appointment
+        </button>
+        {% if user.is_authenticated or patient_name %}
+          <div class="user-profile-menu">
+            <button class="circle-login-btn logged-in" title="Account Details">
+              <i class="fas fa-user-check"></i>
+            </button>
+            <div class="user-dropdown-card">
+              <div class="dropdown-header">
+                <i class="fas fa-user-circle"></i>
+                <div>
+                  <strong>{% if user.is_authenticated %}{{ user.first_name|default:user.username }}{% else %}{{ patient_name }}{% endif %}</strong>
+                  <span style="display: block; font-size: 0.75rem; color: var(--slate-body);">{% if user.is_staff %}Clinic Staff{% else %}Patient Account{% endif %}</span>
+                </div>
+              </div>
+              <a href="{% url 'dashboard' %}" class="dropdown-dashboard-btn" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: var(--dark-navy); font-weight: 600; border-bottom: 1px solid var(--gray-border);">
+                <i class="fas fa-columns" style="color: var(--primary);"></i> My Dashboard
+              </a>
+              {% if user.is_staff %}
+                <a href="/admin/" target="_blank" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: var(--primary); font-weight: 600; border-bottom: 1px solid var(--gray-border);">
+                  <i class="fas fa-tools"></i> Django Admin
+                </a>
+              {% endif %}
+              <a href="{% url 'logout' %}" class="dropdown-logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <button class="circle-login-btn open-login-modal" title="Patient / Staff Login" aria-label="Login">
+            <i class="fas fa-user"></i>
+          </button>
+        {% endif %}
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero-section" id="home">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <i class="fas fa-award"></i> Multi-Specialty Dental Clinic in Town
+        </div>
+        <h1 class="hero-title">
+          Gentle Care For Your <br>
+          <span class="text-highlight">Brightest Smile</span>
+        </h1>
+        <p class="hero-subtitle">
+          Welcome to <strong>Anupam Dental Clinic</strong>, led by <strong>Dr. Anoop</strong>. Experience painless laser treatments, single-visit root canals, lifetime dental implants, and modern smile transformations in a ultra-hygienic setting.
+        </p>
+
+        <div class="hero-buttons">
+          <button class="btn-primary open-appointment-modal">
+            <i class="fas fa-calendar-alt"></i> Book Online Appointment
+          </button>
+          <a href="#services" class="btn-outline">
+            <i class="fas fa-stethoscope"></i> View Treatments
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-number">16+</div>
+            <div class="stat-label">Years Clinical Excellence</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">12,000+</div>
+            <div class="stat-label">Happy Smiles Created</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">99.4%</div>
+            <div class="stat-label">Treatment Success Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-image-card">
+          <div class="hero-main-graphic">
+            <!-- Anupam Dental Emblem SVG -->
+            <svg viewBox="0 0 200 200" class="hero-seal-svg">
+              <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="4" stroke-dasharray="8 6"/>
+              <path d="M100 40 C75 40 60 55 60 80 C60 105 70 125 80 155 C83 163 90 163 93 155 C96 147 100 135 100 128 C100 135 104 147 107 155 C110 163 117 163 120 155 C130 125 140 105 140 80 C140 55 125 40 100 40 Z" fill="#ffffff"/>
+              <text x="100" y="30" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="3">ANUPAM</text>
+              <text x="100" y="180" font-size="12" font-weight="bold" fill="#cff4fc" text-anchor="middle" letter-spacing="2">DENTAL CLINIC</text>
+            </svg>
+            <h3 class="hero-graphic-title">Anupam Dental Clinic</h3>
+            <p class="hero-graphic-sub">Dr. Anoop • Chief Surgeon & Implantologist</p>
+          </div>
+
+          <div class="floating-badge badge-top">
+            <div class="badge-icon"><i class="fas fa-tooth"></i></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem; color: var(--dark-navy);">Painless RCT</div>
+              <div style="font-size: 0.75rem; color: var(--slate-body);">Single-visit micro care</div>
+            </div>
+          </div>
+
+          <div class="floating-badge badge-bottom">
+            <div class="badge-icon" style="background: #fef3c7; color: #d97706;"><i class="fas fa-star"></i></div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem; color: var(--dark-navy);">4.9 / 5.0 Rating</div>
+              <div style="font-size: 0.75rem; color: var(--slate-body);">From 850+ Google Reviews</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT US SECTION -->
+  <section class="section" id="about">
+    <div class="about-grid">
+      <div class="about-media">
+        <div style="background: linear-gradient(135deg, var(--primary-light), #cff4fc); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--gray-border); text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--primary); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 20px; box-shadow: var(--shadow-md);">
+            <i class="fas fa-user-md"></i>
+          </div>
+          <h3 style="font-size: 1.6rem; color: var(--dark-navy); margin-bottom: 8px;">Dr. Anoop</h3>
+          <p style="color: var(--primary); font-weight: 600; margin-bottom: 16px;">BDS, MDS (Oral & Maxillofacial Surgeon)</p>
+          <p style="font-size: 0.95rem; color: var(--slate-body); max-width: 440px; margin: 0 auto 20px; line-height: 1.7;">
+            "Our philosophy at Anupam Dental Clinic is simple: treat every patient like family. We combine advanced German & American dental technology with gentle hands to give you a pain-free, healthy smile."
+          </p>
+          <span style="background: white; padding: 8px 18px; border-radius: var(--radius-full); font-weight: 700; font-size: 0.85rem; color: var(--dark-navy); border: 1px solid var(--gray-border);">
+            <i class="fas fa-check-circle" style="color: var(--accent);"></i> Chief Dental Surgeon
+          </span>
+        </div>
+      </div>
+
+      <div class="about-info">
+        <span class="subtitle-pill">About Our Clinic</span>
+        <h2 class="section-title">Your Trusted Partner For Total Oral Health</h2>
+        <p class="section-desc">
+          At <strong>Anupam Dental Clinic</strong>, we provide complete family dental care under one roof. Dr. Anoop and our specialist team are dedicated to delivering precision dentistry with maximum comfort and zero pain.
+        </p>
+
+        <div class="about-features">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-microscope"></i></div>
+            <h4 class="feature-title">Microscopic RCT</h4>
+            <p style="font-size: 0.85rem; color: var(--slate-body);">Painless single-sitting root canals using rotary endodontics.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+            <h4 class="feature-title">Class-B Sterilization</h4>
+            <p style="font-size: 0.85rem; color: var(--slate-body);">Strict 7-step autoclaving ensuring 100% infection control.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-magic"></i></div>
+            <h4 class="feature-title">Digital Smile Design</h4>
+            <p style="font-size: 0.85rem; color: var(--slate-body);">Preview your new smile in 3D before treatment starts.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-rupee-sign"></i></div>
+            <h4 class="feature-title">Transparent Pricing</h4>
+            <p style="font-size: 0.85rem; color: var(--slate-body);">Affordable treatment plans with easy zero-interest EMI options.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES SECTION -->
+  <section class="section section-bg-light" id="services">
+    <div class="section-header">
+      <span class="subtitle-pill">Comprehensive Care</span>
+      <h2 class="section-title">Our Dental Services & Treatments</h2>
+      <p class="section-desc">From routine hygiene cleanings to complex dental implants and cosmetic smile makeovers, Dr. Anoop provides state-of-the-art treatments.</p>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="services-tabs">
+      <button class="tab-btn active" data-category="all">All Services</button>
+      <button class="tab-btn" data-category="general">General & Preventive</button>
+      <button class="tab-btn" data-category="cosmetic">Cosmetic Whitening</button>
+      <button class="tab-btn" data-category="rootcanal">Root Canal (RCT)</button>
+      <button class="tab-btn" data-category="implant">Implants & Surgery</button>
+      <button class="tab-btn" data-category="ortho">Aligners & Braces</button>
+      <button class="tab-btn" data-category="pediatric">Kids Dentistry</button>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="services-grid">
+      {% for s in services %}
+      <div class="service-card" data-category="{{ s.category }}">
+        <span class="service-badge">{{ s.badge_tag|default:"Featured" }}</span>
+        <div class="service-icon-box">
+          {% if s.category == 'cosmetic' %}<i class="fas fa-sparkles"></i>
+          {% elif s.category == 'rootcanal' %}<i class="fas fa-tooth"></i>
+          {% elif s.category == 'implant' %}<i class="fas fa-shield-virus"></i>
+          {% elif s.category == 'ortho' %}<i class="fas fa-smile"></i>
+          {% elif s.category == 'pediatric' %}<i class="fas fa-child"></i>
+          {% else %}<i class="fas fa-pump-soap"></i>{% endif %}
+        </div>
+        <h3 class="service-card-title">{{ s.title }}</h3>
+        <p class="service-card-desc">{{ s.short_description }}</p>
+
+        <div class="service-meta">
+          <span><i class="far fa-clock"></i> {{ s.duration }}</span>
+          <span style="color: var(--primary); font-weight: 700;">{{ s.price_estimate }}</span>
+        </div>
+
+        <button class="btn-outline open-appointment-modal" data-service="{{ s.title }}" style="width: 100%; margin-top: 16px; justify-content: center;">
+          Book {{ s.title }}
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- INTERACTIVE SYMPTOM CHECKER -->
+    <div class="symptom-checker" id="symptom-checker">
+      <div class="checker-header">
+        <span class="subtitle-pill" style="background: rgba(255,255,255,0.15); color: white;">Interactive Care Tool</span>
+        <h3>What Dental Issue Are You Experiencing?</h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem;">Select your symptom below to discover Dr. Anoop's recommended treatment plan instantly.</p>
+      </div>
+
+      <div class="symptom-buttons">
+        <button class="symptom-chip active" data-symptom="toothache"><i class="fas fa-bolt"></i> Severe Tooth Pain</button>
+        <button class="symptom-chip" data-symptom="yellow"><i class="fas fa-sun"></i> Yellow / Stained Teeth</button>
+        <button class="symptom-chip" data-symptom="missing"><i class="fas fa-compress-alt"></i> Missing Tooth / Gap</button>
+        <button class="symptom-chip" data-symptom="crooked"><i class="fas fa-grip-lines"></i> Crooked / Overcrowded</button>
+        <button class="symptom-chip" data-symptom="bleeding"><i class="fas fa-tint"></i> Bleeding Gums</button>
+      </div>
+
+      <div class="checker-result-box" id="checkerResult">
+        <div>
+          <h4 id="symptomResultTitle" style="color: var(--accent); font-size: 1.3rem; margin-bottom: 8px;">Painless Single-Visit Root Canal (RCT)</h4>
+          <p id="symptomResultDesc" style="font-size: 0.925rem; color: #e2e8f0; max-width: 600px;">
+            Severe or throbbing tooth pain is often caused by nerve inflammation or deep infection. Dr. Anoop performs painless microscopic RCT to instantly relieve pain and preserve your natural tooth.
+          </p>
+          <div id="symptomResultDuration" style="font-size: 0.85rem; color: var(--accent-gold); font-weight: 600; margin-top: 10px;">
+            Estimated Treatment Time: 45-60 Mins
+          </div>
+        </div>
+
+        <button class="btn-primary" id="symptomBookBtn" onclick="openAppointmentModal('Single-Visit Root Canal (RCT)')">
+          <i class="fas fa-calendar-check"></i> Book Recommended Treatment
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCTOR TEAM SECTION ("services team dr.") -->
+  <section class="section" id="doctors">
+    <div class="section-header">
+      <span class="subtitle-pill">Expert Specialists</span>
+      <h2 class="section-title">Meet Team</h2>
+      <p class="section-desc">Our team of experienced dental surgeons, implantologists, and orthodontists are committed to giving you the best clinical outcomes.</p>
+    </div>
+
+    <div class="doctors-grid">
+      {% for doc in doctors %}
+      <div class="doctor-card">
+        <div class="doctor-avatar-wrap">
+          <!-- Doctor Icon Graphic -->
+          <svg viewBox="0 0 100 100" class="doctor-avatar-svg" fill="none" stroke="currentColor">
+            <circle cx="50" cy="35" r="20" stroke-width="4" fill="rgba(255,255,255,0.2)"/>
+            <path d="M15 85 C15 65 30 55 50 55 C70 55 85 65 85 85" stroke-width="4" fill="none"/>
+            <path d="M42 55 L50 68 L58 55" stroke-width="3" stroke="#f59e0b"/>
+          </svg>
+          {% if doc.is_chief %}
+          <span class="chief-badge"><i class="fas fa-crown"></i> Chief Surgeon</span>
+          {% endif %}
+        </div>
+
+        <div class="doctor-info">
+          <h3 class="doctor-name">{{ doc.name }}</h3>
+          <div class="doctor-title">{{ doc.title }}</div>
+          <span class="doctor-qual"><i class="fas fa-graduation-cap"></i> {{ doc.qualification }}</span>
+          
+          <p class="doctor-bio">{{ doc.bio }}</p>
+
+          <div style="font-size: 0.85rem; color: var(--dark-navy); font-weight: 600; margin-bottom: 16px;">
+            <i class="far fa-calendar-alt" style="color: var(--primary);"></i> Available: {{ doc.available_days }}
+          </div>
+
+          <button class="btn-primary open-appointment-modal" data-doctor="{{ doc.name }}" style="width: 100%; justify-content: center;">
+            Book Consultation with {{ doc.name }}
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS SECTION -->
+  <section class="section section-bg-light" id="testimonials">
+    <div class="section-header">
+      <span class="subtitle-pill">Patient Stories</span>
+      <h2 class="section-title">What Our Patients Say</h2>
+      <p class="section-desc">Read genuine reviews from patients who experienced gentle, painless dental care at Anupam Dental Clinic.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      {% for t in testimonials %}
+      <div class="testimonial-card">
+        <div class="stars">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+        </div>
+        <p class="review-text">"{{ t.review_text }}"</p>
+        <div class="patient-name">{{ t.patient_name }}</div>
+        <div class="patient-treatment">Treatment: {{ t.treatment }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- FOOTER WITH ADDRESS, NAVBAR LINKS AND INTERACTIVE MAP -->
+  <footer class="footer-section" id="contact-map">
+    <div class="footer-grid">
+      <!-- BRAND INFO -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="logo-icon-wrap" style="width: 46px; height: 46px; background: white;">
+            <img src="{% static 'Dental/images/logo.png' %}" alt="Anupam Dental Clinic Logo" class="brand-logo-img">
+          </div>
+          <div>
+            <h4 style="color: white; font-size: 1.2rem;">ANUPAM DENTAL</h4>
+            <span style="color: var(--accent); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">CLINIC • DR. ANOOP</span>
+          </div>
+        </div>
+        <p>
+          Anupam Dental Clinic is a premier multi-specialty oral healthcare center in town. Led by Chief Surgeon Dr. Anoop, we offer pain-free laser dentistry, implants, aligners, and emergency dental care.
+        </p>
+        <div style="display: flex; gap: 12px; margin-top: 16px;">
+          <a href="#" style="width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" style="width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." target="_blank" rel="noopener noreferrer" style="width: 36px; height: 36px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;" title="Chat on WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+
+      <!-- NAVBAR QUICK LINKS -->
+      <div>
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul class="footer-links-list">
+          <li><a href="#home"><i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--accent);"></i> Home</a></li>
+          <li><a href="#about"><i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--accent);"></i> About Dr. Anoop</a></li>
+          <li><a href="#services"><i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--accent);"></i> Dental Services</a></li>
+          <li><a href="#symptom-checker"><i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--accent);"></i> Symptom Checker</a></li>
+          <li><a href="#doctors"><i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--accent);"></i> Doctor Team</a></li>
+          <li><a href="#testimonials"><i class="fas fa-chevron-right" style="font-size: 0.7rem; color: var(--accent);"></i> Patient Reviews</a></li>
+        </ul>
+      </div>
+
+      <!-- ADDRESS & CONTACT INFO -->
+      <div>
+        <h4 class="footer-heading">Clinic Address</h4>
+        <ul class="contact-info-list">
+          <li class="contact-info-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <a href="https://www.google.com/maps/dir/?api=1&destination=Dr.Anoop%27s+Anupam+Dental+Clinic" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                <strong>Anupam Dental Clinic</strong><br>
+                West Gate Vaikom,<br>
+                Kottayam Dist, Kerala
+              </a>
+            </div>
+          </li>
+          <li class="contact-info-item">
+            <i class="fas fa-phone-alt"></i>
+            <div>
+              <strong>Helpline / Emergency:</strong><br>
+              <a href="tel:+919446046868" style="color: inherit; text-decoration: none;">+91 9446046868</a>
+            </div>
+          </li>
+          <li class="contact-info-item">
+            <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.2rem;"></i>
+            <div>
+              <strong>WhatsApp Direct:</strong><br>
+              <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">+91 9446046868</a>
+            </div>
+          </li>
+          <li class="contact-info-item">
+            <i class="fas fa-envelope"></i>
+            <div>
+              <strong>Email Us:</strong><br>
+              <a href="mailto:anoopkranupam@yahoo.com" style="color: inherit; text-decoration: none;">anoopkranupam@yahoo.com</a>
+            </div>
+          </li>
+          <li class="contact-info-item">
+            <i class="fas fa-clock"></i>
+            <div>
+              <strong>Working Hours:</strong><br>
+              Mon - Sun: 9:00 AM - 8:00 PM<br>
+              <span style="color: var(--accent-gold); font-weight: 600;">(Tuesday Holiday)</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- INTERACTIVE LOCATION MAP -->
+      <div>
+        <h4 class="footer-heading">Locate Us On Map</h4>
+        <div class="map-container">
+          <iframe 
+            class="map-iframe"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2764.8143663823585!2d76.38949637305933!3d9.750779090342238!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b08790dc53983ab%3A0x59b38e8f04d5b667!2sDr.Anoop's%20Anupam%20Dental%20Clinic!5e1!3m2!1sen!2sin!4v1789793399997!5m2!1sen!2sin" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="strict-origin-when-cross-origin">
+          </iframe>
+        </div>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=Dr.Anoop%27s+Anupam+Dental+Clinic" target="_blank" rel="noopener noreferrer" class="btn-outline" style="margin-top: 14px; width: 100%; justify-content: center; color: white; border-color: rgba(255,255,255,0.3); font-size: 0.85rem;">
+          <i class="fas fa-directions"></i> Get Driving Directions
+        </a>
+      </div>
+    </div>
+
+    <!-- FOOTER BOTTOM -->
+    <div class="footer-bottom">
+      <p>© 2026 Anupam Dental Clinic • Dr. Anoop. All Rights Reserved. Designed with care for healthy smiles.</p>
+    </div>
+  </footer>
+
+  <!-- APPOINTMENT BOOKING MODAL -->
+  <div class="modal-overlay" id="appointmentModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeModalBtn">&times;</button>
+      
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="width: 50px; height: 50px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 10px;">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <h3 style="font-size: 1.5rem; color: var(--dark-navy);">Book Your Appointment</h3>
+        <p style="font-size: 0.875rem; color: var(--slate-body);"><i>Dr.Anoop's</i> Anupam Dental Clinic</p>
+      </div>
+
+      <div id="appointmentAlert" style="display: none; padding: 12px; margin-bottom: 16px; border-radius: 8px; font-size: 0.875rem;"></div>
+
+      <form id="appointmentForm" action="{% url 'book_appointment' %}" method="POST">
+        {% csrf_token %}
+        
+        <!-- Preferred Date & Service -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="preferred_date">Appointment Date *</label>
+            <input type="date" class="form-input" id="preferred_date" name="preferred_date" min="{{ today }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="service_name">Treatment / Service *</label>
+            <select class="form-select" id="service_name" name="service_name" required>
+              <option value="General Consultation">General Consultation</option>
+              <option value="Single-Visit Root Canal (RCT)">Single-Visit Root Canal (RCT)</option>
+              <option value="Laser Teeth Whitening">Laser Teeth Whitening</option>
+              <option value="Dental Implants & Fixed Teeth">Dental Implants & Fixed Teeth</option>
+              <option value="Invisible Clear Aligners">Invisible Clear Aligners</option>
+              <option value="Smile Makeover & Veneers">Smile Makeover & Veneers</option>
+              <option value="Pediatric & Kids Dental Care">Pediatric & Kids Dental Care</option>
+              <option value="Painless Tooth Extraction">Painless Tooth Extraction</option>
+              <option value="Scaling & Deep Teeth Cleaning">Scaling & Deep Teeth Cleaning</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- First Name & Last Name -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="first_name">First Name *</label>
+            <input type="text" class="form-input" id="first_name" name="first_name" placeholder="First Name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="last_name">Last Name *</label>
+            <input type="text" class="form-input" id="last_name" name="last_name" placeholder="Last Name" required>
+          </div>
+        </div>
+
+        <!-- Age & Gender -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="age">Age</label>
+            <input type="number" class="form-input" id="age" name="age" placeholder="e.g. 28" min="1" max="120">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="gender">Gender</label>
+            <select class="form-select" id="gender" name="gender">
+              <option value="">-- Select Gender --</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Email & Phone Numbers -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone Number *</label>
+            <input type="tel" class="form-input" id="phone" name="phone" placeholder="+91 9446046868" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone2">Phone Number 2 (Alternate)</label>
+            <input type="tel" class="form-input" id="phone2" name="phone2" placeholder="Secondary Phone">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" class="form-input" id="email" name="email" placeholder="name@email.com">
+        </div>
+
+        <!-- Address -->
+        <div class="form-group">
+          <label class="form-label" for="address">Street Address</label>
+          <input type="text" class="form-input" id="address" name="address" placeholder="House / Building / Street Address">
+        </div>
+
+        <!-- City, State, Pincode -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="city">City</label>
+            <input type="text" class="form-input" id="city" name="city" placeholder="e.g. Vaikom">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="state">State</label>
+            <input type="text" class="form-input" id="state" name="state" placeholder="e.g. Kerala">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pincode">Pincode</label>
+            <input type="text" class="form-input" id="pincode" name="pincode" placeholder="686141">
+          </div>
+        </div>
+
+        <!-- Doctor & Slot
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="doctor_name">Doctor Preference</label>
+            <select class="form-select" id="doctor_name" name="doctor_name">
+              <option value="Dr. Anoop">Dr. Anoop (Chief Surgeon)</option>
+              <option value="Dr. Priya Sharma">Dr. Priya Sharma (Orthodontist)</option>
+              <option value="Dr. Rahul Mehta">Dr. Rahul Mehta (Pediatric Dentist)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="preferred_time">Time Slot</label>
+            <select class="form-select" id="preferred_time" name="preferred_time">
+              <option value="Morning (09:30 AM - 12:00 PM)">Morning (09:30 AM - 12:00 PM)</option>
+              <option value="Afternoon (12:00 PM - 04:00 PM)">Afternoon (12:00 PM - 04:00 PM)</option>
+              <option value="Evening (04:00 PM - 08:00 PM)">Evening (04:00 PM - 08:00 PM)</option>
+            </select>
+          </div>
+        </div> -->
+
+        <!-- Comments / Commit Notes -->
+        <div class="form-group">
+          <label class="form-label" for="notes">Comments / Special Notes</label>
+          <textarea class="form-textarea" id="notes" name="notes" rows="2" placeholder="Mention any specific dental issue, toothache history or comments..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem; margin-top: 6px;">
+          <i class="fas fa-check-circle"></i> Commit & Book Appointment
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LOGIN & REGISTER MODAL -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-content" style="max-width: 440px;">
+      <button class="modal-close" id="closeLoginModalBtn">&times;</button>
+      
+      <!-- MODE SWITCH TABS -->
+      <div style="display: flex; background: var(--slate-light); padding: 4px; border-radius: 12px; margin-bottom: 20px;">
+        <button id="tabLoginBtn" type="button" class="auth-tab-btn active" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        <button id="tabRegisterBtn" type="button" class="auth-tab-btn" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <i class="fas fa-user-plus"></i> New Register
+        </button>
+      </div>
+
+      <div id="loginAlert" style="display: none; padding: 12px; margin-bottom: 16px; border-radius: 8px; font-size: 0.875rem;"></div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" action="{% url 'login' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="login_username">Username / Email / Mobile *</label>
+          <input type="text" class="form-input" id="login_username" name="username" placeholder="Enter Username, Email or Phone" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login_password">Password *</label>
+          <input type="password" class="form-input" id="login_password" name="password" placeholder="Enter Password" required>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 13px; font-size: 0.95rem; margin-top: 8px;">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="registerForm" action="{% url 'register' %}" method="POST" style="display: none;">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="reg_fullname">Full Name *</label>
+          <input type="text" class="form-input" id="reg_fullname" name="full_name" placeholder="e.g. Rahul Verma" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg_username">Username *</label>
+          <input type="text" class="form-input" id="reg_username" name="username" placeholder="Choose a username" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg_email">Email / Mobile Number</label>
+          <input type="text" class="form-input" id="reg_email" name="email" placeholder="e.g. name@email.com or 9876543210">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg_password">Create Password *</label>
+          <input type="password" class="form-input" id="reg_password" name="password" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 13px; font-size: 0.95rem; margin-top: 8px; background: linear-gradient(135deg, #059669, #10b981);">
+          <i class="fas fa-user-check"></i> Register New Account
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--slate-body); border-top: 1px solid var(--gray-border); padding-top: 12px;">
+        <span>Need a dental consultation? <a href="#" class="open-appointment-modal" style="color: var(--primary); font-weight: 600;">Book Appointment</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING WHATSAPP BUTTON -->
+  <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." 
+     target="_blank" 
+     rel="noopener noreferrer" 
+     class="floating-whatsapp" 
+     aria-label="Chat with Dr. Anoop on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+    <span class="whatsapp-tooltip">Chat with Dr. Anoop</span>
+  </a>
+
+  <!-- Custom Main JS -->
+  <script src="{% static 'Dental/js/main.js' %}"></script>
+</body>
+</html>
