@@ -1,0 +1,464 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anupam Dental Clinic - Patient Registration Slip {% if single_card %}(Single Card){% else %}(8-Slip Grid A4){% endif %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      background: #525659;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    /* Screen toolbar (hidden in print) */
+    .screen-toolbar {
+      width: 210mm;
+      max-width: 95vw;
+      background: #ffffff;
+      padding: 12px 18px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body.is-single-card .screen-toolbar {
+      width: 140mm;
+    }
+
+    .toolbar-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-print {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .btn-print:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-back {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-back:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-toggle {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+    }
+    .btn-toggle:hover {
+      background: #dbeafe;
+    }
+
+    /* A4 Printable Sheet (8-Cards Grid) */
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      height: 297mm;
+      background: #ffffff;
+      padding: 8mm 6mm;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 5mm;
+      page-break-after: always;
+      position: relative;
+    }
+
+    /* Single Card Container */
+    .single-card-container {
+      width: 130mm;
+      background: #ffffff;
+      padding: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      margin: 0 auto;
+    }
+
+    /* Slip Card Structure */
+    .slip-card {
+      border: 1px solid #000;
+      padding: 8px 10px 6px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      background: #fff;
+      overflow: hidden;
+      font-size: 11.5px;
+      line-height: 1.35;
+    }
+
+    /* Single card specific styling */
+    .single-card-container .slip-card {
+      min-height: 82mm;
+      padding: 12px 14px 8px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    /* Boxed clinic name header */
+    .clinic-title-box {
+      border: 1.5px solid #000;
+      text-align: center;
+      padding: 4px 6px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .single-card-container .clinic-title-box {
+      font-size: 17px;
+      padding: 5px 8px;
+      margin-bottom: 10px;
+    }
+
+    /* Middle row with fields and logo */
+    .slip-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .slip-fields {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .single-card-container .slip-fields {
+      gap: 5px;
+    }
+
+    .field-row {
+      display: flex;
+      align-items: baseline;
+    }
+
+    .field-label {
+      font-weight: bold;
+      width: 65px;
+      color: #000;
+      white-space: nowrap;
+    }
+
+    .single-card-container .field-label {
+      width: 75px;
+      font-size: 13px;
+    }
+
+    .field-value {
+      flex: 1;
+      font-weight: normal;
+      border-bottom: 1px dotted transparent;
+      min-height: 14px;
+    }
+
+    .slip-logo-wrap {
+      width: 62px;
+      height: 62px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slip-logo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .single-card-container .slip-logo-wrap {
+      width: 72px;
+      height: 72px;
+    }
+
+    .slip-divider {
+      border: none;
+      border-top: 1px solid #000;
+      margin: 4px 0 3px 0;
+    }
+
+    .single-card-container .slip-divider {
+      margin: 8px 0 5px 0;
+    }
+
+    .slip-footer-address {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .single-card-container .slip-footer-address {
+      font-size: 11.5px;
+      margin-bottom: 4px;
+    }
+
+    .slip-footer-hours {
+      border: 1px solid #000;
+      text-align: center;
+      font-size: 9.5px;
+      padding: 1.5px 4px;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+
+    .single-card-container .slip-footer-hours {
+      font-size: 11px;
+      padding: 3px 6px;
+    }
+
+    /* Print Styles */
+    @media print {
+      @page {
+        size: auto;
+        margin: 6mm 5mm;
+      }
+
+      body {
+        background: #ffffff;
+        padding: 0;
+        margin: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .a4-sheet {
+        box-shadow: none;
+        margin: 0 auto;
+        padding: 4mm 3mm;
+        width: 100%;
+        height: 100%;
+        min-height: auto;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+      }
+
+      .single-card-container {
+        box-shadow: none;
+        margin: 10mm auto;
+        padding: 0;
+        width: 130mm;
+      }
+
+      .slip-card {
+        border: 1px solid #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .clinic-title-box, .slip-footer-hours {
+        border-color: #000 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Toolbar -->
+  <div class="screen-toolbar no-print">
+    <div class="toolbar-title">
+      <i class="fas fa-th-large" style="color: #2563eb;"></i>
+      <span>Patient Registration Slip {% if single_card %}(Single Card){% else %}(8-Slip Grid A4){% endif %}</span>
+    </div>
+    <div class="toolbar-actions">
+      {% if single_card %}
+        <a href="?reg_no={{ reg_no }}&pid={{ pid }}&date={{ date }}&name={{ name }}&age={{ age }}&gender={{ gender }}&address={{ address }}&single_card=0" class="btn btn-toggle">
+          <i class="fas fa-th"></i> View 8-Card Grid (A4)
+        </a>
+      {% else %}
+        <a href="?reg_no={{ reg_no }}&pid={{ pid }}&date={{ date }}&name={{ name }}&age={{ age }}&gender={{ gender }}&address={{ address }}&single_card=1" class="btn btn-toggle">
+          <i class="fas fa-id-card"></i> View Single Card
+        </a>
+      {% endif %}
+      <a href="{% url 'dashboard' %}" class="btn btn-back">
+        <i class="fas fa-arrow-left"></i> Dashboard
+      </a>
+      <button type="button" class="btn btn-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Print / Save PDF
+      </button>
+    </div>
+  </div>
+
+  {% if single_card %}
+  <!-- SINGLE CARD VIEW (1 Card Standalone) -->
+  <div class="single-card-container">
+    <div class="slip-card">
+      <div>
+        <div class="clinic-title-box">
+          ANUPAM DENTAL CLINIC
+        </div>
+
+        <div class="slip-body">
+          <div class="slip-fields">
+            <div class="field-row">
+              <span class="field-label">Reg No :</span>
+              <span class="field-value">{{ reg_no|default:"" }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">PID :</span>
+              <span class="field-value">{{ pid|default:"" }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Date :</span>
+              <span class="field-value">{{ date|default:"" }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Age :</span>
+              <span class="field-value" style="width: 55px; flex: none;">{{ age|default:"" }}</span>
+              <span style="font-weight: bold; margin-left: 12px; margin-right: 6px;">Gender :</span>
+              <span class="field-value">{{ gender|default:"" }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Name :</span>
+              <span class="field-value">{{ name|default:"" }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Address :</span>
+              <span class="field-value">{{ address|default:"" }}</span>
+            </div>
+          </div>
+
+          <div class="slip-logo-wrap">
+            <img src="{% static 'Dental/images/logo1.png' %}" alt="Anupam Dental Clinic Logo">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <hr class="slip-divider">
+        <div class="slip-footer-address">
+          West Gate Vaikom - 686141, Ph : 9446046868
+        </div>
+        <div class="slip-footer-hours">
+          Clinic Hours :10:00 AM to 08:00 PM, Tuesday Holiday
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+
+  <!-- 8-CARD A4 GRID SHEET (2 columns x 4 rows) -->
+  <div class="a4-sheet" id="slipGridSheet">
+    {% for i in "12345678" %}
+    <div class="slip-card">
+      <div>
+        <div class="clinic-title-box">
+          ANUPAM DENTAL CLINIC
+        </div>
+
+        <div class="slip-body">
+          <div class="slip-fields">
+            <div class="field-row">
+              <span class="field-label">Reg No :</span>
+              <span class="field-value">{% if forloop.first or prefill_all %}{{ reg_no|default:"" }}{% endif %}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">PID :</span>
+              <span class="field-value">{% if forloop.first or prefill_all %}{{ pid|default:"" }}{% endif %}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Date :</span>
+              <span class="field-value">{% if forloop.first or prefill_all %}{{ date|default:"" }}{% endif %}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Age :</span>
+              <span class="field-value" style="width: 50px; flex: none;">{% if forloop.first or prefill_all %}{{ age|default:"" }}{% endif %}</span>
+              <span style="font-weight: bold; margin-left: 10px; margin-right: 6px;">Gender :</span>
+              <span class="field-value">{% if forloop.first or prefill_all %}{{ gender|default:"" }}{% endif %}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Name :</span>
+              <span class="field-value">{% if forloop.first or prefill_all %}{{ name|default:"" }}{% endif %}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Address :</span>
+              <span class="field-value">{% if forloop.first or prefill_all %}{{ address|default:"" }}{% endif %}</span>
+            </div>
+          </div>
+
+          <div class="slip-logo-wrap">
+            <img src="{% static 'Dental/images/logo1.png' %}" alt="Anupam Dental Clinic Logo">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <hr class="slip-divider">
+        <div class="slip-footer-address">
+          West Gate Vaikom - 686141, Ph : 9446046868
+        </div>
+        <div class="slip-footer-hours">
+          Clinic Hours :10:00 AM to 08:00 PM, Tuesday Holiday
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+
+</body>
+</html>

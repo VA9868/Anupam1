@@ -1,0 +1,399 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anupam Dental Clinic - Doctor Prescription & Letterhead</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      background: #525659;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    /* Screen toolbar */
+    .screen-toolbar {
+      width: 210mm;
+      background: #ffffff;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .toolbar-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-print {
+      background: #0f766e;
+      color: #ffffff;
+    }
+    .btn-print:hover {
+      background: #115e59;
+    }
+
+    .btn-back {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-back:hover {
+      background: #e2e8f0;
+    }
+
+    /* A4 Prescription Sheet */
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      height: 297mm;
+      background: #ffffff;
+      padding: 12mm 14mm 10mm 14mm;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    /* Top Header */
+    .rx-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      margin-bottom: 10px;
+    }
+
+    .rx-logo-wrap {
+      width: 76px;
+      height: 76px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rx-logo-wrap img {
+      width: 76px;
+      height: 76px;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .rx-clinic-title {
+      text-align: center;
+      flex: 1;
+      padding-top: 4px;
+    }
+
+    .rx-clinic-title h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .rx-clinic-title p {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .rx-contacts {
+      width: 140px;
+      text-align: right;
+      font-size: 12.5px;
+      line-height: 1.5;
+      padding-top: 4px;
+    }
+
+    /* Main Prescription Box with 2 columns */
+    .rx-main-box {
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      border-left: none;
+      border-right: none;
+      flex: 1;
+      display: flex;
+      min-height: 220mm;
+      margin-bottom: 8px;
+    }
+
+    .rx-left-col {
+      width: 32%;
+      border-right: 1.5px solid #000;
+      padding: 12px 14px;
+      font-size: 11.5px;
+      line-height: 1.35;
+    }
+
+    .rx-left-col h3 {
+      font-size: 13px;
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 6px;
+    }
+
+    .doc-entry {
+      margin-bottom: 10px;
+    }
+
+    .doc-name {
+      font-weight: bold;
+      font-size: 11.5px;
+    }
+
+    .doc-sub {
+      font-size: 10.5px;
+    }
+
+    .doc-reg {
+      font-size: 10.5px;
+    }
+
+    .rx-right-col {
+      width: 68%;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .rx-date-line {
+      text-align: right;
+      font-size: 12.5px;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+
+    .rx-body-blank {
+      flex: 1;
+      position: relative;
+    }
+
+    .rx-symbol {
+      font-family: 'Times New Roman', serif;
+      font-size: 24px;
+      font-weight: bold;
+      font-style: italic;
+      color: #333;
+      margin-bottom: 16px;
+    }
+
+    .doctors-notes-box {
+      border: 1px solid #000;
+      text-align: center;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 4px 10px;
+      margin-bottom: 40mm;
+    }
+
+    /* Footer Hours */
+    .rx-footer {
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: bold;
+      padding-top: 4px;
+    }
+
+    /* Print Styles */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+      }
+
+      body {
+        background: #ffffff;
+        padding: 0;
+        margin: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .a4-sheet {
+        box-shadow: none;
+        margin: 0 auto;
+        padding: 4mm 6mm;
+        width: 100%;
+        height: 100%;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+      }
+
+      .rx-main-box, .doctors-notes-box {
+        border-color: #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Toolbar -->
+  <div class="screen-toolbar no-print">
+    <div class="toolbar-title">
+      <i class="fas fa-file-prescription" style="color: #0f766e;"></i>
+      <span>Doctor Prescription Letterhead</span>
+    </div>
+    <div class="toolbar-actions">
+      <a href="{% url 'dashboard' %}" class="btn btn-back">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </a>
+      <button type="button" class="btn btn-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Print / Save as PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- A4 Prescription Sheet -->
+  <div class="a4-sheet">
+
+    <!-- Top Header -->
+    <div class="rx-header">
+      <div class="rx-logo-wrap">
+        <img src="{% static 'Dental/images/logo1.png' %}" alt="Anupam Dental Clinic Logo">
+      </div>
+
+      <div class="rx-clinic-title">
+        <h1>ANUPAM DENTAL CLINIC</h1>
+        <p>West Gate Vaikom - 686141</p>
+      </div>
+
+      <div class="rx-contacts">
+        <div>Clinic : 9446046868</div>
+        <div>Resi&nbsp;&nbsp; : 216858</div>
+      </div>
+    </div>
+
+    <!-- Main Box -->
+    <div class="rx-main-box">
+      <!-- Left Column: Doctors List -->
+      <div class="rx-left-col">
+        <h3 style="margin-bottom: 8px; text-decoration: none;">Consultants :</h3>
+        <div class="doc-entry">
+          <div class="doc-name">Dr. Anoop Kumar. BDS</div>
+          <div class="doc-sub">Cheif Surgan</div>
+          <div class="doc-reg">Reg.No. 1234</div>
+        </div>
+
+        <h3 style="margin-top: 14px; margin-bottom: 8px; text-decoration: none;">Visiting :</h3>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.JUSTIN MATHEW. MDS</div>
+          <div class="doc-sub">Oral & Maxillo Facial Surgeon</div>
+          <div class="doc-reg">Reg.No. 5492</div>
+        </div>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.KRISHNA KUMAR. MDS</div>
+          <div class="doc-sub">Paedodontist</div>
+          <div class="doc-reg">Reg.No. 7729</div>
+        </div>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.JOSEPH J PULIKKOTTIL. MDS</div>
+          <div class="doc-sub">Periodontist & Implantologist</div>
+          <div class="doc-reg">Reg.No. 2418</div>
+        </div>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.TERRY THOMAS. MDS</div>
+          <div class="doc-sub">Orthodontist</div>
+          <div class="doc-reg">Reg.No. 4807</div>
+        </div>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.SHIBHU SREEDHAR. MDS</div>
+          <div class="doc-sub">Endodontist</div>
+          <div class="doc-reg">Reg.No. 15619-A</div>
+        </div>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.RENJITH RAJ. MDS</div>
+          <div class="doc-sub">Endodontist</div>
+          <div class="doc-reg">Reg.No. 8171</div>
+        </div>
+
+        <div class="doc-entry">
+          <div class="doc-name">Dr.SIJO P MATHEW. MDS</div>
+          <div class="doc-sub">Endodontist</div>
+          <div class="doc-reg">Reg.No. 8982</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Date, Blank Prescriptions Area, Doctor's Notes -->
+      <div class="rx-right-col">
+        <div class="rx-date-line">
+          Date : {{ date|default:"________________" }}
+        </div>
+
+        <div class="rx-body-blank">
+          <div class="rx-symbol">&#8478;</div>
+        </div>
+
+        <div class="doctors-notes-box">
+          Doctor's Notes
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Footer -->
+    <div class="rx-footer">
+      Clinic Hours : 10:00 AM to 08:00 PM, Tuesday Holiday
+    </div>
+
+  </div>
+
+</body>
+</html>

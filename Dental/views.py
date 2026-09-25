@@ -1,9 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from .models import Doctor, Service, Appointment, Testimonial, ContactMessage
+from django.db.models import Sum, Q
+from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice
 import datetime
 
 def home_view(request):
@@ -287,38 +288,80 @@ def contact_view(request):
             
     return redirect('home')
 
-def dashboard_view(request):
+def dashboard_patient_view(request):
+    if not request.user.is_authenticated and 'patient_phone' not in request.session:
+        return redirect('login')
+
     if request.user.is_authenticated:
-        if request.user.is_staff:
-            appointments = Appointment.objects.all().order_by('-created_at')
-        else:
-            appointments = Appointment.objects.filter(
-                email__iexact=request.user.email
-            ) | Appointment.objects.filter(
-                phone__icontains=request.user.username
-            )
-            if not appointments.exists() and request.user.first_name:
-                appointments = Appointment.objects.filter(
-                    patient_name__icontains=request.user.first_name
-                )
-            appointments = appointments.order_by('-created_at')
+        appointments = Appointment.objects.filter(
+            Q(email__iexact=request.user.email) | Q(phone__icontains=request.user.username) | Q(patient_name__icontains=request.user.first_name)
+        ).order_by('-created_at')
+        display_name = request.user.first_name or request.user.username
     elif 'patient_phone' in request.session:
-        phone = request.session['patient_phone']
-        appointments = Appointment.objects.filter(phone__icontains=phone).order_by('-created_at')
+        appointments = Appointment.objects.filter(phone__icontains=request.session['patient_phone']).order_by('-created_at')
+        display_name = request.session.get('patient_name') or "Patient"
     else:
-        messages.warning(request, "Please log in or register to access your dashboard.")
-        return redirect('home')
+        appointments = Appointment.objects.none()
+        display_name = "Patient"
 
     latest_appointment = appointments.first() if appointments.exists() else None
 
     context = {
         'appointments': appointments,
         'latest_appointment': latest_appointment,
-        'patient_name': request.session.get('patient_name') or (request.user.first_name or request.user.username if request.user.is_authenticated else "Patient"),
+        'user': request.user,
+        'patient_name': display_name,
+        'today': datetime.date.today().strftime('%Y-%m-%d'),
+    }
+    return render(request, 'Dental/dashboardpatient.html', context)
+
+
+def dashboard_view(request):
+    if not request.user.is_authenticated and 'patient_phone' not in request.session:
+        return redirect('login')
+
+    # If regular patient (not staff), render the patient dashboard
+    if not (request.user.is_authenticated and request.user.is_staff):
+        return dashboard_patient_view(request)
+
+    cases = DentalCase.objects.all().order_by('-due_date')
+    total_jobs = cases.count()
+    in_progress_count = cases.filter(status='in_progress').count()
+    completed_count = cases.filter(status='completed').count()
+    overdue_count = cases.filter(status='overdue').count()
+
+    paid_revenue = Invoice.objects.filter(payment_status='Paid').aggregate(s=Sum('amount'))['s'] or 0
+    total_revenue = f"{int(paid_revenue):,}"
+
+    appointments = Appointment.objects.all().order_by('-created_at')
+    doctors = Doctor.objects.all().order_by('-is_chief')
+    invoices = Invoice.objects.all().order_by('-created_at')
+
+    context = {
+        'total_jobs': total_jobs,
+        'in_progress_count': in_progress_count,
+        'completed_count': completed_count,
+        'overdue_count': overdue_count,
+        'total_revenue': total_revenue,
+        'cases': cases,
+        'appointments': appointments,
+        'doctors': doctors,
+        'invoices': invoices,
+        'user': request.user,
+        'today': datetime.date.today().strftime('%Y-%m-%d'),
+        'patient_name': request.user.first_name or request.user.username or "Admin",
     }
     return render(request, 'Dental/dashboard.html', context)
 
+
 def login_view(request):
+    if request.method == 'GET':
+        if request.user.is_authenticated:
+            if request.user.is_staff:
+                return redirect('dashboard')
+            return redirect('dashboard_patient')
+        return render(request, 'Dental/login.html')
+
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
@@ -328,25 +371,23 @@ def login_view(request):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': err}, status=400)
             messages.error(request, err)
-            return redirect('home')
+            return redirect('login')
 
-        # 1. Django user authentication by username
         user = authenticate(request, username=username, password=password)
         if user is None and '@' in username:
-            # Fallback email search
             user_obj = User.objects.filter(email__iexact=username).first()
             if user_obj:
                 user = authenticate(request, username=user_obj.username, password=password)
 
         if user is not None:
             login(request, user)
-            msg = f"Welcome back, {user.first_name or user.username}! Loading dashboard..."
+            target_url = '/dashboard/' if user.is_staff else '/dashboardpatient/'
+            msg = f"Welcome back, {user.first_name or user.username}!"
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboard/'})
+                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': target_url})
             messages.success(request, msg)
-            return redirect('dashboard')
+            return redirect('dashboard' if user.is_staff else 'dashboard_patient')
 
-        # 2. Patient phone/email lookup fallback
         patient_appointments = Appointment.objects.filter(phone__icontains=username) | Appointment.objects.filter(email__iexact=username)
         if patient_appointments.exists():
             latest = patient_appointments.order_by('-created_at').first()
@@ -354,17 +395,18 @@ def login_view(request):
             request.session['patient_name'] = latest.patient_name
             msg = f"Welcome, {latest.patient_name}! Opening your dashboard..."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboard/'})
+                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboardpatient/'})
             messages.success(request, msg)
-            return redirect('dashboard')
+            return redirect('dashboard_patient')
 
         err = 'Invalid Username or Password. Please try again.'
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': err}, status=400)
         messages.error(request, err)
-        return redirect('home')
+        return redirect('login')
 
-    return redirect('home')
+    return redirect('login')
+
 
 def register_view(request):
     if request.method == 'POST':
@@ -397,12 +439,15 @@ def register_view(request):
                 first_name=first_name,
                 last_name=last_name
             )
+            user.is_staff = False
+            user.save()
+
             login(request, user)
             msg = f"Account registered successfully! Welcome, {user.first_name or user.username}."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboard/'})
+                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboardpatient/'})
             messages.success(request, msg)
-            return redirect('dashboard')
+            return redirect('dashboard_patient')
         except Exception as e:
             err = f"Registration error: {str(e)}"
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -420,4 +465,232 @@ def logout_view(request):
         del request.session['patient_phone']
     messages.info(request, "You have been logged out successfully.")
     return redirect('home')
+
+
+def add_case_view(request):
+    if request.method == 'POST':
+        patient_name = request.POST.get('patient_name', '').strip()
+        doctor_name = request.POST.get('doctor_name', 'Dr. Anoop').strip()
+        case_type = request.POST.get('case_type', 'Crown & Bridge').strip()
+        status = request.POST.get('status', 'in_progress').strip()
+        due_date = request.POST.get('due_date') or datetime.date.today().strftime('%Y-%m-%d')
+        amount = request.POST.get('amount', '0').strip() or '0'
+        notes = request.POST.get('notes', '').strip()
+
+        case_count = DentalCase.objects.count() + 1
+        case_id = f"DC-{datetime.date.today().year}-{case_count:03d}"
+
+        try:
+            DentalCase.objects.create(
+                case_id=case_id,
+                patient_name=patient_name or 'Walk-in Patient',
+                doctor_name=doctor_name,
+                case_type=case_type,
+                status=status,
+                due_date=due_date,
+                amount=float(amount),
+                notes=notes
+            )
+            messages.success(request, f"Dental Case {case_id} added successfully!")
+        except Exception as e:
+            messages.error(request, f"Error adding case: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def add_patient_view(request):
+    if request.method == 'POST':
+        patient_name = request.POST.get('patient_name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        age = request.POST.get('age', '').strip()
+        gender = request.POST.get('gender', 'Male').strip()
+        service_name = request.POST.get('service_name', 'General Consultation').strip()
+        doctor_name = request.POST.get('doctor_name', 'Dr. Anoop').strip()
+        preferred_date = request.POST.get('preferred_date') or datetime.date.today().strftime('%Y-%m-%d')
+        notes = request.POST.get('notes', '').strip()
+
+        try:
+            Appointment.objects.create(
+                patient_name=patient_name or 'New Patient',
+                phone=phone or '9999999999',
+                age=int(age) if age.isdigit() else None,
+                gender=gender,
+                service_name=service_name,
+                doctor_name=doctor_name,
+                preferred_date=preferred_date,
+                notes=notes,
+                status='confirmed'
+            )
+            messages.success(request, f"Patient {patient_name} registered successfully!")
+        except Exception as e:
+            messages.error(request, f"Error adding patient: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def add_doctor_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        reg_no = request.POST.get('reg_no', '').strip()
+        qualification = request.POST.get('qualification', 'BDS, MDS').strip()
+        designation = request.POST.get('designation', '').strip()
+        available_days = request.POST.get('available_days', 'Mon - Sat (10:00 AM - 6:00 PM)').strip()
+        bio = request.POST.get('bio', '').strip()
+        photo = request.FILES.get('photo')
+
+        try:
+            Doctor.objects.create(
+                name=name or 'Dr. Specialist',
+                reg_no=reg_no,
+                qualification=qualification,
+                designation=designation or 'Consultant Dental Surgeon',
+                title=designation or 'Consultant Dental Surgeon',
+                specialization=designation or 'General & Cosmetic Dentistry',
+                available_days=available_days,
+                experience_years=5,
+                bio=bio or f"{name} is an experienced dental surgeon at Anupam Dental Clinic.",
+                photo=photo
+            )
+            success_info = f"Doctor {name}"
+            if reg_no:
+                success_info += f" (Reg No: {reg_no})"
+            messages.success(request, f"{success_info} added to clinic staff successfully!")
+        except Exception as e:
+            messages.error(request, f"Error adding doctor: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def edit_doctor_view(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        reg_no = request.POST.get('reg_no', '').strip()
+        qualification = request.POST.get('qualification', '').strip()
+        designation = request.POST.get('designation', '').strip()
+        available_days = request.POST.get('available_days', '').strip()
+        bio = request.POST.get('bio', '').strip()
+
+        if name:
+            doctor.name = name
+        doctor.reg_no = reg_no
+        if qualification:
+            doctor.qualification = qualification
+        if designation:
+            doctor.designation = designation
+            doctor.title = designation
+            doctor.specialization = designation
+        if available_days:
+            doctor.available_days = available_days
+        doctor.bio = bio
+
+        if 'photo' in request.FILES and request.FILES['photo']:
+            doctor.photo = request.FILES['photo']
+
+        try:
+            doctor.save()
+            messages.success(request, f"Doctor {doctor.name} updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Error updating doctor: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def delete_doctor_view(request, doctor_id):
+    if request.method == 'POST':
+        doctor = get_object_or_404(Doctor, id=doctor_id)
+        name = doctor.name
+        doctor.delete()
+        messages.info(request, f"Doctor {name} has been removed.")
+    return redirect('dashboard')
+
+
+def new_invoice_view(request):
+    if request.method == 'POST':
+        patient_name = request.POST.get('patient_name', '').strip()
+        treatment = request.POST.get('treatment', 'Dental Treatment').strip()
+        amount = request.POST.get('amount', '0').strip() or '0'
+        payment_status = request.POST.get('payment_status', 'Paid').strip()
+        payment_mode = request.POST.get('payment_mode', 'UPI').strip()
+
+        inv_count = Invoice.objects.count() + 1
+        invoice_id = f"INV-{datetime.date.today().year}-{inv_count:03d}"
+
+        try:
+            Invoice.objects.create(
+                invoice_id=invoice_id,
+                patient_name=patient_name or 'Patient',
+                treatment=treatment,
+                amount=float(amount),
+                payment_status=payment_status,
+                payment_mode=payment_mode
+            )
+            messages.success(request, f"Invoice {invoice_id} for ₹{amount} recorded successfully!")
+        except Exception as e:
+            messages.error(request, f"Error creating invoice: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def update_case_status_view(request, case_id):
+    if request.method == 'POST':
+        case = get_object_or_404(DentalCase, id=case_id)
+        new_status = request.POST.get('status', case.status)
+        if new_status in ['in_progress', 'completed', 'overdue', 'pending']:
+            case.status = new_status
+            case.save()
+            messages.success(request, f"Case {case.case_id} status updated to {case.get_status_display()}!")
+    return redirect('dashboard')
+
+
+def delete_case_view(request, case_id):
+    if request.method == 'POST':
+        case = get_object_or_404(DentalCase, id=case_id)
+        cid = case.case_id
+        case.delete()
+        messages.info(request, f"Case {cid} has been archived/deleted.")
+    return redirect('dashboard')
+
+
+def print_slip_grid_view(request):
+    reg_no = request.GET.get('reg_no', '').strip()
+    pid = request.GET.get('pid', '').strip()
+    date_val = request.GET.get('date', datetime.date.today().strftime('%d/%m/%Y')).strip()
+    name = request.GET.get('name', '').strip()
+    age = request.GET.get('age', '').strip()
+    gender = request.GET.get('gender', '').strip()
+    address = request.GET.get('address', '').strip()
+    prefill_all = request.GET.get('prefill_all', '0') == '1'
+    single_card = request.GET.get('single_card', '0') == '1'
+
+    context = {
+        'reg_no': reg_no,
+        'pid': pid,
+        'date': date_val,
+        'name': name,
+        'age': age,
+        'gender': gender,
+        'address': address,
+        'prefill_all': prefill_all,
+        'single_card': single_card,
+    }
+    return render(request, 'Dental/print_slip_grid.html', context)
+
+
+def print_letterhead_view(request):
+    return render(request, 'Dental/print_letterhead.html', {})
+
+
+def print_clinical_notes_view(request):
+    date_val = request.GET.get('date', datetime.date.today().strftime('%d/%m/%Y')).strip()
+    context = {
+        'date': date_val,
+    }
+    return render(request, 'Dental/print_clinical_notes.html', context)
+
+
+def print_prescription_view(request):
+    return print_clinical_notes_view(request)
+
+
 

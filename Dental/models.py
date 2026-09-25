@@ -2,17 +2,28 @@ from django.db import models
 
 class Doctor(models.Model):
     name = models.CharField(max_length=150)
-    title = models.CharField(max_length=150, default="Senior Dental Surgeon")
+    reg_no = models.CharField(max_length=100, blank=True, default="", help_text="Registration Number")
+    designation = models.CharField(max_length=150, blank=True, default="", help_text="e.g. Senior Dental Surgeon")
     qualification = models.CharField(max_length=200, help_text="e.g. BDS, MDS (Implantology)")
-    specialization = models.CharField(max_length=150)
+    title = models.CharField(max_length=150, blank=True, default="Senior Dental Surgeon")
+    specialization = models.CharField(max_length=150, blank=True, default="")
     experience_years = models.IntegerField(default=15)
-    bio = models.TextField()
+    bio = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='doctors/', blank=True, null=True, help_text="Doctor profile photo")
     avatar_url = models.CharField(max_length=300, blank=True, help_text="Image URL or SVG icon")
     is_chief = models.BooleanField(default=False)
     available_days = models.CharField(max_length=100, default="Mon - Sat")
     
+    def save(self, *args, **kwargs):
+        if self.designation:
+            if not self.title:
+                self.title = self.designation
+            if not self.specialization:
+                self.specialization = self.designation
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.name} - {self.specialization}"
+        return f"{self.name} - {self.designation or self.title or self.specialization}"
 
 class Service(models.Model):
     CATEGORY_CHOICES = [
@@ -66,9 +77,14 @@ class Appointment(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def formatted_id(self):
+        date_str = self.created_at.strftime('%Y%m%d') if self.created_at else (self.preferred_date.strftime('%Y%m%d') if self.preferred_date else '20260919')
+        return f"{date_str}-{self.id:04d}"
+
     def __str__(self):
         full_name = f"{self.first_name} {self.last_name}".strip() or self.patient_name or "Patient"
-        return f"Booking for {full_name} on {self.preferred_date} ({self.service_name})"
+        return f"Booking {self.formatted_id} for {full_name} on {self.preferred_date} ({self.service_name})"
 
 class Testimonial(models.Model):
     patient_name = models.CharField(max_length=150)
@@ -90,4 +106,39 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Message from {self.name} - {self.subject}"
+
+
+class DentalCase(models.Model):
+    CASE_STATUS_CHOICES = [
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('overdue', 'Overdue'),
+        ('pending', 'Pending Review'),
+    ]
+
+    case_id = models.CharField(max_length=50, unique=True)
+    patient_name = models.CharField(max_length=150)
+    doctor_name = models.CharField(max_length=150, default="Dr. Anoop")
+    case_type = models.CharField(max_length=100, default='Crown & Bridge')
+    status = models.CharField(max_length=30, choices=CASE_STATUS_CHOICES, default='in_progress')
+    due_date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.case_id} - {self.patient_name} ({self.case_type})"
+
+
+class Invoice(models.Model):
+    invoice_id = models.CharField(max_length=50, unique=True)
+    patient_name = models.CharField(max_length=150)
+    treatment = models.CharField(max_length=150)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=50, choices=[('Paid', 'Paid'), ('Pending', 'Pending'), ('Partial', 'Partial')], default='Paid')
+    payment_mode = models.CharField(max_length=50, default='UPI / Card')
+    created_at = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.invoice_id} - {self.patient_name} - ₹{self.amount}"
 
