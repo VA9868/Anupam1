@@ -187,10 +187,10 @@
         <span class="subtitle-pill">About Our Clinic</span>
         <h2 class="section-title">Your Trusted Partner For Total Oral Health</h2>
         <p class="section-desc">
-          At <strong>Anupam Dental Clinic</strong>, we provide complete family dental care under one roof. Dr. Anoop and our specialist team are dedicated to delivering precision dentistry with maximum comfort and zero pain.
+          <strong>Anupam Dental Clinic</strong>, led by <strong>Dr. Anoop</strong>, has been caring for patients since <strong>19th August 1996</strong>. For nearly three decades, we have remained committed to ethical dentistry, clear communication, and compassionate care.
         </p>
 
-        <div class="about-features">
+        <!-- <div class="about-features">
           <div class="feature-card">
             <div class="feature-icon"><i class="fas fa-microscope"></i></div>
             <h4 class="feature-title">Microscopic RCT</h4>
@@ -211,7 +211,8 @@
             <h4 class="feature-title">Transparent Pricing</h4>
             <p style="font-size: 0.85rem; color: var(--slate-body);">Affordable treatment plans with easy zero-interest EMI options.</p>
           </div>
-        </div>
+        </div> -->
+        
       </div>
     </div>
   </section>
@@ -240,25 +241,33 @@
       {% for s in services %}
       <div class="service-card" data-category="{{ s.category }}">
         <span class="service-badge">{{ s.badge_tag|default:"Featured" }}</span>
+
         <div class="service-icon-box">
-          {% if s.category == 'cosmetic' %}<i class="fas fa-sparkles"></i>
+          {% if s.image %}
+            <img src="{{ s.image.url }}" alt="{{ s.title }}" style="width: 30px; height: 30px; object-fit: contain;">
+          {% elif s.icon_name and s.icon_name != 'tooth' %}
+            <i class="fas fa-{{ s.icon_name }}"></i>
+          {% elif s.category == 'cosmetic' %}<i class="fas fa-sparkles"></i>
           {% elif s.category == 'rootcanal' %}<i class="fas fa-tooth"></i>
           {% elif s.category == 'implant' %}<i class="fas fa-shield-virus"></i>
           {% elif s.category == 'ortho' %}<i class="fas fa-smile"></i>
           {% elif s.category == 'pediatric' %}<i class="fas fa-child"></i>
           {% else %}<i class="fas fa-pump-soap"></i>{% endif %}
         </div>
+
         <h3 class="service-card-title">{{ s.title }}</h3>
         <p class="service-card-desc">{{ s.short_description }}</p>
 
-        <div class="service-meta">
-          <span><i class="far fa-clock"></i> {{ s.duration }}</span>
-          <!-- <span style="color: var(--primary); font-weight: 700;">{{ s.price_estimate }}</span> -->
+        <div class="service-meta" style="display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+          <span><i class="far fa-clock"></i> {{ s.duration|default:"30-45 Mins" }}</span>
+          {% if s.price_estimate %}
+            <span style="color: var(--primary); font-weight: 700;">{{ s.price_estimate }}</span>
+          {% endif %}
         </div>
 
-        <!-- <button class="btn-outline open-appointment-modal" data-service="{{ s.title }}" style="width: 100%; margin-top: 16px; justify-content: center;">
-          Book {{ s.title }}
-        </button> -->
+        <button class="btn-outline open-appointment-modal" data-service="{{ s.title }}" style="width: 100%; margin-top: 16px; justify-content: center;">
+          <i class="far fa-calendar-check" style="margin-right: 6px;"></i> Book {{ s.title }}
+        </button>
       </div>
       {% endfor %}
     </div>
@@ -393,11 +402,28 @@
       {% for t in testimonials %}
       <div class="testimonial-card">
         <div class="stars">
-          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          {% for i in "12345" %}
+            {% if forloop.counter <= t.rating|default:5 %}
+              <i class="fas fa-star"></i>
+            {% else %}
+              <i class="far fa-star" style="color: #cbd5e1;"></i>
+            {% endif %}
+          {% endfor %}
         </div>
         <p class="review-text">"{{ t.review_text }}"</p>
-        <div class="patient-name">{{ t.patient_name }}</div>
-        <div class="patient-treatment">Treatment: {{ t.treatment }}</div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px;">
+          {% if t.photo %}
+            <img src="{{ t.photo.url }}" alt="{{ t.patient_name }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-light); flex-shrink: 0;">
+          {% else %}
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; flex-shrink: 0;">
+              {{ t.patient_name|slice:":1"|upper }}
+            </div>
+          {% endif %}
+          <div>
+            <div class="patient-name">{{ t.patient_name }}</div>
+            <div class="patient-treatment">Treatment: {{ t.treatment }}</div>
+          </div>
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -539,14 +565,9 @@
             <label class="form-label" for="service_name">Treatment / Service *</label>
             <select class="form-select" id="service_name" name="service_name" required>
               <option value="General Consultation">General Consultation</option>
-              <option value="Single-Visit Root Canal (RCT)">Single-Visit Root Canal (RCT)</option>
-              <option value="Laser Teeth Whitening">Laser Teeth Whitening</option>
-              <option value="Dental Implants & Fixed Teeth">Dental Implants & Fixed Teeth</option>
-              <option value="Invisible Clear Aligners">Invisible Clear Aligners</option>
-              <option value="Smile Makeover & Veneers">Smile Makeover & Veneers</option>
-              <option value="Pediatric & Kids Dental Care">Pediatric & Kids Dental Care</option>
-              <option value="Painless Tooth Extraction">Painless Tooth Extraction</option>
-              <option value="Scaling & Deep Teeth Cleaning">Scaling & Deep Teeth Cleaning</option>
+              {% for s in services %}
+                <option value="{{ s.title }}">{{ s.title }}</option>
+              {% endfor %}
             </select>
           </div>
         </div>

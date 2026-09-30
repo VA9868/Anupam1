@@ -39,13 +39,26 @@ class Service(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='general')
     icon_name = models.CharField(max_length=50, default='tooth', help_text="FontAwesome icon class name")
+    image = models.ImageField(upload_to='services/', blank=True, null=True, help_text="Service photo or banner image")
     short_description = models.CharField(max_length=300)
-    detailed_description = models.TextField()
+    detailed_description = models.TextField(blank=True, default="")
     duration = models.CharField(max_length=100, default="30-45 Mins")
     price_estimate = models.CharField(max_length=100, default="Affordable Care")
     badge_tag = models.CharField(max_length=50, blank=True, default="Popular")
     is_featured = models.BooleanField(default=True)
     
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            base_slug = slugify(self.title) or 'service'
+            slug = base_slug
+            count = 1
+            while Service.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{count}"
+                count += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
 
@@ -74,6 +87,7 @@ class Appointment(models.Model):
     preferred_date = models.DateField()
     preferred_time = models.CharField(max_length=50, blank=True, null=True, default="Morning (09:30 AM - 12:00 PM)")
     notes = models.TextField(blank=True, null=True, help_text="Comments / Notes")
+    chart_data = models.TextField(blank=True, null=True, default="{}", help_text="JSON teeth chart data")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -91,6 +105,7 @@ class Testimonial(models.Model):
     rating = models.IntegerField(default=5)
     review_text = models.TextField()
     treatment = models.CharField(max_length=150, default="General Dentistry")
+    photo = models.ImageField(upload_to='testimonials/', blank=True, null=True, help_text="Patient photo or smile image")
     created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):

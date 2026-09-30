@@ -8,9 +8,9 @@ from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, D
 import datetime
 
 def home_view(request):
-    services = Service.objects.filter(is_featured=True)
+    services = Service.objects.filter(is_featured=True).order_by('-id')
     doctors = Doctor.objects.all().order_by('-is_chief')
-    testimonials = Testimonial.objects.all().order_by('-created_at')[:6]
+    testimonials = Testimonial.objects.all().order_by('-id')[:12]
 
     # Fallback initial dataset if database is empty yet
     if not doctors.exists():
@@ -54,14 +54,12 @@ def home_view(request):
         services = [
             {
                 'id': 1,
-                'title': 'Laser Teeth Whitening',
+                'title': 'General Dentistry',
                 'slug': 'teeth-whitening',
                 'category': 'cosmetic',
                 'icon_name': 'sparkles',
-                'short_description': 'Get a sparkling white smile up to 8 shades lighter in just 45 minutes using advanced laser technology.',
+                'short_description': 'Led by Dr. Anoopkumar Ravindranath, our general dentistry services focus on prevention, accurate diagnosis, and long-term oral health. From routine dental check-ups to essential treatments, every step is guided by clarity and ethical care.',
                 'detailed_description': 'Safe, effective, and painless cosmetic whitening procedure designed to lift stubborn stains caused by coffee, smoking, and aging.',
-                'duration': '45 Mins',
-                'price_estimate': '₹2,999 onwards',
                 'badge_tag': 'Most Popular'
             },
             {
@@ -306,14 +304,87 @@ def dashboard_patient_view(request):
 
     latest_appointment = appointments.first() if appointments.exists() else None
 
+    # Calculate time-of-day greeting (Good Morning, Good Afternoon, Good Evening, Good Night)
+    now = datetime.datetime.now()
+    current_hour = now.hour
+    if 5 <= current_hour < 12:
+        greeting = "Good Morning"
+        greeting_period = "morning"
+        greeting_icon = "fas fa-sun"
+        greeting_subtext = "Start your day with a confident, healthy smile! Check your upcoming visits and records below."
+    elif 12 <= current_hour < 17:
+        greeting = "Good Afternoon"
+        greeting_period = "afternoon"
+        greeting_icon = "fas fa-sun"
+        greeting_subtext = "Hope your day is treating you well! Stay hydrated and keep your dental hygiene on track."
+    elif 17 <= current_hour < 21:
+        greeting = "Good Evening"
+        greeting_period = "evening"
+        greeting_icon = "fas fa-cloud-moon"
+        greeting_subtext = "Winding down your day? Easily manage your family's oral wellness and consultation history."
+    else:
+        greeting = "Good Night"
+        greeting_period = "night"
+        greeting_icon = "fas fa-moon"
+        greeting_subtext = "Wishing you a peaceful night! Don't forget your nightly 2-minute brushing routine."
+
+    testimonials = Testimonial.objects.all().order_by('-id')
+    services = Service.objects.all().order_by('title')
+
     context = {
         'appointments': appointments,
         'latest_appointment': latest_appointment,
+        'testimonials': testimonials,
+        'services': services,
         'user': request.user,
         'patient_name': display_name,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
+        'greeting': greeting,
+        'greeting_period': greeting_period,
+        'greeting_icon': greeting_icon,
+        'greeting_subtext': greeting_subtext,
     }
     return render(request, 'Dental/dashboardpatient.html', context)
+
+
+def upload_testimonial_view(request):
+    if request.method == 'POST':
+        patient_name = request.POST.get('patient_name', '').strip()
+        if not patient_name and request.user.is_authenticated:
+            patient_name = request.user.first_name or request.user.username
+        if not patient_name and 'patient_name' in request.session:
+            patient_name = request.session['patient_name']
+        if not patient_name:
+            patient_name = 'Satisfied Patient'
+
+        try:
+            rating = int(request.POST.get('rating', 5))
+            if rating < 1 or rating > 5:
+                rating = 5
+        except (ValueError, TypeError):
+            rating = 5
+
+        treatment = request.POST.get('treatment', '').strip() or 'General Dental Care'
+        review_text = request.POST.get('review_text', '').strip()
+        photo = request.FILES.get('photo')
+
+        if review_text:
+            testimonial = Testimonial(
+                patient_name=patient_name,
+                rating=rating,
+                treatment=treatment,
+                review_text=review_text
+            )
+            if photo:
+                testimonial.photo = photo
+            testimonial.save()
+            messages.success(request, "Thank you! Your testimonial has been uploaded and published successfully.")
+        else:
+            messages.error(request, "Please enter your review text before submitting.")
+
+        return redirect('dashboard_patient')
+
+    return redirect('dashboard_patient')
 
 
 def dashboard_view(request):
@@ -336,6 +407,7 @@ def dashboard_view(request):
     appointments = Appointment.objects.all().order_by('-created_at')
     doctors = Doctor.objects.all().order_by('-is_chief')
     invoices = Invoice.objects.all().order_by('-created_at')
+    services = Service.objects.all().order_by('-id')
 
     context = {
         'total_jobs': total_jobs,
@@ -346,6 +418,7 @@ def dashboard_view(request):
         'cases': cases,
         'appointments': appointments,
         'doctors': doctors,
+        'services': services,
         'invoices': invoices,
         'user': request.user,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
@@ -605,6 +678,94 @@ def delete_doctor_view(request, doctor_id):
     return redirect('dashboard')
 
 
+def add_service_view(request):
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        category = request.POST.get('category', 'general').strip()
+        icon_name = request.POST.get('icon_name', 'tooth').strip()
+        short_description = request.POST.get('short_description', '').strip()
+        detailed_description = request.POST.get('detailed_description', '').strip()
+        duration = request.POST.get('duration', '30-45 Mins').strip()
+        price_estimate = request.POST.get('price_estimate', 'Affordable Care').strip()
+        badge_tag = request.POST.get('badge_tag', 'Popular').strip()
+        is_featured = request.POST.get('is_featured') in ['on', 'true', '1', True]
+        image = request.FILES.get('image')
+
+        if not title:
+            messages.error(request, "Service title is required.")
+            return redirect('dashboard')
+
+        try:
+            service = Service.objects.create(
+                title=title,
+                category=category,
+                icon_name=icon_name or 'tooth',
+                short_description=short_description or f"Quality {title} procedures at Anupam Dental Clinic.",
+                detailed_description=detailed_description or short_description,
+                duration=duration or '30-45 Mins',
+                price_estimate=price_estimate or 'Affordable Care',
+                badge_tag=badge_tag or 'Featured',
+                is_featured=is_featured,
+                image=image
+            )
+            messages.success(request, f"Service '{service.title}' uploaded and added to the services-grid successfully!")
+        except Exception as e:
+            messages.error(request, f"Error uploading service: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def edit_service_view(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        category = request.POST.get('category', '').strip()
+        icon_name = request.POST.get('icon_name', '').strip()
+        short_description = request.POST.get('short_description', '').strip()
+        detailed_description = request.POST.get('detailed_description', '').strip()
+        duration = request.POST.get('duration', '').strip()
+        price_estimate = request.POST.get('price_estimate', '').strip()
+        badge_tag = request.POST.get('badge_tag', '').strip()
+        is_featured = request.POST.get('is_featured') in ['on', 'true', '1', True]
+
+        if title:
+            service.title = title
+        if category:
+            service.category = category
+        if icon_name:
+            service.icon_name = icon_name
+        if short_description:
+            service.short_description = short_description
+        if detailed_description is not None:
+            service.detailed_description = detailed_description
+        if duration:
+            service.duration = duration
+        if price_estimate:
+            service.price_estimate = price_estimate
+        service.badge_tag = badge_tag
+        service.is_featured = is_featured
+
+        if 'image' in request.FILES and request.FILES['image']:
+            service.image = request.FILES['image']
+
+        try:
+            service.save()
+            messages.success(request, f"Service '{service.title}' updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Error updating service: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def delete_service_view(request, service_id):
+    if request.method == 'POST':
+        service = get_object_or_404(Service, id=service_id)
+        name = service.title
+        service.delete()
+        messages.info(request, f"Service '{name}' has been deleted from services-grid.")
+    return redirect('dashboard')
+
+
 def new_invoice_view(request):
     if request.method == 'POST':
         patient_name = request.POST.get('patient_name', '').strip()
@@ -617,7 +778,7 @@ def new_invoice_view(request):
         invoice_id = f"INV-{datetime.date.today().year}-{inv_count:03d}"
 
         try:
-            Invoice.objects.create(
+            inv = Invoice.objects.create(
                 invoice_id=invoice_id,
                 patient_name=patient_name or 'Patient',
                 treatment=treatment,
@@ -625,11 +786,52 @@ def new_invoice_view(request):
                 payment_status=payment_status,
                 payment_mode=payment_mode
             )
-            messages.success(request, f"Invoice {invoice_id} for ₹{amount} recorded successfully!")
+            success_msg = f"Invoice {invoice_id} for ₹{amount} recorded successfully!"
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('is_ajax') == '1':
+                return JsonResponse({
+                    'status': 'success',
+                    'message': success_msg,
+                    'invoice': {
+                        'id': inv.id,
+                        'invoice_id': inv.invoice_id,
+                        'patient_name': inv.patient_name,
+                        'treatment': inv.treatment,
+                        'amount': float(inv.amount),
+                        'payment_status': inv.payment_status,
+                        'payment_mode': inv.payment_mode,
+                        'created_at': inv.created_at.strftime('%b %d, %Y')
+                    }
+                })
+            messages.success(request, success_msg)
         except Exception as e:
-            messages.error(request, f"Error creating invoice: {str(e)}")
+            err_msg = f"Error creating invoice: {str(e)}"
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('is_ajax') == '1':
+                return JsonResponse({'status': 'error', 'message': err_msg}, status=500)
+            messages.error(request, err_msg)
 
     return redirect('dashboard')
+
+
+def save_patient_chart_view(request, appointment_id):
+    if request.method == 'POST':
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        chart_data = request.POST.get('chart_data', '')
+        if not chart_data:
+            import json
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+                chart_data = payload.get('chart_data', '')
+            except Exception:
+                pass
+        
+        appointment.chart_data = chart_data or "{}"
+        appointment.save()
+        return JsonResponse({
+            'status': 'success',
+            'message': f"Teeth chart for {appointment.patient_name or 'Patient'} saved successfully!",
+            'chart_data': appointment.chart_data
+        })
+    return JsonResponse({'status': 'error', 'message': 'Invalid HTTP method.'}, status=400)
 
 
 def update_case_status_view(request, case_id):

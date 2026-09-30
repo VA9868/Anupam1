@@ -14,984 +14,8 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <style>
-    :root {
-      --primary-blue: #2563eb;
-      --primary-blue-hover: #1d4ed8;
-      --primary-blue-light: #eff6ff;
-      --bg-canvas: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --text-light: #94a3b8;
-      --border-color: #f1f5f9;
-      --border-darker: #e2e8f0;
-      
-      --sidebar-width: 250px;
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --radius-pill: 9999px;
-
-      --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
-      --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-      --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-canvas);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      overflow-x: hidden;
-    }
-
-    /* SIDEBAR */
-    .sidebar {
-      width: var(--sidebar-width);
-      background: #ffffff;
-      border-right: 1px solid var(--border-darker);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      z-index: 50;
-      padding: 24px 16px;
-      overflow-y: auto;
-    }
-
-    .clinic-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      padding: 0 8px 24px 8px;
-      border-bottom: 1px solid var(--border-color);
-      margin-bottom: 20px;
-    }
-
-    .brand-logo-img {
-      width: 44px;
-      height: 44px;
-      object-fit: contain;
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .brand-name {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--primary-blue);
-      line-height: 1.2;
-    }
-
-    .brand-tagline {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .nav-menu {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex-grow: 1;
-    }
-
-    .nav-item {
-      width: 100%;
-    }
-
-    .nav-link {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 16px;
-      border-radius: var(--radius-md);
-      color: #475569;
-      text-decoration: none;
-      font-size: 0.925rem;
-      font-weight: 500;
-      transition: all 0.18s ease;
-      cursor: pointer;
-    }
-
-    .nav-link i {
-      font-size: 1.05rem;
-      width: 22px;
-      text-align: center;
-      color: #64748b;
-      transition: color 0.18s ease;
-    }
-
-    .nav-link:hover {
-      background: #f1f5f9;
-      color: var(--text-main);
-    }
-
-    .nav-link:hover i {
-      color: var(--primary-blue);
-    }
-
-    .nav-link.active {
-      background: var(--primary-blue);
-      color: #ffffff !important;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
-    }
-
-    .nav-link.active i {
-      color: #ffffff !important;
-    }
-
-    .sidebar-footer {
-      padding-top: 16px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .sidebar-footer a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: var(--radius-sm);
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      transition: all 0.15s ease;
-    }
-
-    .sidebar-footer a:hover {
-      background: #f1f5f9;
-      color: var(--primary-blue);
-    }
-
-    .sidebar-footer a.logout-btn:hover {
-      background: #fef2f2;
-      color: #ef4444;
-    }
-
-    /* MAIN CONTENT */
-    .main-wrapper {
-      margin-left: var(--sidebar-width);
-      flex: 1;
-      padding: 24px 36px 48px 36px;
-      min-width: 0;
-    }
-
-    .top-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 28px;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .header-titles h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.65rem;
-      font-weight: 700;
-      color: var(--text-main);
-      letter-spacing: -0.01em;
-    }
-
-    .header-titles p {
-      font-size: 0.85rem;
-      color: var(--text-light);
-      margin-top: 2px;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .search-box {
-      position: relative;
-      display: flex;
-      align-items: center;
-      width: 290px;
-    }
-
-    .search-box i {
-      position: absolute;
-      left: 16px;
-      color: #94a3b8;
-      font-size: 0.9rem;
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 10px 16px 10px 42px;
-      border-radius: var(--radius-pill);
-      border: 1px solid #e2e8f0;
-      background: #ffffff;
-      font-size: 0.875rem;
-      color: var(--text-main);
-      transition: all 0.2s ease;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary-blue);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    .notification-btn {
-      position: relative;
-      width: 40px;
-      height: 40px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #64748b;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .notification-btn:hover {
-      background: #f8fafc;
-      color: var(--primary-blue);
-    }
-
-    .notification-dot {
-      position: absolute;
-      top: 9px;
-      right: 10px;
-      width: 8px;
-      height: 8px;
-      background-color: #ef4444;
-      border-radius: 50%;
-      border: 2px solid #ffffff;
-    }
-
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      padding: 6px 14px 6px 6px;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      position: relative;
-      user-select: none;
-      transition: all 0.15s ease;
-    }
-
-    .user-pill:hover {
-      background: #f8fafc;
-    }
-
-    .user-avatar-circle {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: #f1f5f9;
-      color: #334155;
-      font-weight: 700;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .user-pill-name {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #1e293b;
-    }
-
-    .date-btn {
-      width: 40px;
-      height: 40px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary-blue);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-size: 0.95rem;
-    }
-
-    .date-btn:hover {
-      background: var(--primary-blue-light);
-      border-color: #93c5fd;
-    }
-
-    .profile-dropdown {
-      position: absolute;
-      top: 50px;
-      right: 0;
-      background: #ffffff;
-      border: 1px solid var(--border-darker);
-      border-radius: var(--radius-md);
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-      width: 200px;
-      display: none;
-      flex-direction: column;
-      z-index: 100;
-      overflow: hidden;
-    }
-
-    .profile-dropdown.show {
-      display: flex;
-    }
-
-    .dropdown-item {
-      padding: 10px 16px;
-      font-size: 0.85rem;
-      color: #334155;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: background 0.15s;
-    }
-
-    .dropdown-item:hover {
-      background: #f1f5f9;
-      color: var(--primary-blue);
-    }
-
-    /* 5 METRICS ROW */
-    .metrics-row {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 18px;
-      margin-bottom: 28px;
-    }
-
-    @media (max-width: 1200px) {
-      .metrics-row {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .metrics-row {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .metric-card {
-      background: #ffffff;
-      border-radius: var(--radius-lg);
-      padding: 22px 20px;
-      border: 1px solid #f1f5f9;
-      box-shadow: var(--shadow-card);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .metric-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .metric-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .metric-label {
-      font-size: 0.825rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .metric-value {
-      font-size: 1.65rem;
-      font-weight: 700;
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-      line-height: 1.1;
-    }
-
-    .metric-value.revenue-val {
-      display: flex;
-      align-items: baseline;
-      gap: 2px;
-    }
-
-    .currency-symbol {
-      font-size: 1.45rem;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .metric-icon-wrap {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .icon-total-jobs { background: #eef2ff; color: #3b82f6; }
-    .icon-in-progress { background: #fef3c7; color: #f59e0b; }
-    .icon-completed { background: #d1fae5; color: #10b981; }
-    .icon-overdue { background: #fee2e2; color: #ef4444; }
-    .icon-revenue { background: #f3e8ff; color: #a855f7; font-weight: 700; }
-
-    /* DASHBOARD GRID */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 24px;
-      align-items: start;
-    }
-
-    .dashboard-grid:not(:has(.quick-actions-panel)) {
-      grid-template-columns: 1fr;
-    }
-
-    .dashboard-grid > .dash-panel:only-child {
-      grid-column: 1 / -1;
-    }
-
-    @media (max-width: 1080px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .dash-panel {
-      background: #ffffff;
-      border-radius: var(--radius-lg);
-      border: 1px solid #f1f5f9;
-      box-shadow: var(--shadow-card);
-      overflow: hidden;
-    }
-
-    .panel-header {
-      padding: 22px 24px 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .panel-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-    }
-
-    .view-all-link {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--primary-blue);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .view-all-link:hover {
-      text-decoration: underline;
-    }
-
-    .filter-pills {
-      display: flex;
-      gap: 8px;
-      padding: 0 24px 16px 24px;
-      border-bottom: 1px solid #f8fafc;
-      overflow-x: auto;
-    }
-
-    .filter-btn {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      padding: 5px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 0.775rem;
-      font-weight: 600;
-      color: #64748b;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-
-    .filter-btn:hover {
-      background: #f1f5f9;
-      color: var(--text-main);
-    }
-
-    .filter-btn.active {
-      background: var(--primary-blue);
-      color: #ffffff;
-      border-color: var(--primary-blue);
-    }
-
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    .cases-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    .cases-table th {
-      padding: 12px 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-light);
-      background: #fafbfc;
-      border-top: 1px solid #f1f5f9;
-      border-bottom: 1px solid #f1f5f9;
-      text-transform: capitalize;
-    }
-
-    .cases-table td {
-      padding: 14px 20px;
-      font-size: 0.875rem;
-      border-bottom: 1px solid #f8fafc;
-      vertical-align: middle;
-      color: #334155;
-    }
-
-    .cases-table tbody tr:hover {
-      background: #f8fafc;
-    }
-
-    .case-id-badge {
-      font-weight: 600;
-      color: #1e293b;
-      font-size: 0.85rem;
-    }
-
-    .patient-cell strong {
-      display: block;
-      color: #0f172a;
-    }
-
-    .patient-cell span {
-      font-size: 0.75rem;
-      color: #94a3b8;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 0.775rem;
-      font-weight: 600;
-    }
-
-    .badge-in_progress { background: #fef3c7; color: #b45309; }
-    .badge-completed { background: #d1fae5; color: #047857; }
-    .badge-overdue { background: #fee2e2; color: #b91c1c; }
-    .badge-pending { background: #e0f2fe; color: #0369a1; }
-
-    .table-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-action-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      background: #ffffff;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.75rem;
-      transition: all 0.15s;
-    }
-
-    .btn-action-icon:hover {
-      background: #eff6ff;
-      color: var(--primary-blue);
-      border-color: #93c5fd;
-    }
-
-    .btn-action-icon.btn-delete:hover {
-      background: #fef2f2;
-      color: #ef4444;
-      border-color: #fca5a5;
-    }
-
-    .empty-row-td {
-      text-align: center;
-      padding: 36px 20px;
-      color: var(--text-light);
-    }
-
-    /* QUICK ACTIONS */
-    .quick-actions-panel {
-      padding: 22px 20px 24px 20px;
-    }
-
-    .quick-actions-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-      margin-bottom: 20px;
-    }
-
-    .quick-actions-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .quick-action-tile {
-      background: #ffffff;
-      border: 1px solid #f1f5f9;
-      border-radius: var(--radius-md);
-      padding: 24px 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-
-    .quick-action-tile:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 16px -2px rgba(0,0,0,0.06);
-      border-color: #e2e8f0;
-    }
-
-    .action-icon-box {
-      width: 46px;
-      height: 46px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .action-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #334155;
-      text-align: center;
-    }
-
-    .qa-new-case .action-icon-box { background: #eff6ff; color: #2563eb; }
-    .qa-add-patient .action-icon-box { background: #ecfdf5; color: #10b981; }
-    .qa-add-doctor .action-icon-box { background: #f5f3ff; color: #8b5cf6; }
-    .qa-new-invoice .action-icon-box { background: #fffbeb; color: #f59e0b; }
-
-    /* MODALS */
-    .modal-backdrop {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.45);
-      backdrop-filter: blur(4px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 16px;
-    }
-
-    .modal-backdrop.active { display: flex; }
-
-    .modal-card {
-      background: #ffffff;
-      width: 100%;
-      max-width: 520px;
-      border-radius: var(--radius-lg);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border-darker);
-      overflow: hidden;
-      animation: modalFadeIn 0.2s ease-out;
-    }
-
-    @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .modal-header {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .modal-header h3 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-    }
-
-    .modal-close-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      font-size: 1.25rem;
-      cursor: pointer;
-      padding: 4px;
-      transition: color 0.15s;
-    }
-
-    .modal-close-btn:hover { color: #0f172a; }
-    .modal-body { padding: 24px; max-height: 80vh; overflow-y: auto; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 0.825rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
-    .form-control {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      background: #f8fafc;
-      transition: all 0.2s ease;
-    }
-    .form-control:focus {
-      outline: none;
-      border-color: var(--primary-blue);
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-footer {
-      padding: 16px 24px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      background: #fafbfc;
-    }
-    .btn-secondary {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      color: #475569;
-      padding: 9px 18px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-secondary:hover { background: #f1f5f9; }
-    .btn-primary-submit {
-      background: var(--primary-blue);
-      border: none;
-      color: #ffffff;
-      padding: 9px 20px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-    }
-    .btn-primary-submit:hover { background: var(--primary-blue-hover); }
-
-    .django-alert {
-      padding: 12px 18px;
-      border-radius: var(--radius-md);
-      font-size: 0.875rem;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .django-alert.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .django-alert.info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-    .django-alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
-    @media (max-width: 900px) {
-      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
-      .sidebar.open { transform: translateX(0); }
-      .main-wrapper { margin-left: 0; padding: 20px; }
-      .mobile-menu-btn { display: block !important; }
-    }
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      color: #334155;
-    }
-
-    /* CLINIC CALENDAR MODAL STYLES */
-    .cal-header-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-color);
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .cal-month-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .cal-btn {
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-main);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .cal-btn:hover {
-      background: #eff6ff;
-      border-color: #93c5fd;
-      color: var(--primary-blue);
-    }
-    .cal-weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.775rem;
-      color: #64748b;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .cal-days-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      margin-bottom: 18px;
-    }
-    .cal-day-cell {
-      min-height: 58px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 6px 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      position: relative;
-    }
-    .cal-day-cell:hover {
-      background: #f8fafc;
-      border-color: #93c5fd;
-    }
-    .cal-day-cell.other-month {
-      opacity: 0.35;
-      background: #fbfcfd;
-    }
-    .cal-day-cell.today {
-      border: 2px solid var(--primary-blue);
-      background: #eff6ff;
-    }
-    .cal-day-cell.selected {
-      border-color: #1d4ed8;
-      background: #dbeafe;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
-    }
-    .cal-day-cell.tuesday {
-      background: #fffbeb;
-    }
-    .cal-day-num {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #1e293b;
-    }
-    .cal-day-cell.today .cal-day-num {
-      color: var(--primary-blue);
-    }
-    .cal-appt-dot {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #047857;
-      background: #d1fae5;
-      padding: 1px 5px;
-      border-radius: 4px;
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cal-appt-list {
-      max-height: 220px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .cal-appt-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      transition: all 0.15s ease;
-    }
-    .cal-appt-card:hover {
-      border-color: #cbd5e1;
-      background: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    }
-  </style>
+  <!-- Dashboard Stylesheet (with auto cache-buster) -->
+  <link rel="stylesheet" href="{% static 'Dental/css/dashboard.css' %}?v={% now 'U' %}">
 </head>
 <body>
 
@@ -1028,6 +52,12 @@
         <a href="#doctors" class="nav-link" data-section="doctors" onclick="switchTab('doctors', event)">
           <i class="fas fa-user-md"></i>
           <span>Doctors</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#services" class="nav-link" data-section="services" onclick="switchTab('services', event)">
+          <i class="fas fa-hand-holding-medical"></i>
+          <span>Services</span>
         </a>
       </li>
       <li class="nav-item">
@@ -1244,8 +274,12 @@
                     <tr class="case-row" data-status="{{ c.status }}" data-search="{{ c.case_id }} {{ c.patient_name }} {{ c.doctor_name }} {{ c.case_type }}">
                       <td><span class="case-id-badge">{{ c.case_id }}</span></td>
                       <td class="patient-cell">
-                        <strong>{{ c.patient_name }}</strong>
-                        {% if c.notes %}<span>{{ c.notes|truncatewords:4 }}</span>{% endif %}
+                        <a href="javascript:void(0)" class="patient-link-btn" title="Open Teeth Chart &amp; Payment"
+                           onclick="openClinicalHubByName('{{ c.patient_name|escapejs }}', 'chart')">
+                          <i class="fas fa-tooth" style="color: #2563eb; font-size: 0.8rem;"></i>
+                          <span>{{ c.patient_name }}</span>
+                        </a>
+                        {% if c.notes %}<span style="display: block; font-size: 0.75rem; color: #94a3b8;">{{ c.notes|truncatewords:4 }}</span>{% endif %}
                       </td>
                       <td>{{ c.doctor_name }}</td>
                       <td><span style="font-weight: 500; color: #475569;">{{ c.case_type }}</span></td>
@@ -1265,7 +299,17 @@
                       <td style="font-weight: 500; color: #334155;">{{ c.due_date|date:"M d, Y" }}</td>
                       <td>
                         <div class="table-actions" style="justify-content: flex-end;">
-                          <button type="button" class="btn-action-icon" title="View Case Details" onclick="openCaseDetails('{{ c.id }}', '{{ c.case_id }}', '{{ c.patient_name|escapejs }}', '{{ c.doctor_name|escapejs }}', '{{ c.case_type|escapejs }}', '{{ c.status }}', '{{ c.due_date|date:"Y-m-d" }}', '{{ c.amount }}', '{{ c.notes|escapejs }}')">
+                          <button type="button" class="btn-action-icon" title="View Case Details"
+                            data-id="{{ c.id }}"
+                            data-case-id="{{ c.case_id }}"
+                            data-patient="{{ c.patient_name }}"
+                            data-doctor="{{ c.doctor_name }}"
+                            data-type="{{ c.case_type }}"
+                            data-status="{{ c.status }}"
+                            data-due="{{ c.due_date|date:'Y-m-d' }}"
+                            data-amount="{{ c.amount }}"
+                            data-notes="{{ c.notes|default:'' }}"
+                            onclick="openCaseDetailsFromBtn(this)">
                             <i class="fas fa-eye"></i>
                           </button>
                           <form action="{% url 'delete_case' c.id %}" method="POST" style="display: inline;" onsubmit="return confirm('Archive Case {{ c.case_id }}?');">
@@ -1347,19 +391,59 @@
                 <th>Booking ID</th>
                 <th>Patient</th>
                 <th>Phone</th>
-                <th>Date & Slot</th>
+                <th>Date &amp; Slot</th>
                 <th>Service / Treatment</th>
                 <th>Doctor</th>
                 <th>Status</th>
+                <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for a in appointments %}
                 <tr>
                   <td><strong>{{ a.formatted_id }}</strong></td>
-                  <td>
-                    <strong>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name }}{% endif %}</strong>
-                    {% if a.age %}<br><span style="font-size: 0.75rem; color: #94a3b8;">Age: {{ a.age }} | {{ a.gender }}</span>{% endif %}
+                  <td class="patient-interactive-cell">
+                    <a href="javascript:void(0)" class="patient-link-btn" title="Click to open Teeth Chart &amp; Payment"
+                       data-id="{{ a.id }}"
+                       data-code="{{ a.formatted_id }}"
+                       data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                       data-phone="{{ a.phone|default:'' }}"
+                       data-age="{{ a.age|default:'' }}"
+                       data-gender="{{ a.gender|default:'' }}"
+                       data-service="{{ a.service_name|default:'General Consultation' }}"
+                       data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                       onclick="openClinicalHubFromBtn(this, 'chart')">
+                      <i class="fas fa-tooth" style="color: #2563eb; font-size: 0.85rem;"></i>
+                      <span>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}</span>
+                      <i class="fas fa-external-link-alt patient-link-icon"></i>
+                    </a>
+                    {% if a.age %}<span style="font-size: 0.75rem; color: #94a3b8;">Age: {{ a.age }} | {{ a.gender|default:"-" }}</span>{% endif %}
+                    <div class="patient-quick-pills">
+                      <button type="button" class="btn-quick-pill btn-pill-chart" title="Open Teeth Chart"
+                         data-id="{{ a.id }}"
+                         data-code="{{ a.formatted_id }}"
+                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                         data-phone="{{ a.phone|default:'' }}"
+                         data-age="{{ a.age|default:'' }}"
+                         data-gender="{{ a.gender|default:'' }}"
+                         data-service="{{ a.service_name|default:'General Consultation' }}"
+                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                         onclick="openClinicalHubFromBtn(this, 'chart')">
+                        <i class="fas fa-tooth"></i> Teeth Chart
+                      </button>
+                      <button type="button" class="btn-quick-pill btn-pill-pay" title="Open Billing &amp; Payment"
+                         data-id="{{ a.id }}"
+                         data-code="{{ a.formatted_id }}"
+                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                         data-phone="{{ a.phone|default:'' }}"
+                         data-age="{{ a.age|default:'' }}"
+                         data-gender="{{ a.gender|default:'' }}"
+                         data-service="{{ a.service_name|default:'General Consultation' }}"
+                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                         onclick="openClinicalHubFromBtn(this, 'payment')">
+                        <i class="fas fa-receipt"></i> Payment
+                      </button>
+                    </div>
                   </td>
                   <td>{{ a.phone }}</td>
                   <td>{{ a.preferred_date }}<br><span style="font-size: 0.75rem; color: #64748b;">{{ a.preferred_time }}</span></td>
@@ -1370,9 +454,42 @@
                       {{ a.get_status_display }}
                     </span>
                   </td>
+                  <td>
+                    <div class="table-actions" style="justify-content: flex-end; gap: 6px;">
+                      <button type="button" class="btn-action-icon" title="Open Teeth Chart"
+                        style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;"
+                        data-id="{{ a.id }}"
+                        data-code="{{ a.formatted_id }}"
+                        data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                        data-phone="{{ a.phone|default:'' }}"
+                        data-age="{{ a.age|default:'' }}"
+                        data-gender="{{ a.gender|default:'' }}"
+                        data-service="{{ a.service_name|default:'General Consultation' }}"
+                        data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                        onclick="openClinicalHubFromBtn(this, 'chart')">
+                        <i class="fas fa-tooth"></i>
+                      </button>
+                      <button type="button" class="btn-action-icon" title="Open Billing &amp; Payment"
+                        style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;"
+                        data-id="{{ a.id }}"
+                        data-code="{{ a.formatted_id }}"
+                        data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                        data-phone="{{ a.phone|default:'' }}"
+                        data-age="{{ a.age|default:'' }}"
+                        data-gender="{{ a.gender|default:'' }}"
+                        data-service="{{ a.service_name|default:'General Consultation' }}"
+                        data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                        onclick="openClinicalHubFromBtn(this, 'payment')">
+                        <i class="fas fa-credit-card"></i>
+                      </button>
+                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1" target="_blank" class="btn-action-icon" title="Print Registration Slip">
+                        <i class="fas fa-print"></i>
+                      </a>
+                    </div>
+                  </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="7" class="empty-row-td">No appointments found.</td></tr>
+                <tr><td colspan="8" class="empty-row-td">No appointments found.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -1399,20 +516,92 @@
                 <th>Treatment History</th>
                 <th>Assigned Doctor</th>
                 <th>Registration Date</th>
+                <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for a in appointments %}
                 <tr>
-                  <td><strong>{{ a.patient_name|default:"Patient" }}</strong></td>
+                  <td class="patient-interactive-cell">
+                    <a href="javascript:void(0)" class="patient-link-btn" title="Click to open Teeth Chart &amp; Payment"
+                       data-id="{{ a.id }}"
+                       data-code="{{ a.formatted_id }}"
+                       data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                       data-phone="{{ a.phone|default:'' }}"
+                       data-age="{{ a.age|default:'' }}"
+                       data-gender="{{ a.gender|default:'' }}"
+                       data-service="{{ a.service_name|default:'General Consultation' }}"
+                       data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                       onclick="openClinicalHubFromBtn(this, 'chart')">
+                      <i class="fas fa-tooth" style="color: #2563eb; font-size: 0.85rem;"></i>
+                      <span>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:"Patient" }}{% endif %}</span>
+                      <i class="fas fa-external-link-alt patient-link-icon"></i>
+                    </a>
+                    <div class="patient-quick-pills">
+                      <button type="button" class="btn-quick-pill btn-pill-chart" title="Open Teeth Chart"
+                         data-id="{{ a.id }}"
+                         data-code="{{ a.formatted_id }}"
+                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                         data-phone="{{ a.phone|default:'' }}"
+                         data-age="{{ a.age|default:'' }}"
+                         data-gender="{{ a.gender|default:'' }}"
+                         data-service="{{ a.service_name|default:'General Consultation' }}"
+                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                         onclick="openClinicalHubFromBtn(this, 'chart')">
+                        <i class="fas fa-tooth"></i> Teeth Chart
+                      </button>
+                      <button type="button" class="btn-quick-pill btn-pill-pay" title="Open Billing &amp; Payment"
+                         data-id="{{ a.id }}"
+                         data-code="{{ a.formatted_id }}"
+                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                         data-phone="{{ a.phone|default:'' }}"
+                         data-age="{{ a.age|default:'' }}"
+                         data-gender="{{ a.gender|default:'' }}"
+                         data-service="{{ a.service_name|default:'General Consultation' }}"
+                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                         onclick="openClinicalHubFromBtn(this, 'payment')">
+                        <i class="fas fa-receipt"></i> Payment
+                      </button>
+                    </div>
+                  </td>
                   <td>{{ a.phone }}</td>
                   <td>{{ a.age|default:"-" }} / {{ a.gender|default:"-" }}</td>
-                  <td>{{ a.service_name }}</td>
+                  <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span></td>
                   <td>{{ a.doctor_name }}</td>
                   <td>{{ a.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    <div class="table-actions" style="justify-content: flex-end; gap: 6px;">
+                      <button type="button" class="btn-action-icon" title="Open Teeth Chart"
+                        style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;"
+                        data-id="{{ a.id }}"
+                        data-code="{{ a.formatted_id }}"
+                        data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                        data-phone="{{ a.phone|default:'' }}"
+                        data-age="{{ a.age|default:'' }}"
+                        data-gender="{{ a.gender|default:'' }}"
+                        data-service="{{ a.service_name|default:'General Consultation' }}"
+                        data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                        onclick="openClinicalHubFromBtn(this, 'chart')">
+                        <i class="fas fa-tooth"></i>
+                      </button>
+                      <button type="button" class="btn-action-icon" title="Open Billing &amp; Payment"
+                        style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;"
+                        data-id="{{ a.id }}"
+                        data-code="{{ a.formatted_id }}"
+                        data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                        data-phone="{{ a.phone|default:'' }}"
+                        data-age="{{ a.age|default:'' }}"
+                        data-gender="{{ a.gender|default:'' }}"
+                        data-service="{{ a.service_name|default:'General Consultation' }}"
+                        data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                        onclick="openClinicalHubFromBtn(this, 'payment')">
+                        <i class="fas fa-credit-card"></i>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="6" class="empty-row-td">No patient directory records yet.</td></tr>
+                <tr><td colspan="7" class="empty-row-td">No patient directory records yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -1476,6 +665,141 @@
                   </button>
                 </form>
               </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4.5: CLINICAL SERVICES & SERVICES-GRID MANAGEMENT VIEW -->
+    <div id="section-services" class="content-section" style="display: none;">
+      <div class="dash-panel" style="padding: 24px;">
+        <div class="panel-header" style="padding: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <h2 class="panel-title" style="display: flex; align-items: center; gap: 10px;">
+              <i class="fas fa-hand-holding-medical" style="color: var(--primary-blue);"></i> Clinical Services &amp; Services-Grid
+            </h2>
+            <p style="font-size: 0.825rem; color: #64748b; margin-top: 3px;">
+              Upload new clinical services, custom image banners, pricing &amp; tariffs directly connected to the website's services-grid
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="search-box" style="margin: 0; width: 230px;">
+              <i class="fas fa-search"></i>
+              <input type="text" id="serviceSearchInput" class="search-input" placeholder="Search services..." onkeyup="filterDashboardServices()">
+            </div>
+            <a href="{% url 'home' %}#services" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website Live Services-Grid">
+              <i class="fas fa-external-link-alt"></i> View on Website
+            </a>
+            <button type="button" class="btn-primary-submit" onclick="openModal('addServiceModal')">
+              <i class="fas fa-cloud-upload-alt"></i> Upload New Service
+            </button>
+          </div>
+        </div>
+
+        <!-- SERVICE CATEGORY FILTER PILLS -->
+        <div class="filter-pills" style="margin-bottom: 20px; padding: 0 0 14px 0;">
+          <button type="button" class="filter-btn active svc-cat-btn" data-cat="all" onclick="filterServiceCategory('all', this)">All Services ({{ services.count }})</button>
+          <button type="button" class="filter-btn svc-cat-btn" data-cat="general" onclick="filterServiceCategory('general', this)">General &amp; Preventive</button>
+          <button type="button" class="filter-btn svc-cat-btn" data-cat="cosmetic" onclick="filterServiceCategory('cosmetic', this)">Cosmetic &amp; Whitening</button>
+          <button type="button" class="filter-btn svc-cat-btn" data-cat="implant" onclick="filterServiceCategory('implant', this)">Implants &amp; Surgery</button>
+          <button type="button" class="filter-btn svc-cat-btn" data-cat="ortho" onclick="filterServiceCategory('ortho', this)">Braces &amp; Aligners</button>
+          <button type="button" class="filter-btn svc-cat-btn" data-cat="rootcanal" onclick="filterServiceCategory('rootcanal', this)">Root Canal (RCT)</button>
+          <button type="button" class="filter-btn svc-cat-btn" data-cat="pediatric" onclick="filterServiceCategory('pediatric', this)">Kids Dentistry</button>
+        </div>
+
+        <!-- SERVICES CARDS GRID -->
+        <div id="dashboardServicesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 22px;">
+          {% for s in services %}
+            <div class="dash-service-card" data-category="{{ s.category }}" data-search="{{ s.title|lower }} {{ s.category|lower }} {{ s.short_description|lower }} {{ s.price_estimate|lower }}" style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: all 0.2s ease;">
+              <div>
+                <!-- SERVICE ICON HEADER -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                  <div style="width: 50px; height: 50px; min-width: 50px; border-radius: 14px; background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 2px 6px rgba(37,99,235,0.12); overflow: hidden; border: 1px solid #bfdbfe;">
+                    {% if s.image %}
+                      <img src="{{ s.image.url }}" alt="{{ s.title }}" style="width: 28px; height: 28px; object-fit: contain;">
+                    {% elif s.icon_name and s.icon_name != 'tooth' %}
+                      <i class="fas fa-{{ s.icon_name }}"></i>
+                    {% elif s.category == 'cosmetic' %}<i class="fas fa-sparkles"></i>
+                    {% elif s.category == 'rootcanal' %}<i class="fas fa-tooth"></i>
+                    {% elif s.category == 'implant' %}<i class="fas fa-shield-virus"></i>
+                    {% elif s.category == 'ortho' %}<i class="fas fa-smile"></i>
+                    {% elif s.category == 'pediatric' %}<i class="fas fa-child"></i>
+                    {% else %}<i class="fas fa-pump-soap"></i>{% endif %}
+                  </div>
+                  <span style="background: #eff6ff; color: #2563eb; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #bfdbfe;">
+                    {{ s.badge_tag|default:"Featured" }}
+                  </span>
+                </div>
+
+                <!-- CATEGORY & LIVE STATUS -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                  <span style="background: #f1f5f9; color: #475569; font-size: 0.725rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; text-transform: capitalize;">
+                    {{ s.get_category_display }}
+                  </span>
+                  {% if s.is_featured %}
+                    <span style="color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;">
+                      <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i> Live in Services-Grid
+                    </span>
+                  {% else %}
+                    <span style="color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; font-size: 0.7rem; font-weight: 500; padding: 2px 8px; border-radius: 999px;">
+                      Draft / Hidden
+                    </span>
+                  {% endif %}
+                </div>
+
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0 0 6px 0; font-family: 'Outfit', sans-serif;">{{ s.title }}</h3>
+                <p style="font-size: 0.825rem; color: #64748b; line-height: 1.45; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                  {{ s.short_description }}
+                </p>
+
+                <!-- DURATION & TARIFF -->
+                <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; margin-bottom: 14px;">
+                  <span style="color: #64748b;"><i class="far fa-clock"></i> {{ s.duration|default:"30-45 Mins" }}</span>
+                  <strong style="color: #2563eb; font-weight: 700;">{{ s.price_estimate|default:"Affordable Care" }}</strong>
+                </div>
+              </div>
+
+              <!-- ACTIONS BAR -->
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-darker);">
+                <button type="button" class="btn-sm" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                        data-id="{{ s.id }}"
+                        data-title="{{ s.title }}"
+                        data-category="{{ s.category }}"
+                        data-icon="{{ s.icon_name }}"
+                        data-short="{{ s.short_description }}"
+                        data-detail="{{ s.detailed_description }}"
+                        data-duration="{{ s.duration }}"
+                        data-price="{{ s.price_estimate }}"
+                        data-badge="{{ s.badge_tag }}"
+                        data-featured="{% if s.is_featured %}1{% else %}0{% endif %}"
+                        data-image="{% if s.image %}{{ s.image.url }}{% endif %}"
+                        onclick="openEditServiceModalFromBtn(this)">
+                  <i class="fas fa-edit"></i> Edit / Upload Photo
+                </button>
+                <div style="display: flex; gap: 6px;">
+                  <a href="{% url 'home' %}#services" target="_blank" class="btn-sm" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; text-decoration: none;" title="Preview in Services-Grid">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <form action="{% url 'delete_service' s.id %}" method="POST" onsubmit="return confirm('Are you sure you want to remove service {{ s.title|escapejs }} from the services grid?');" style="display: inline; margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-sm" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer;" title="Delete Service">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
+              <i class="fas fa-hand-holding-medical" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+              <h3 style="font-size: 1.15rem; color: #0f172a; margin-bottom: 6px;">No Clinical Services Uploaded Yet</h3>
+              <p style="font-size: 0.875rem; color: #64748b; max-width: 480px; margin: 0 auto 16px auto;">
+                Upload your first service with photo banner, description, and tariff to display live on the website's services-grid!
+              </p>
+              <button type="button" class="btn-primary-submit" onclick="openModal('addServiceModal')">
+                <i class="fas fa-cloud-upload-alt"></i> Upload First Service
+              </button>
             </div>
           {% endfor %}
         </div>
@@ -2063,6 +1387,236 @@
     </div>
   </div>
 
+  <!-- MODAL: ADD / UPLOAD NEW SERVICE -->
+  <div class="modal-backdrop" id="addServiceModal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-hand-holding-medical" style="color: #2563eb; margin-right: 8px;"></i>Add New Service &amp; Icon</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('addServiceModal')" aria-label="Close modal">&times;</button>
+      </div>
+      <form action="{% url 'add_service' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <!-- SERVICE ICON UPLOAD / SELECTOR (Only Icon) -->
+          <div class="form-group" style="background: #f8fafc; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+            <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 700; color: #0f172a; font-size: 0.875rem;">
+                <i class="fas fa-icons" style="color: var(--primary-blue); margin-right: 6px;"></i>Service Icon
+              </span>
+              <span style="font-size: 0.75rem; color: #64748b;">Upload custom icon file or select preset</span>
+            </label>
+
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <!-- 54x54 Preview Icon Box -->
+              <div id="addSvcIconBoxPreview" style="width: 54px; height: 54px; min-width: 54px; border-radius: 14px; background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 2px 8px rgba(37,99,235,0.15); border: 1px solid #bfdbfe; overflow: hidden;">
+                <img id="addSvcIconImg" src="" alt="Icon" style="display: none; width: 30px; height: 30px; object-fit: contain;">
+                <i id="addSvcIconFa" class="fas fa-tooth"></i>
+              </div>
+
+              <!-- Upload Icon File -->
+              <div style="flex: 1;">
+                <label for="add_svc_icon_file" style="font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">
+                  <i class="fas fa-upload" style="color: #2563eb; margin-right: 4px;"></i>Upload Custom Icon (SVG / PNG / WebP)
+                </label>
+                <input type="file" id="add_svc_icon_file" name="image" accept="image/*,.svg" class="form-control" style="padding: 6px 10px; font-size: 0.825rem; background: #ffffff;" onchange="previewServiceIcon(this, 'addSvcIconImg', 'addSvcIconFa')">
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 3px;">Displays inside the service icon box (Square / Transparent recommended)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="svc_title">Service / Treatment Title *</label>
+            <input type="text" id="svc_title" name="title" class="form-control" placeholder="e.g. Single-Visit Root Canal (RCT) or Clear Aligners" required>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="svc_category">Category Filter *</label>
+              <select id="svc_category" name="category" class="form-control" required onchange="handleCategoryIconDefault(this.value, 'add')">
+                <option value="general">General &amp; Preventive</option>
+                <option value="cosmetic">Cosmetic Whitening</option>
+                <option value="implant">Implants &amp; Surgery</option>
+                <option value="ortho">Aligners &amp; Braces</option>
+                <option value="rootcanal">Root Canal (RCT)</option>
+                <option value="pediatric">Kids Dentistry</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="svc_icon">Or Pick FontAwesome Icon</label>
+              <select id="svc_icon" name="icon_name" class="form-control" onchange="updateServiceIconSelect(this.value, 'addSvcIconImg', 'addSvcIconFa')">
+                <option value="tooth">tooth (Standard Tooth)</option>
+                <option value="sparkles">sparkles (Cosmetic Whitening)</option>
+                <option value="shield-virus">shield-virus (Implants &amp; Surgery)</option>
+                <option value="smile">smile (Aligners &amp; Braces)</option>
+                <option value="child">child (Kids Dentistry)</option>
+                <option value="pump-soap">pump-soap (Cleaning &amp; Scaling)</option>
+                <option value="gem">gem (Veneers &amp; Smile Design)</option>
+                <option value="syringe">syringe (Painless Extraction)</option>
+                <option value="shield-alt">shield-alt (Protection &amp; Guards)</option>
+                <option value="stethoscope">stethoscope (General Diagnosis)</option>
+                <option value="teeth">teeth (Dentures &amp; Full Arch)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="svc_duration">Estimated Duration</label>
+              <input type="text" id="svc_duration" name="duration" class="form-control" placeholder="e.g. 30-45 Mins, 1 Visit" value="30-45 Mins">
+            </div>
+
+            <div class="form-group">
+              <label for="svc_price">Tariff / Price Estimate</label>
+              <input type="text" id="svc_price" name="price_estimate" class="form-control" placeholder="e.g. ₹2,500 onwards / Affordable Care" value="Affordable Care">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="svc_badge">Badge Tag</label>
+            <input type="text" id="svc_badge" name="badge_tag" class="form-control" placeholder="e.g. Popular, Painless Tech, Most Popular, Lifetime Warranty" value="Popular">
+          </div>
+
+          <div class="form-group">
+            <label for="svc_short_desc">Short Summary (Displayed on Website Card) *</label>
+            <textarea id="svc_short_desc" name="short_description" rows="2" class="form-control" placeholder="Brief 1-2 sentence description for patients viewing the grid..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="svc_detailed_desc">Detailed Clinical Procedure (Optional)</label>
+            <textarea id="svc_detailed_desc" name="detailed_description" rows="2" class="form-control" placeholder="Detailed treatment protocol, post-op instructions, or notes..."></textarea>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid var(--border-darker); border-radius: 8px; padding: 10px 14px; margin-top: 6px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; font-size: 0.875rem; font-weight: 600; color: #0f172a;">
+              <input type="checkbox" name="is_featured" checked style="width: 18px; height: 18px; accent-color: #2563eb;">
+              <span>Publish &amp; Connect Live to Website's <strong>services-grid</strong></span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('addServiceModal')">Cancel</button>
+          <button type="submit" class="btn-primary-submit"><i class="fas fa-check"></i> Add Service to Grid</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT SERVICE -->
+  <div class="modal-backdrop" id="editServiceModal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-edit" style="color: #2563eb; margin-right: 8px;"></i>Edit Service &amp; Icon</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('editServiceModal')" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="editServiceForm" action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <!-- SERVICE ICON UPLOAD / SELECTOR (Only Icon) -->
+          <div class="form-group" style="background: #f8fafc; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+            <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 700; color: #0f172a; font-size: 0.875rem;">
+                <i class="fas fa-icons" style="color: var(--primary-blue); margin-right: 6px;"></i>Service Icon
+              </span>
+              <span style="font-size: 0.75rem; color: #64748b;">Upload custom icon file or select preset</span>
+            </label>
+
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <!-- 54x54 Preview Icon Box -->
+              <div id="editSvcIconBoxPreview" style="width: 54px; height: 54px; min-width: 54px; border-radius: 14px; background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 2px 8px rgba(37,99,235,0.15); border: 1px solid #bfdbfe; overflow: hidden;">
+                <img id="editSvcIconImg" src="" alt="Icon" style="display: none; width: 30px; height: 30px; object-fit: contain;">
+                <i id="editSvcIconFa" class="fas fa-tooth"></i>
+              </div>
+
+              <!-- Upload Icon File -->
+              <div style="flex: 1;">
+                <label for="edit_svc_image" style="font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">
+                  <i class="fas fa-upload" style="color: #2563eb; margin-right: 4px;"></i>Upload New Icon File (SVG / PNG / WebP)
+                </label>
+                <input type="file" id="edit_svc_image" name="image" accept="image/*,.svg" class="form-control" style="padding: 6px 10px; font-size: 0.825rem; background: #ffffff;" onchange="previewServiceIcon(this, 'editSvcIconImg', 'editSvcIconFa')">
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 3px;">Leave empty to keep current icon</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_svc_title">Service Title *</label>
+            <input type="text" id="edit_svc_title" name="title" class="form-control" required>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="edit_svc_category">Category Filter *</label>
+              <select id="edit_svc_category" name="category" class="form-control" required>
+                <option value="general">General &amp; Preventive</option>
+                <option value="cosmetic">Cosmetic Whitening</option>
+                <option value="implant">Implants &amp; Surgery</option>
+                <option value="ortho">Aligners &amp; Braces</option>
+                <option value="rootcanal">Root Canal (RCT)</option>
+                <option value="pediatric">Kids Dentistry</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edit_svc_icon">FontAwesome Icon</label>
+              <select id="edit_svc_icon" name="icon_name" class="form-control" onchange="updateServiceIconSelect(this.value, 'editSvcIconImg', 'editSvcIconFa')">
+                <option value="tooth">tooth (Standard Tooth)</option>
+                <option value="sparkles">sparkles (Cosmetic Whitening)</option>
+                <option value="shield-virus">shield-virus (Implants &amp; Surgery)</option>
+                <option value="smile">smile (Aligners &amp; Braces)</option>
+                <option value="child">child (Kids Dentistry)</option>
+                <option value="pump-soap">pump-soap (Cleaning &amp; Scaling)</option>
+                <option value="gem">gem (Veneers &amp; Smile Design)</option>
+                <option value="syringe">syringe (Painless Extraction)</option>
+                <option value="shield-alt">shield-alt (Protection &amp; Guards)</option>
+                <option value="stethoscope">stethoscope (General Diagnosis)</option>
+                <option value="teeth">teeth (Dentures &amp; Full Arch)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="edit_svc_duration">Estimated Duration</label>
+              <input type="text" id="edit_svc_duration" name="duration" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="edit_svc_price">Tariff / Price Estimate</label>
+              <input type="text" id="edit_svc_price" name="price_estimate" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_svc_badge">Badge Tag</label>
+            <input type="text" id="edit_svc_badge" name="badge_tag" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label for="edit_svc_short_desc">Short Summary *</label>
+            <textarea id="edit_svc_short_desc" name="short_description" rows="2" class="form-control" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="edit_svc_detailed_desc">Detailed Clinical Procedure</label>
+            <textarea id="edit_svc_detailed_desc" name="detailed_description" rows="2" class="form-control"></textarea>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid var(--border-darker); border-radius: 8px; padding: 10px 14px; margin-top: 6px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0; font-size: 0.875rem; font-weight: 600; color: #0f172a;">
+              <input type="checkbox" id="edit_svc_featured" name="is_featured" style="width: 18px; height: 18px; accent-color: #2563eb;">
+              <span>Publish &amp; Connect Live to Website's <strong>services-grid</strong></span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('editServiceModal')">Cancel</button>
+          <button type="submit" class="btn-primary-submit" style="background: #2563eb;"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL 4: NEW INVOICE -->
   <div class="modal-backdrop" id="newInvoiceModal">
     <div class="modal-card">
@@ -2410,7 +1964,394 @@
     </div>
   </div>
 
-  <!-- APPOINTMENTS DATA FOR CALENDAR -->
+  <!-- MODAL: PATIENT CLINICAL HUB (DENTAL TEETH CHART & PAYMENT) -->
+  <div class="modal-backdrop" id="patientClinicalHubModal">
+    <div class="modal-card hub-modal-card">
+      
+      <!-- HUB HEADER -->
+      <div class="hub-header">
+        <div class="hub-patient-meta">
+          <div class="hub-avatar" id="hubPatientAvatar">P</div>
+          <div class="hub-title-block">
+            <h3 id="hubPatientName">Patient Name</h3>
+            <div class="hub-meta-tags">
+              <span><i class="fas fa-id-badge" style="color: #2563eb;"></i> PID: <strong id="hubPatientCode">#2026-0001</strong></span>
+              <span>&bull;</span>
+              <span><i class="fas fa-phone-alt" style="color: #10b981;"></i> <span id="hubPatientPhone">+91 94460 46868</span></span>
+              <span>&bull;</span>
+              <span><i class="fas fa-user" style="color: #64748b;"></i> <span id="hubPatientDemographics">32 Y / Male</span></span>
+              <span>&bull;</span>
+              <span><i class="fas fa-user-md" style="color: #8b5cf6;"></i> <span id="hubPatientDoctor">Dr. Anoop</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- TAB SWITCHER: TEETH CHART & PAYMENTS -->
+          <div class="hub-tab-bar">
+            <button type="button" class="hub-tab-btn active" id="tabBtnTeethChart" onclick="switchHubTab('chart')">
+              <i class="fas fa-tooth"></i> Teeth Chart <span class="tab-badge-num" id="hubToothCountBadge">32</span>
+            </button>
+            <button type="button" class="hub-tab-btn" id="tabBtnPayment" onclick="switchHubTab('payment')">
+              <i class="fas fa-file-invoice-dollar"></i> Billing &amp; Payment <span class="tab-badge-num" id="hubPaymentCountBadge">0</span>
+            </button>
+          </div>
+
+          <button type="button" class="modal-close-btn" onclick="closeModal('patientClinicalHubModal')">&times;</button>
+        </div>
+      </div>
+
+      <!-- HUB BODY CONTAINER -->
+      <div class="hub-body">
+
+        <!-- TAB CONTENT 1: TEETH CHART (ODONTOGRAM) -->
+        <div id="hubSectionChart" style="display: block;">
+          
+          <!-- ODONTOGRAM TOP BAR -->
+          <div class="odontogram-header">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <span style="font-size: 0.825rem; font-weight: 700; color: #0f172a;">Dentition:</span>
+              <div class="dentition-toggle-group">
+                <button type="button" class="btn-dentition active" id="btnDentAdult" onclick="setDentitionMode('adult')">Adult (32 Teeth)</button>
+                <button type="button" class="btn-dentition" id="btnDentPediatric" onclick="setDentitionMode('pediatric')">Child / Primary (20 Teeth)</button>
+              </div>
+              <span style="font-size: 0.75rem; color: #64748b;">Notation: <strong>Universal # (FDI Notation)</strong></span>
+            </div>
+
+            <div class="chart-counters-row">
+              <span class="chart-counter-badge badge-sound"><i class="fas fa-circle" style="font-size: 7px;"></i> Sound: <strong id="cntSound">32</strong></span>
+              <span class="chart-counter-badge badge-caries"><i class="fas fa-circle" style="font-size: 7px;"></i> Caries: <strong id="cntCaries">0</strong></span>
+              <span class="chart-counter-badge badge-restored"><i class="fas fa-circle" style="font-size: 7px;"></i> Restored: <strong id="cntRestored">0</strong></span>
+              <span class="chart-counter-badge badge-rct"><i class="fas fa-circle" style="font-size: 7px;"></i> RCT: <strong id="cntRct">0</strong></span>
+              <span class="chart-counter-badge badge-crown"><i class="fas fa-circle" style="font-size: 7px;"></i> Crown: <strong id="cntCrown">0</strong></span>
+              <span class="chart-counter-badge badge-missing"><i class="fas fa-circle" style="font-size: 7px;"></i> Missing: <strong id="cntMissing">0</strong></span>
+            </div>
+          </div>
+
+          <!-- ODONTOGRAM ARCH DISPLAY (UPPER & LOWER JAW) -->
+          <div class="odontogram-arch-container">
+            <!-- UPPER JAW (MAXILLARY ARCH) -->
+            <div class="arch-label">
+              <span>Upper Jaw &bull; Maxillary Arch</span>
+            </div>
+            
+            <div class="teeth-row" id="upperTeethRow">
+              <!-- Rendered via JavaScript -->
+            </div>
+
+            <!-- LOWER JAW (MANDIBULAR ARCH) -->
+            <div class="arch-label" style="margin-top: 24px;">
+              <span>Lower Jaw &bull; Mandibular Arch</span>
+            </div>
+
+            <div class="teeth-row" id="lowerTeethRow">
+              <!-- Rendered via JavaScript -->
+            </div>
+          </div>
+
+          <!-- SELECTED TOOTH DETAILS & TREATMENT PLANNER -->
+          <div class="tooth-detail-panel" id="toothDetailPanel">
+            <div class="detail-panel-header">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="selToothIconBadge" style="width: 38px; height: 38px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                  <i class="fas fa-tooth"></i>
+                </div>
+                <div>
+                  <h4 id="selToothTitle" style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0;">Tooth #14 &bull; Maxillary Right First Molar</h4>
+                  <span id="selToothFdiNotation" style="font-size: 0.775rem; color: #64748b;">FDI: 16 &bull; Adult Dentition</span>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="selToothCurrentStatusBadge" class="badge badge-completed">Healthy / Sound</span>
+              </div>
+            </div>
+
+            <!-- CONDITION PICKER -->
+            <label style="font-size: 0.8rem; font-weight: 700; color: #334155; display: block; margin-bottom: 8px;">Select Tooth Condition:</label>
+            <div class="condition-selector-grid">
+              <button type="button" class="btn-cond-choice active" data-condition="sound" onclick="selectToothCondition('sound')">
+                <span class="cond-dot" style="background: #10b981;"></span> Sound (Healthy)
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="caries" onclick="selectToothCondition('caries')">
+                <span class="cond-dot" style="background: #ef4444;"></span> Caries / Cavity
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="filled" onclick="selectToothCondition('filled')">
+                <span class="cond-dot" style="background: #2563eb;"></span> Restored / Filling
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="rct" onclick="selectToothCondition('rct')">
+                <span class="cond-dot" style="background: #8b5cf6;"></span> Root Canal (RCT)
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="crown" onclick="selectToothCondition('crown')">
+                <span class="cond-dot" style="background: #f59e0b;"></span> Crown / Bridge
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="missing" onclick="selectToothCondition('missing')">
+                <span class="cond-dot" style="background: #94a3b8;"></span> Missing / Extracted
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="implant" onclick="selectToothCondition('implant')">
+                <span class="cond-dot" style="background: #06b6d4;"></span> Dental Implant
+              </button>
+              <button type="button" class="btn-cond-choice" data-condition="fractured" onclick="selectToothCondition('fractured')">
+                <span class="cond-dot" style="background: #f97316;"></span> Broken / Fractured
+              </button>
+            </div>
+
+            <!-- SURFACE CHECKBOXES (OCCLUSAL, MESIAL, DISTAL, BUCCAL, LINGUAL) -->
+            <div class="surfaces-selector-bar">
+              <span style="font-size: 0.775rem; font-weight: 700; color: #475569; margin-right: 4px;">Affected Surfaces:</span>
+              <label class="surface-checkbox-label"><input type="checkbox" id="surf_o" onchange="toggleToothSurface('O')"> <strong>O</strong> (Occlusal)</label>
+              <label class="surface-checkbox-label"><input type="checkbox" id="surf_m" onchange="toggleToothSurface('M')"> <strong>M</strong> (Mesial)</label>
+              <label class="surface-checkbox-label"><input type="checkbox" id="surf_d" onchange="toggleToothSurface('D')"> <strong>D</strong> (Distal)</label>
+              <label class="surface-checkbox-label"><input type="checkbox" id="surf_b" onchange="toggleToothSurface('B')"> <strong>B</strong> (Buccal/Facial)</label>
+              <label class="surface-checkbox-label"><input type="checkbox" id="surf_l" onchange="toggleToothSurface('L')"> <strong>L</strong> (Lingual/Palatal)</label>
+            </div>
+
+            <!-- PROCEDURE RECOMMENDATION & BILLING QUICK CONNECT -->
+            <div class="form-grid-2" style="margin-bottom: 14px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="selToothProcedure">Recommended Dental Procedure</label>
+                <select id="selToothProcedure" class="form-control" onchange="handleProcedureSelect(this.value)">
+                  <option value="">-- Choose Dental Treatment / Procedure --</option>
+                  <option value="Single-Visit Root Canal Treatment (RCT)" data-price="3500">Single-Visit Root Canal Treatment (RCT) - ₹3,500</option>
+                  <option value="Multi-layer Zirconia Crown" data-price="5500">Multi-layer Zirconia Crown - ₹5,500</option>
+                  <option value="Composite Tooth Restoration / Filling" data-price="1200">Composite Tooth Restoration / Filling - ₹1,200</option>
+                  <option value="Titanium Dental Implant Fixture" data-price="18000">Titanium Dental Implant Fixture - ₹18,000</option>
+                  <option value="Ultrasonic Scaling &amp; Deep Cleaning" data-price="1200">Ultrasonic Scaling &amp; Deep Cleaning - ₹1,200</option>
+                  <option value="Surgical / Atraumatic Extraction" data-price="1500">Surgical / Atraumatic Extraction - ₹1,500</option>
+                  <option value="Porcelain Ceramic Veneer" data-price="6500">Porcelain Ceramic Veneer - ₹6,500</option>
+                  <option value="Laser Teeth Whitening" data-price="2999">Laser Teeth Whitening - ₹2,999</option>
+                  <option value="Custom Treatment" data-price="0">Custom Clinical Procedure</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="selToothPrice">Estimated Fee (₹)</label>
+                <input type="number" id="selToothPrice" class="form-control" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="selToothNotes">Clinical Findings &amp; Diagnostics</label>
+              <input type="text" id="selToothNotes" class="form-control" placeholder="e.g. Deep cavity on occlusal surface, tender to percussion...">
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border-color);">
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-primary-submit" onclick="saveCurrentToothData()" style="background: #2563eb;">
+                  <i class="fas fa-save"></i> Save Tooth Condition
+                </button>
+                <button type="button" class="btn-secondary" onclick="resetCurrentTooth()" style="font-size: 0.825rem;">
+                  <i class="fas fa-undo"></i> Reset to Sound
+                </button>
+              </div>
+
+              <button type="button" class="btn-primary-submit" onclick="addCurrentToothToBilling()" style="background: #059669;">
+                <i class="fas fa-credit-card"></i> Add Procedure to Bill / Payment &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- CHART BOTTOM CONTROLS -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-darker); flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-secondary" onclick="printDentalChartSummary()" style="font-size: 0.825rem;">
+                <i class="fas fa-print"></i> Print Dental Chart Report
+              </button>
+              <button type="button" class="btn-secondary" onclick="resetAllTeethChart()" style="font-size: 0.825rem; color: #ef4444; border-color: #fecaca;">
+                <i class="fas fa-trash-alt"></i> Reset All Teeth
+              </button>
+            </div>
+
+            <button type="button" class="btn-primary-submit" onclick="switchHubTab('payment')" style="background: #0f172a;">
+              <span>Go to Patient Billing &amp; Payment Ledger</span> <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- TAB CONTENT 2: BILLING & PAYMENT LEDGER -->
+        <div id="hubSectionPayment" style="display: none;">
+          
+          <!-- FINANCIAL SUMMARY CARDS -->
+          <div class="payment-overview-row">
+            <div class="payment-stat-card">
+              <div>
+                <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">TOTAL BILLED</span>
+                <div class="payment-stat-val" style="color: #0f172a;">₹<span id="hubTotalBilled">0.00</span></div>
+              </div>
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fas fa-receipt"></i>
+              </div>
+            </div>
+
+            <div class="payment-stat-card">
+              <div>
+                <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">TOTAL PAID / RECEIVED</span>
+                <div class="payment-stat-val" style="color: #059669;">₹<span id="hubTotalPaid">0.00</span></div>
+              </div>
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fas fa-check-circle"></i>
+              </div>
+            </div>
+
+            <div class="payment-stat-card">
+              <div>
+                <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">BALANCE DUE / PENDING</span>
+                <div class="payment-stat-val" id="hubBalanceDueWrap" style="color: #dc2626;">₹<span id="hubBalanceDue">0.00</span></div>
+              </div>
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fas fa-hourglass-half"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-COL LAYOUT: INVOICES TABLE & RECORD NEW PAYMENT -->
+          <div class="payment-grid-layout">
+            
+            <!-- LEFT: PATIENT INVOICES / BILLS -->
+            <div class="payment-card-panel">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0;">
+                  <i class="fas fa-history" style="color: #2563eb; margin-right: 6px;"></i>Invoices &amp; Payment History
+                </h4>
+                <span id="hubInvoiceCountTag" class="badge badge-completed">0 Invoices</span>
+              </div>
+
+              <div class="table-responsive">
+                <table class="cases-table" style="font-size: 0.85rem;">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th>
+                      <th>Date</th>
+                      <th>Treatment</th>
+                      <th>Amount</th>
+                      <th>Mode</th>
+                      <th>Status</th>
+                      <th style="text-align: right;">Receipt</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hubPatientInvoicesBody">
+                    <!-- Populated dynamically via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- RIGHT: RECORD PAYMENT FORM -->
+            <div class="payment-card-panel" style="background: #ffffff; border: 1.5px solid #bfdbfe;">
+              <h4 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-cash-register" style="color: #059669;"></i> Record New Payment / Bill
+              </h4>
+
+              <form id="hubNewInvoiceForm" onsubmit="handleHubRecordPayment(event)">
+                <div class="form-group">
+                  <label for="hubPayPatientName">Patient</label>
+                  <input type="text" id="hubPayPatientName" class="form-control" readonly style="background: #f1f5f9; font-weight: 600;">
+                </div>
+
+                <div class="form-group">
+                  <label for="hubPayTreatment">Procedure / Treatment *</label>
+                  <input type="text" id="hubPayTreatment" class="form-control" placeholder="e.g. Single-Visit RCT" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="hubPayAmount">Billed Amount (₹) *</label>
+                  <input type="number" step="0.01" min="0" id="hubPayAmount" class="form-control" placeholder="e.g. 3500" required>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="hubPayStatus">Status</label>
+                    <select id="hubPayStatus" class="form-control">
+                      <option value="Paid">Paid</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Partial">Partial</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="hubPayMode">Mode</label>
+                    <select id="hubPayMode" class="form-control">
+                      <option value="UPI">UPI (GPay/Paytm)</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Credit Card">Credit Card</option>
+                      <option value="Debit Card">Debit Card</option>
+                      <option value="Net Banking">Net Banking</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-primary-submit" id="btnSubmitPayment" style="width: 100%; justify-content: center; padding: 11px; background: #059669; font-size: 0.9rem; margin-top: 6px;">
+                  <i class="fas fa-check-circle"></i> Save Invoice &amp; Record Payment
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- HUB FOOTER -->
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.775rem; color: #94a3b8;">
+          <i class="fas fa-shield-alt"></i> Anupam Dental Clinical Records System &bull; Auto-saved
+        </span>
+        <button type="button" class="btn-secondary" onclick="closeModal('patientClinicalHubModal')">Close Window</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: PRINTABLE PATIENT RECEIPT -->
+  <div class="modal-backdrop" id="patientReceiptModal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-file-invoice" style="color: #2563eb; margin-right: 8px;"></i>Official Payment Receipt</h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('patientReceiptModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="printableReceiptArea">
+        <div class="receipt-print-wrapper">
+          <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
+            <h2 style="font-size: 1.35rem; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">Dr. Anoop's Dental Clinic</h2>
+            <p style="font-size: 0.775rem; color: #64748b; margin: 2px 0 0 0;">Specialized Smile Care &amp; Implant Centre &bull; Ph: +91 94460 46868</p>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px;">
+            <span><strong>Receipt No:</strong> <span id="recNo">INV-2026-001</span></span>
+            <span><strong>Date:</strong> <span id="recDate">Sep 26, 2026</span></span>
+          </div>
+          
+          <div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem;">
+            <div><strong>Patient Name:</strong> <span id="recPatient">Rajesh Kumar</span></div>
+            <div><strong>Treatment / Service:</strong> <span id="recTreatment">Single-Visit RCT</span></div>
+            <div><strong>Payment Mode:</strong> <span id="recMode">UPI</span> &bull; <strong>Status:</strong> <span id="recStatus" style="color: #059669; font-weight: 700;">Paid</span></div>
+          </div>
+
+          <div style="border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; padding: 12px 0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-size: 1.05rem; font-weight: 700;">TOTAL AMOUNT PAID:</span>
+            <span style="font-size: 1.4rem; font-weight: 800; color: #059669;">₹<span id="recAmount">3,500</span></span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 0.75rem; color: #64748b;">
+            <span>Thank you for choosing Dr. Anoop's Dental Clinic.</span>
+            <div style="text-align: center; border-top: 1px solid #94a3b8; padding-top: 4px; min-width: 120px;">
+              <strong>Authorized Signatory</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModal('patientReceiptModal')">Close</button>
+        <button type="button" class="btn-primary-submit" onclick="window.print()" style="background: #2563eb;">
+          <i class="fas fa-print"></i> Print Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPOINTMENTS DATA FOR CALENDAR & CHARTS -->
   <script id="clinicAppointmentsData" type="application/json">
     [
       {% for a in appointments %}
@@ -2419,627 +2360,42 @@
         "code": "{{ a.formatted_id }}",
         "patient": "{% if a.first_name %}{{ a.first_name|escapejs }} {{ a.last_name|escapejs }}{% else %}{{ a.patient_name|escapejs }}{% endif %}",
         "phone": "{{ a.phone|default:''|escapejs }}",
+        "age": "{{ a.age|default:'' }}",
+        "gender": "{{ a.gender|default:''|escapejs }}",
         "date": "{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}",
         "time": "{{ a.preferred_time|default:'Morning'|escapejs }}",
-        "doctor": "{{ a.doctor_name|default:'Duty Doctor'|escapejs }}",
+        "doctor": "{{ a.doctor_name|default:'Dr. Anoop'|escapejs }}",
         "service": "{{ a.service_name|default:'Consultation'|escapejs }}",
-        "status": "{{ a.status|default:'pending'|escapejs }}"
+        "status": "{{ a.status|default:'pending'|escapejs }}",
+        "chart_data_raw": "{{ a.chart_data|default:'{}'|escapejs }}"
       }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ]
   </script>
 
-  <!-- JAVASCRIPT LOGIC -->
-  <script>
-    // Clinic Calendar Data & Logic
-    let allClinicAppointments = [];
-    try {
-      const rawCalData = document.getElementById('clinicAppointmentsData');
-      if (rawCalData) allClinicAppointments = JSON.parse(rawCalData.textContent);
-    } catch (e) {
-      console.error('Error parsing calendar appointments:', e);
-    }
-
-    let calCurrentDate = new Date();
-    const djangoTodayStr = "{{ today }}";
-    if (djangoTodayStr) {
-      const parts = djangoTodayStr.split('-');
-      if (parts.length === 3) {
-        calCurrentDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      }
-    }
-
-    let calDisplayYear = calCurrentDate.getFullYear();
-    let calDisplayMonth = calCurrentDate.getMonth();
-    let calSelectedDateStr = formatCalDate(calCurrentDate);
-
-    function formatCalDate(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
-    }
-
-    function openClinicCalendar() {
-      openModal('clinicCalendarModal');
-      renderClinicCalendar();
-    }
-
-    function changeCalMonth(delta) {
-      calDisplayMonth += delta;
-      if (calDisplayMonth < 0) {
-        calDisplayMonth = 11;
-        calDisplayYear -= 1;
-      } else if (calDisplayMonth > 11) {
-        calDisplayMonth = 0;
-        calDisplayYear += 1;
-      }
-      renderClinicCalendar();
-    }
-
-    function jumpCalToToday() {
-      calDisplayYear = calCurrentDate.getFullYear();
-      calDisplayMonth = calCurrentDate.getMonth();
-      calSelectedDateStr = formatCalDate(calCurrentDate);
-      renderClinicCalendar();
-    }
-
-    function selectCalDate(dateStr) {
-      calSelectedDateStr = dateStr;
-      renderClinicCalendar();
-    }
-
-    function renderClinicCalendar() {
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      const titleEl = document.getElementById('calMonthYearTitle');
-      if (titleEl) {
-        titleEl.textContent = `${monthNames[calDisplayMonth]} ${calDisplayYear}`;
-      }
-
-      const gridEl = document.getElementById('calDaysGrid');
-      if (!gridEl) return;
-      gridEl.innerHTML = '';
-
-      const firstDay = new Date(calDisplayYear, calDisplayMonth, 1);
-      let startDayOfWeek = (firstDay.getDay() + 6) % 7; 
-      const daysInMonth = new Date(calDisplayYear, calDisplayMonth + 1, 0).getDate();
-      const prevMonthDays = new Date(calDisplayYear, calDisplayMonth, 0).getDate();
-
-      const todayFormatted = formatCalDate(calCurrentDate);
-
-      for (let i = startDayOfWeek - 1; i >= 0; i--) {
-        const pDay = prevMonthDays - i;
-        const cell = document.createElement('div');
-        cell.className = 'cal-day-cell other-month';
-        cell.innerHTML = `<span class="cal-day-num">${pDay}</span>`;
-        gridEl.appendChild(cell);
-      }
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const thisDate = new Date(calDisplayYear, calDisplayMonth, day);
-        const dateStr = formatCalDate(thisDate);
-        const dayOfWeek = (thisDate.getDay() + 6) % 7;
-        const isTue = (dayOfWeek === 1);
-        const isToday = (dateStr === todayFormatted);
-        const isSelected = (dateStr === calSelectedDateStr);
-
-        const matchingAppts = allClinicAppointments.filter(a => a.date === dateStr);
-
-        const cell = document.createElement('div');
-        let cellClasses = ['cal-day-cell'];
-        if (isToday) cellClasses.push('today');
-        if (isSelected) cellClasses.push('selected');
-        if (isTue) cellClasses.push('tuesday');
-        cell.className = cellClasses.join(' ');
-        cell.onclick = () => selectCalDate(dateStr);
-
-        let apptHtml = '';
-        if (matchingAppts.length > 0) {
-          apptHtml = `<span class="cal-appt-dot" title="${matchingAppts.length} appointments"><i class="fas fa-circle" style="font-size: 5px;"></i> ${matchingAppts.length} ${matchingAppts.length === 1 ? 'appt' : 'appts'}</span>`;
-        } else if (isTue) {
-          apptHtml = `<span style="font-size: 0.65rem; color: #b45309; font-weight: 600;">Holiday</span>`;
-        }
-
-        cell.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="cal-day-num">${day}</span>
-            ${isToday ? '<span style="font-size: 0.6rem; color: #2563eb; font-weight: 800; background: #dbeafe; padding: 1px 4px; border-radius: 3px;">TODAY</span>' : ''}
-          </div>
-          ${apptHtml}
-        `;
-        gridEl.appendChild(cell);
-      }
-
-      const totalRendered = startDayOfWeek + daysInMonth;
-      const remaining = (7 - (totalRendered % 7)) % 7;
-      for (let n = 1; n <= remaining; n++) {
-        const cell = document.createElement('div');
-        cell.className = 'cal-day-cell other-month';
-        cell.innerHTML = `<span class="cal-day-num">${n}</span>`;
-        gridEl.appendChild(cell);
-      }
-
-      renderSelectedDateSchedule();
-    }
-
-    function renderSelectedDateSchedule() {
-      const titleEl = document.getElementById('calSelectedDateTitle');
-      const countEl = document.getElementById('calSelectedApptCount');
-      const listEl = document.getElementById('calApptList');
-      if (!listEl) return;
-
-      let displayDateText = calSelectedDateStr;
-      try {
-        const parts = calSelectedDateStr.split('-');
-        const d = new Date(parts[0], parts[1] - 1, parts[2]);
-        displayDateText = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-      } catch (e) {}
-
-      if (titleEl) {
-        titleEl.textContent = `Schedule for ${displayDateText}`;
-      }
-
-      const appts = allClinicAppointments.filter(a => a.date === calSelectedDateStr);
-
-      if (countEl) {
-        countEl.textContent = `${appts.length} Scheduled`;
-        countEl.style.display = appts.length > 0 ? 'inline-block' : 'none';
-      }
-
-      if (appts.length === 0) {
-        listEl.innerHTML = `
-          <div style="text-align: center; padding: 20px 16px; color: #94a3b8;">
-            <i class="far fa-calendar-times" style="font-size: 1.8rem; margin-bottom: 6px; color: #cbd5e1; display: block;"></i>
-            <p style="margin: 0; font-size: 0.875rem; font-weight: 500; color: #64748b;">No appointments scheduled for this date.</p>
-          </div>
-        `;
-        return;
-      }
-
-      listEl.innerHTML = appts.map(a => `
-        <div class="cal-appt-card">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 0.75rem; padding: 6px 10px; border-radius: 6px; text-align: center; min-width: 75px;">
-              ${a.time}
-            </div>
-            <div>
-              <strong style="color: #0f172a; font-size: 0.9rem;">${a.patient}</strong>
-              <span style="font-size: 0.75rem; color: #64748b; margin-left: 6px;">(${a.code})</span>
-              <div style="font-size: 0.775rem; color: #475569; margin-top: 2px;">
-                <i class="fas fa-stethoscope" style="color: #0e7490; font-size: 0.7rem;"></i> ${a.service} &bull; 
-                <i class="fas fa-user-md" style="color: #64748b; font-size: 0.7rem;"></i> ${a.doctor}
-              </div>
-            </div>
-          </div>
-          <span class="badge ${a.status === 'confirmed' ? 'badge-completed' : (a.status === 'pending' ? 'badge-pending' : 'badge-overdue')}" style="text-transform: capitalize;">
-            ${a.status}
-          </span>
-        </div>
-      `).join('');
-    }
-
-    function switchTab(sectionKey, event) {
-      if (event) event.preventDefault();
-      
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-      });
-      const activeLink = document.querySelector(`.nav-link[data-section="${sectionKey}"]`);
-      if (activeLink) activeLink.classList.add('active');
-
-      document.querySelectorAll('.content-section').forEach(sec => {
-        sec.style.display = 'none';
-      });
-
-      const targetSec = document.getElementById(`section-${sectionKey}`);
-      if (targetSec) {
-        targetSec.style.display = 'block';
-      }
-
-      if (sectionKey === 'personal') {
-        renderPersonalTreatments();
-      }
-
-      const headingEl = document.getElementById('pageHeading');
-      if (headingEl) {
-        headingEl.textContent = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1);
-      }
-
-      const sidebarEl = document.getElementById('sidebar');
-      if (sidebarEl) sidebarEl.classList.remove('open');
-    }
-
-    function toggleSidebar() {
-      const sidebarEl = document.getElementById('sidebar');
-      if (sidebarEl) sidebarEl.classList.toggle('open');
-    }
-
-    function toggleProfileDropdown() {
-      const dd = document.getElementById('profileDropdown');
-      if (dd) dd.classList.toggle('show');
-    }
-
-    window.addEventListener('click', function(e) {
-      const userPill = document.querySelector('.user-pill');
-      const dropdown = document.getElementById('profileDropdown');
-      if (userPill && dropdown && !userPill.contains(e.target)) {
-        dropdown.classList.remove('show');
-      }
-    });
-
-    function toggleNotifications() {
-      alert("Clinic Notifications:\n- 2 Dental lab deliveries arriving today\n- Dr. Priya has 4 clear aligner consults scheduled\n- 1 overdue case pending lab shade verification");
-    }
-
-    function openModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) modal.classList.remove('active');
-    }
-
-    document.querySelectorAll('.modal-backdrop').forEach(modal => {
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.classList.remove('active');
-      });
-    });
-
-    function filterCasesTable() {
-      const searchEl = document.getElementById('dashboardSearch');
-      if (!searchEl) return;
-      const query = searchEl.value.toLowerCase().trim();
-      const rows = document.querySelectorAll('.case-row');
-      
-      rows.forEach(row => {
-        const text = (row.getAttribute('data-search') || '').toLowerCase();
-        if (text.includes(query)) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
-        }
-      });
-    }
-
-    function filterStatus(status) {
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
-
-      const rows = document.querySelectorAll('.case-row');
-      rows.forEach(row => {
-        if (status === 'all' || row.getAttribute('data-status') === status) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
-        }
-      });
-    }
-
-    function openCaseDetails(id, caseId, patient, doctor, type, status, dueDate, amount, notes) {
-      document.getElementById('vcTitle').innerHTML = `<i class="fas fa-folder-open" style="color: #2563eb; margin-right: 8px;"></i>Case: ${caseId}`;
-      document.getElementById('vcCaseId').textContent = caseId;
-      document.getElementById('vcPatient').textContent = patient;
-      document.getElementById('vcDoctor').textContent = doctor;
-      document.getElementById('vcType').textContent = type;
-      document.getElementById('vcDueDate').textContent = dueDate;
-      document.getElementById('vcAmount').textContent = amount;
-      document.getElementById('vcNotes').textContent = notes || 'No special clinical notes recorded.';
-      document.getElementById('vcUpdateStatus').value = status;
-      
-      document.getElementById('updateCaseStatusForm').action = `/dashboard/update-case-status/${id}/`;
-      openModal('viewCaseModal');
-    }
-
-    function previewDoctorPhoto(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.getElementById('doctorPhotoPreview');
-          const icon = document.getElementById('doctorPhotoPlaceholderIcon');
-          if (preview && icon) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            icon.style.display = 'none';
-          }
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-
-    function openEditDoctorModalFromBtn(btn) {
-      const id = btn.getAttribute('data-id');
-      const name = btn.getAttribute('data-name');
-      const regNo = btn.getAttribute('data-regno');
-      const designation = btn.getAttribute('data-designation');
-      const qualification = btn.getAttribute('data-qual');
-      const availableDays = btn.getAttribute('data-days');
-      const bio = btn.getAttribute('data-bio');
-      const photoUrl = btn.getAttribute('data-photo');
-
-      openEditDoctorModal(id, name, regNo, designation, qualification, availableDays, bio, photoUrl);
-    }
-
-    function openEditDoctorModal(id, name, regNo, designation, qualification, availableDays, bio, photoUrl) {
-      document.getElementById('editDoctorForm').action = `/dashboard/edit-doctor/${id}/`;
-      document.getElementById('edit_doc_name').value = name || '';
-      document.getElementById('edit_doc_reg_no').value = regNo || '';
-      document.getElementById('edit_doc_designation').value = designation || '';
-      document.getElementById('edit_doc_qual').value = qualification || '';
-      document.getElementById('edit_doc_days').value = availableDays || '';
-      document.getElementById('edit_doc_bio').value = bio || '';
-      
-      const preview = document.getElementById('editDoctorPhotoPreview');
-      const icon = document.getElementById('editDoctorPhotoPlaceholderIcon');
-      const fileInput = document.getElementById('edit_doc_photo');
-      if (fileInput) fileInput.value = '';
-
-      if (photoUrl && photoUrl.trim() !== '') {
-        preview.src = photoUrl;
-        preview.style.display = 'block';
-        icon.style.display = 'none';
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-        icon.style.display = 'block';
-      }
-      openModal('editDoctorModal');
-    }
-
-    function previewEditDoctorPhoto(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.getElementById('editDoctorPhotoPreview');
-          const icon = document.getElementById('editDoctorPhotoPlaceholderIcon');
-          if (preview && icon) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            icon.style.display = 'none';
-          }
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-
-    // ==========================================
-    // PERSONAL TREATMENTS LOGIC (ID, TREATMENT, RATE, AMOUNT)
-    // ==========================================
-    const defaultTreatments = [
-      { id: '1', treatment: 'Single-Visit Root Canal Treatment (RCT)', rate: 3500, amount: 3500 },
-      { id: '2', treatment: 'Dental Implant & Crown (Titanium)', rate: 18000, amount: 18000 },
-      { id: '3', treatment: 'Ultrasonic Scaling & Deep Cleaning', rate: 1200, amount: 1200 },
-      { id: '4', treatment: 'Laser Teeth Whitening (Single Session)', rate: 2999, amount: 2999 },
-      { id: '5', treatment: 'Multi-layer Zirconia Crown', rate: 5500, amount: 5500 },
-      { id: '6', treatment: 'Invisible Clear Aligners (Initial Arch)', rate: 39999, amount: 39999 },
-      { id: '7', treatment: 'Painless Surgical Tooth Extraction', rate: 1500, amount: 1500 }
-    ];
-
-    function getPersonalTreatments() {
-      try {
-        const stored = localStorage.getItem('clinic_personal_treatments');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.error('Error reading personal treatments:', e);
-      }
-      return defaultTreatments;
-    }
-
-    function savePersonalTreatments(items) {
-      localStorage.setItem('clinic_personal_treatments', JSON.stringify(items));
-      renderPersonalTreatments();
-    }
-
-    function renderPersonalTreatments() {
-      const tbody = document.getElementById('personalTreatmentsTableBody');
-      if (!tbody) return;
-      const treatments = getPersonalTreatments();
-      const searchEl = document.getElementById('treatmentSearchInput');
-      const searchQuery = (searchEl ? searchEl.value : '').toLowerCase().trim();
-
-      const filtered = treatments.filter(t => {
-        if (!searchQuery) return true;
-        return (t.id && t.id.toLowerCase().includes(searchQuery)) ||
-               (t.treatment && t.treatment.toLowerCase().includes(searchQuery)) ||
-               String(t.rate).includes(searchQuery) ||
-               String(t.amount).includes(searchQuery);
-      });
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-row-td"><i class="fas fa-tooth" style="font-size: 1.8rem; margin-bottom: 6px; display: block; color: #cbd5e1;"></i>No treatments found. Click <strong>New Treatment</strong> to add one.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = filtered.map((t) => {
-        const origIdx = treatments.findIndex(item => item.id === t.id);
-        const rateFormatted = Number(t.rate || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const amountFormatted = Number(t.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return `
-          <tr class="treatment-row">
-            <td><strong class="case-id-badge" style="color: #2563eb;">${escapeHtml(t.id)}</strong></td>
-            <td>
-              <div style="font-weight: 600; color: #0f172a;">${escapeHtml(t.treatment)}</div>
-            </td>
-            <td style="font-weight: 600; color: #334155;">₹${rateFormatted}</td>
-            <td style="font-weight: 700; color: #059669;">₹${amountFormatted}</td>
-            <td style="text-align: right;">
-              <button type="button" class="btn-sm" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer; margin-right: 6px;" onclick="openEditTreatmentModal(${origIdx})" title="Edit Treatment">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button type="button" class="btn-sm" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer;" onclick="deleteTreatment(${origIdx})" title="Delete Treatment">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-      });
-    }
-
-    function openNewTreatmentModal() {
-      const treatments = getPersonalTreatments();
-      let nextNum = treatments.length + 1;
-      let nextId = `TRT-${String(nextNum).padStart(3, '0')}`;
-      while (treatments.some(t => t.id && t.id.toUpperCase() === nextId.toUpperCase())) {
-        nextNum++;
-        nextId = `TRT-${String(nextNum).padStart(3, '0')}`;
-      }
-
-      document.getElementById('treatmentModalTitle').innerHTML = '<i class="fas fa-tooth" style="color: #2563eb; margin-right: 8px;"></i>New Treatment';
-      document.getElementById('treatment_edit_index').value = '-1';
-      document.getElementById('trt_id').value = nextId;
-      document.getElementById('trt_name').value = '';
-      document.getElementById('trt_rate').value = '';
-      document.getElementById('trt_amount').value = '';
-      openModal('newTreatmentModal');
-    }
-
-    function openEditTreatmentModal(index) {
-      const treatments = getPersonalTreatments();
-      const item = treatments[index];
-      if (!item) return;
-
-      document.getElementById('treatmentModalTitle').innerHTML = '<i class="fas fa-edit" style="color: #2563eb; margin-right: 8px;"></i>Edit Treatment';
-      document.getElementById('treatment_edit_index').value = index;
-      document.getElementById('trt_id').value = item.id;
-      document.getElementById('trt_name').value = item.treatment;
-      document.getElementById('trt_rate').value = item.rate;
-      document.getElementById('trt_amount').value = item.amount;
-      openModal('newTreatmentModal');
-    }
-
-    function handleRateInput(val) {
-      const amountInput = document.getElementById('trt_amount');
-      if (amountInput && (!amountInput.value || amountInput.dataset.manual !== 'true')) {
-        amountInput.value = val;
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const amountInput = document.getElementById('trt_amount');
-      if (amountInput) {
-        amountInput.addEventListener('input', function() {
-          amountInput.dataset.manual = 'true';
-        });
-      }
-      renderPersonalTreatments();
-    });
-
-    function handleSaveTreatment(e) {
-      e.preventDefault();
-      const editIdx = parseInt(document.getElementById('treatment_edit_index').value, 10);
-      const id = document.getElementById('trt_id').value.trim();
-      const treatment = document.getElementById('trt_name').value.trim();
-      const rate = parseFloat(document.getElementById('trt_rate').value) || 0;
-      const amount = parseFloat(document.getElementById('trt_amount').value) || 0;
-
-      if (!id || !treatment) {
-        alert('Please fill in both Treatment ID and Treatment Name.');
-        return;
-      }
-
-      const treatments = getPersonalTreatments();
-
-      const duplicate = treatments.some((t, i) => i !== editIdx && t.id.toLowerCase() === id.toLowerCase());
-      if (duplicate) {
-        alert(`Treatment ID "${id}" already exists. Please choose a unique ID.`);
-        return;
-      }
-
-      const treatmentData = { id, treatment, rate, amount };
-
-      if (editIdx >= 0 && editIdx < treatments.length) {
-        treatments[editIdx] = treatmentData;
-      } else {
-        treatments.unshift(treatmentData);
-      }
-
-      savePersonalTreatments(treatments);
-      closeModal('newTreatmentModal');
-    }
-
-    function deleteTreatment(index) {
-      const treatments = getPersonalTreatments();
-      const item = treatments[index];
-      if (!item) return;
-      if (confirm(`Are you sure you want to delete treatment "${item.treatment}" (${item.id})?`)) {
-        treatments.splice(index, 1);
-        savePersonalTreatments(treatments);
-      }
-    }
-
-    function filterTreatmentsTable() {
-      renderPersonalTreatments();
-    }
-
-    // ==========================================
-    // PATIENT SLIP GRID PDF CONNECT & OPEN
-    // ==========================================
-    function openSlipGridModal() {
-      openModal('slipGridModal');
-    }
-
-    function toggleSlipPrefillMode(mode) {
-      const fillSection = document.getElementById('slipFillFields');
-      if (fillSection) {
-        fillSection.style.display = (mode === 'blank') ? 'none' : 'block';
-      }
-    }
-
-    function loadPatientIntoSlip(selectEl) {
-      if (!selectEl || !selectEl.value) return;
-      const opt = selectEl.options[selectEl.selectedIndex];
-      if (!opt) return;
-
-      const name = opt.getAttribute('data-name') || '';
-      const age = opt.getAttribute('data-age') || '';
-      const gender = opt.getAttribute('data-gender') || 'Male';
-      const address = opt.getAttribute('data-address') || '';
-      const pid = opt.getAttribute('data-pid') || '';
-      const id = opt.getAttribute('data-id') || '001';
-
-      if (document.getElementById('grid_name')) document.getElementById('grid_name').value = name;
-      if (document.getElementById('grid_age')) document.getElementById('grid_age').value = age;
-      if (document.getElementById('grid_gender')) document.getElementById('grid_gender').value = gender;
-      if (document.getElementById('grid_address')) document.getElementById('grid_address').value = address;
-      if (document.getElementById('grid_pid')) document.getElementById('grid_pid').value = pid;
-      if (document.getElementById('grid_reg')) document.getElementById('grid_reg').value = 'REG-' + id;
-    }
-
-    function generateSlipGridPDF() {
-      const mode = document.querySelector('input[name="slip_mode"]:checked')?.value || 'filled_one';
-      let url = '/dashboard/print-slip-grid/';
-      if (mode === 'blank') {
-        window.open(url, '_blank');
-        closeModal('slipGridModal');
-        return;
-      }
-
-      const reg = encodeURIComponent((document.getElementById('grid_reg')?.value || '').trim());
-      const pid = encodeURIComponent((document.getElementById('grid_pid')?.value || '').trim());
-      const date = encodeURIComponent((document.getElementById('grid_date')?.value || '').trim());
-      const name = encodeURIComponent((document.getElementById('grid_name')?.value || '').trim());
-      const age = encodeURIComponent((document.getElementById('grid_age')?.value || '').trim());
-      const gender = encodeURIComponent((document.getElementById('grid_gender')?.value || '').trim());
-      const address = encodeURIComponent((document.getElementById('grid_address')?.value || '').trim());
-      const prefillAll = document.getElementById('grid_prefill_all')?.checked ? '1' : '0';
-      const singleCard = (mode === 'single_card') ? '1' : '0';
-
-      url += `?reg_no=${reg}&pid=${pid}&date=${date}&name=${name}&age=${age}&gender=${gender}&address=${address}&prefill_all=${prefillAll}&single_card=${singleCard}`;
-      window.open(url, '_blank');
-      closeModal('slipGridModal');
-    }
+  <!-- CLINIC INVOICES DATA FOR BILLING & PAYMENTS -->
+  <script id="clinicInvoicesData" type="application/json">
+    [
+      {% for inv in invoices %}
+      {
+        "id": "{{ inv.id }}",
+        "invoice_id": "{{ inv.invoice_id|escapejs }}",
+        "patient_name": "{{ inv.patient_name|escapejs }}",
+        "treatment": "{{ inv.treatment|escapejs }}",
+        "amount": "{{ inv.amount }}",
+        "payment_status": "{{ inv.payment_status|escapejs }}",
+        "payment_mode": "{{ inv.payment_mode|escapejs }}",
+        "created_at": "{{ inv.created_at|date:'M d, Y' }}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
   </script>
+
+  <!-- DASHBOARD JAVASCRIPT LOGIC -->
+  <script>
+    window.djangoTodayStr = "{{ today }}";
+  </script>
+  <script src="{% static 'Dental/js/dashboard.js' %}?v={% now 'U' %}"></script>
 
 </body>
 </html>
