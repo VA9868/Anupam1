@@ -13,6 +13,7 @@ urlpatterns = [
     path('dashboard/add-service/', views.add_service_view, name='add_service'),
     path('dashboard/edit-service/<int:service_id>/', views.edit_service_view, name='edit_service'),
     path('dashboard/delete-service/<int:service_id>/', views.delete_service_view, name='delete_service'),
+    path('dashboard/edit-about/', views.edit_about_view, name='edit_about'),
     path('dashboard/new-invoice/', views.new_invoice_view, name='new_invoice'),
     path('dashboard/update-case-status/<int:case_id>/', views.update_case_status_view, name='update_case_status'),
     path('dashboard/delete-case/<int:case_id>/', views.delete_case_view, name='delete_case'),
@@ -27,5 +28,6 @@ urlpatterns = [
     path('dashboard/print-prescription/', views.print_prescription_view, name='print_prescription'),
     path('dashboard/save-chart/<int:appointment_id>/', views.save_patient_chart_view, name='save_patient_chart'),
     path('register/', views.register_view, name='register'),
+    path('replace-password/', views.replace_password_view, name='replace_password'),
     path('logout/', views.logout_view, name='logout'),
 ]

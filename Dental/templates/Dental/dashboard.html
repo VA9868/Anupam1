@@ -16,6 +16,73 @@
 
   <!-- Dashboard Stylesheet (with auto cache-buster) -->
   <link rel="stylesheet" href="{% static 'Dental/css/dashboard.css' %}?v={% now 'U' %}">
+
+  <!-- Core Modal Helper Functions (Available Immediately) -->
+  <script>
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+      }
+    }
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
+    }
+    function openUploadSmileMakeoverModal() {
+      openModal('uploadSmileMakeoverModal');
+    }
+    function previewAboutPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('aboutPhotoPreviewImg');
+          if (img) {
+            img.src = e.target.result;
+          }
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    function updateAboutDescPreview() {
+      const textarea = document.getElementById('about_desc');
+      const preview = document.getElementById('aboutDescLivePreview');
+      if (!textarea || !preview) return;
+      const lines = textarea.value.trim().split('\n');
+      let html = '';
+      lines.forEach(line => {
+        const l = line.trim();
+        if (!l) return;
+        if (l.startsWith('**') && l.endsWith('**')) {
+          const heading = l.replace(/\*\*/g, '');
+          html += `<h4 style="font-family: 'Outfit', 'Inter', sans-serif; font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 14px 0 4px 0;">${heading}</h4>`;
+        } else if (['Our Philosophy', 'Ethics & Safety First', 'Trusted by Generations', 'Comprehensive Dental Care', 'Gentle Care for Children'].includes(l) || (l.length < 40 && !l.endsWith('.') && !l.endsWith(','))) {
+          html += `<h4 style="font-family: 'Outfit', 'Inter', sans-serif; font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 14px 0 4px 0;">${l}</h4>`;
+        } else {
+          html += `<p style="font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #475569; line-height: 1.6; margin: 0 0 10px 0;">${l}</p>`;
+        }
+      });
+      preview.innerHTML = html;
+    }
+    function insertAboutHeading() {
+      const textarea = document.getElementById('about_desc');
+      if (!textarea) return;
+      const sample = "\n\nNew Section Heading\nWrite your section description here...\n";
+      textarea.value += sample;
+      textarea.focus();
+      updateAboutDescPreview();
+    }
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.openUploadSmileMakeoverModal = openUploadSmileMakeoverModal;
+    window.previewAboutPhoto = previewAboutPhoto;
+    window.updateAboutDescPreview = updateAboutDescPreview;
+    window.insertAboutHeading = insertAboutHeading;
+  </script>
 </head>
 <body>
 
@@ -90,12 +157,12 @@
           <span>Accounts</span>
         </a>
       </li>
-      <!-- <li class="nav-item">
+      <li class="nav-item">
         <a href="#about" class="nav-link" data-section="about" onclick="switchTab('about', event)">
           <i class="fas fa-info-circle"></i>
           <span>About</span>
         </a>
-      </li> --> 
+      </li>
     </ul>
 
     <div class="sidebar-footer">
@@ -243,9 +310,16 @@
         
         <!-- LEFT: RECENT JOBS / CASES TABLE -->
         <div class="dash-panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Recent Jobs / Cases</h2>
-            <a href="javascript:void(0)" class="view-all-link" onclick="filterStatus('all')">View All</a>
+          <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+            <h2 class="panel-title" style="margin: 0; white-space: nowrap;">Recent Jobs / Cases</h2>
+            <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+              <div class="cases-search-box" style="position: relative; display: flex; align-items: center; width: 240px;">
+                <i class="fas fa-search" style="position: absolute; left: 12px; color: #94a3b8; font-size: 0.82rem; pointer-events: none;"></i>
+                <input type="text" id="casesSearchInput" class="search-input" placeholder="Search cases or patients..." onkeyup="filterCasesTable(this.value)" style="width: 100%; padding: 7px 28px 7px 32px; font-size: 0.82rem; border-radius: 20px; border: 1px solid #cbd5e1; background: #ffffff;">
+                <button type="button" onclick="clearCasesSearch()" id="clearCasesSearchBtn" style="display: none; position: absolute; right: 10px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem;" title="Clear search">&times;</button>
+              </div>
+              <a href="javascript:void(0)" class="view-all-link" onclick="filterStatus('all')">View All</a>
+            </div>
           </div>
 
           <div class="filter-pills">
@@ -322,6 +396,12 @@
                       </td>
                     </tr>
                   {% endfor %}
+                  <tr id="casesNoResultsRow" style="display: none;">
+                    <td colspan="7" class="empty-row-td" style="text-align: center; padding: 28px 16px; color: #64748b;">
+                      <i class="fas fa-search" style="font-size: 1.6rem; margin-bottom: 8px; display: block; color: #cbd5e1;"></i>
+                      No cases match your search query. <a href="javascript:void(0)" onclick="clearCasesSearch()" style="color: var(--primary-blue); font-weight: 600;">Clear search</a>
+                    </td>
+                  </tr>
                 {% else %}
                   <tr>
                     <td colspan="7" class="empty-row-td">
@@ -377,11 +457,28 @@
     <!-- TAB 2: APPOINTMENTS VIEW -->
     <div id="section-appointments" class="content-section" style="display: none;">
       <div class="dash-panel" style="padding: 24px;">
-        <div class="panel-header" style="padding: 0 0 16px 0;">
-          <h2 class="panel-title">Patient Appointments Schedule</h2>
+        <div class="panel-header" style="padding: 0 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <h2 class="panel-title" style="margin: 0;">Patient Appointments Schedule</h2>
           <button class="btn-primary-submit" onclick="openModal('addPatientModal')">
             <i class="fas fa-plus"></i> Book New Patient
           </button>
+        </div>
+
+        <!-- APPOINTMENTS DATE FILTER PILLS (TODAY / NOW DATE ONLY) -->
+        <div class="filter-pills" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button class="filter-btn active" id="btnApptAll" onclick="filterAppointmentsDate('all')">All Appointments ({{ appointments.count }})</button>
+            <button class="filter-btn" id="btnApptToday" onclick="filterAppointmentsDate('today')">
+              <i class="fas fa-calendar-day" style="color: #2563eb; margin-right: 4px;"></i>Today / Now Date Only ({{ today }})
+            </button>
+            <button class="filter-btn" id="btnApptUpcoming" onclick="filterAppointmentsDate('upcoming')">Upcoming</button>
+            <button class="filter-btn" id="btnApptPast" onclick="filterAppointmentsDate('past')">Past</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="apptDatePicker" style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin: 0;">Filter Date:</label>
+            <input type="date" id="apptDatePicker" class="form-control" value="{{ today }}" onchange="filterAppointmentsDate('custom', this.value)" style="width: auto; padding: 6px 10px; font-size: 0.82rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <button type="button" class="btn-secondary" onclick="filterAppointmentsDate('all')" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px;">Reset</button>
+          </div>
         </div>
 
         <div class="table-responsive">
@@ -391,7 +488,7 @@
                 <th>Booking ID</th>
                 <th>Patient</th>
                 <th>Phone</th>
-                <th>Date &amp; Slot</th>
+                <th>Appointment Date</th>
                 <th>Service / Treatment</th>
                 <th>Doctor</th>
                 <th>Status</th>
@@ -400,7 +497,7 @@
             </thead>
             <tbody>
               {% for a in appointments %}
-                <tr>
+                <tr class="appointment-row" data-date="{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}">
                   <td><strong>{{ a.formatted_id }}</strong></td>
                   <td class="patient-interactive-cell">
                     <a href="javascript:void(0)" class="patient-link-btn" title="Click to open Teeth Chart &amp; Payment"
@@ -446,7 +543,9 @@
                     </div>
                   </td>
                   <td>{{ a.phone }}</td>
-                  <td>{{ a.preferred_date }}<br><span style="font-size: 0.75rem; color: #64748b;">{{ a.preferred_time }}</span></td>
+                  <td style="font-weight: 600; color: #1e293b; white-space: nowrap;">
+                    <i class="far fa-calendar-alt" style="color: #2563eb; margin-right: 6px;"></i>{{ a.preferred_date }}
+                  </td>
                   <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span></td>
                   <td>{{ a.doctor_name }}</td>
                   <td>
@@ -491,6 +590,12 @@
               {% empty %}
                 <tr><td colspan="8" class="empty-row-td">No appointments found.</td></tr>
               {% endfor %}
+              <tr id="apptNoResultsRow" style="display: none;">
+                <td colspan="8" class="empty-row-td" style="text-align: center; padding: 24px; color: #64748b;">
+                  <i class="far fa-calendar-times" style="font-size: 1.8rem; margin-bottom: 8px; display: block; color: #cbd5e1;"></i>
+                  No appointments found for the selected date. <a href="javascript:void(0)" onclick="filterAppointmentsDate('all')" style="color: var(--primary-blue); font-weight: 600;">Show All Appointments</a>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -677,7 +782,7 @@
         <div class="panel-header" style="padding: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
           <div>
             <h2 class="panel-title" style="display: flex; align-items: center; gap: 10px;">
-              <i class="fas fa-hand-holding-medical" style="color: var(--primary-blue);"></i> Clinical Services &amp; Services-Grid
+              <i class="fas fa-hand-holding-medical" style="color: var(--primary-blue);"></i> Our Dental Services &amp; Treatments
             </h2>
             <p style="font-size: 0.825rem; color: #64748b; margin-top: 3px;">
               Upload new clinical services, custom image banners, pricing &amp; tariffs directly connected to the website's services-grid
@@ -912,24 +1017,187 @@
     <!-- TAB 7: FILES & CLINICAL RECORDS -->
     <div id="section-files" class="content-section" style="display: none;">
       <div class="dash-panel" style="padding: 24px;">
-        <div class="panel-header" style="padding: 0 0 16px 0;">
-          <h2 class="panel-title">Digital Radiographs, 3D Scans & Lab Files</h2>
+        <div class="panel-header" style="padding: 0 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 class="panel-title">Digital Radiographs, 3D Scans &amp; Lab Files</h2>
+            <p style="font-size: 0.82rem; color: #64748b; margin-top: 4px;">Manage patient OPG X-Rays, CBCT DICOM archives, and AI-powered diagnostic scans.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <label class="btn-primary-submit" style="background: #0284c7; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 9px 16px; font-size: 0.85rem;">
+              <i class="fas fa-cloud-upload-alt"></i> Upload OPG X-Ray to AI Scanner
+              <input type="file" id="dashboardOpgDirectInput" accept="image/*" style="display: none;" onchange="handleOpgDashboardUpload(event)">
+            </label>
+            <button type="button" class="btn-secondary" onclick="openOpgAiScannerModal(null, 'Rajesh Kumar')" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; font-size: 0.85rem;">
+              <i class="fas fa-brain" style="color: #0284c7;"></i> Launch AI Analyzer
+            </button>
+          </div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 16px;">
-          <div style="border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 16px; text-align: center; background: #fafbfc;">
-            <i class="fas fa-x-ray" style="font-size: 2.2rem; color: #2563eb; margin-bottom: 10px;"></i>
-            <h4 style="font-size: 0.9rem;">Digital OPG X-Rays</h4>
-            <span style="font-size: 0.75rem; color: #94a3b8;">142 Scans</span>
+
+        <!-- Metric & Feature Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 16px;">
+          
+          <!-- DIGITAL OPG X-RAYS AI CARD -->
+          <div style="border: 2px solid #38bdf8; border-radius: var(--radius-md); padding: 20px; text-align: left; background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%); position: relative; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.08); transition: transform 0.2s ease;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 1.4rem;">
+                <i class="fas fa-x-ray"></i>
+              </div>
+              <span style="background: #0284c7; color: white; font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; letter-spacing: 0.3px;">
+                <i class="fas fa-sparkles"></i> AI SCANNER
+              </span>
+            </div>
+            <h4 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Digital OPG X-Rays</h4>
+            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 14px; line-height: 1.4;">142 Scans Stored &bull; Automatic neural network caries, impaction &amp; bone loss analysis.</p>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-primary-submit" onclick="openOpgAiScannerModal(null, 'Rajesh Kumar')" style="flex: 1; padding: 7px 10px; font-size: 0.78rem; justify-content: center; background: #0284c7;">
+                <i class="fas fa-play"></i> AI Scan
+              </button>
+              <label class="btn-secondary" style="margin: 0; padding: 7px 12px; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Upload custom OPG X-Ray file">
+                <i class="fas fa-upload"></i> Upload
+                <input type="file" accept="image/*" style="display: none;" onchange="handleOpgDashboardUpload(event)">
+              </label>
+            </div>
           </div>
-          <div style="border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 16px; text-align: center; background: #fafbfc;">
-            <i class="fas fa-cube" style="font-size: 2.2rem; color: #10b981; margin-bottom: 10px;"></i>
-            <h4 style="font-size: 0.9rem;">3D Intraoral STL Scans</h4>
-            <span style="font-size: 0.75rem; color: #94a3b8;">86 Models</span>
+
+          <!-- 3D INTRAORAL STL SCANS & AI SMILE MAKEOVER -->
+          <div style="border: 2px solid #f59e0b; border-radius: var(--radius-md); padding: 20px; text-align: left; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); position: relative; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08); transition: transform 0.2s ease;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 1.4rem;">
+                <i class="fas fa-wand-magic-sparkles"></i>
+              </div>
+              <span style="background: #d97706; color: white; font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; letter-spacing: 0.3px;">
+                <i class="fas fa-smile"></i> AI SMILE DESIGN
+              </span>
+            </div>
+            <h4 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;">3D Scans &amp; Smile Makeover</h4>
+            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 14px; line-height: 1.4;">86 STL Models &bull; AI cosmetic smile simulation, laser whitening &amp; veneer shade design.</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-primary-submit" onclick="openSmileMakeoverModal(null, null, 'Ananya Sharma')" style="flex: 1; min-width: 105px; padding: 7px 10px; font-size: 0.78rem; justify-content: center; background: #d97706;">
+                <i class="fas fa-wand-magic-sparkles"></i> AI Makeover
+              </button>
+              <label class="btn-secondary" id="btnUploadSmileCase" style="flex: 1; min-width: 110px; padding: 7px 10px; font-size: 0.78rem; justify-content: center; border-color: #f59e0b; color: #b45309; cursor: pointer; margin: 0; display: inline-flex; align-items: center;" title="Upload Patient Smile Photo (Opens file dialog directly)">
+                <i class="fas fa-cloud-arrow-up"></i> Upload Case
+                <input type="file" id="directSmileCaseFileInput" accept="image/*" style="display: none;" onchange="handleDirectSmileCaseUpload(event)">
+              </label>
+            </div>
           </div>
-          <div style="border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 16px; text-align: center; background: #fafbfc;">
-            <i class="fas fa-file-pdf" style="font-size: 2.2rem; color: #ef4444; margin-bottom: 10px;"></i>
-            <h4 style="font-size: 0.9rem;">Lab Prescriptions</h4>
-            <span style="font-size: 0.75rem; color: #94a3b8;">52 Records</span>
+
+          <!-- LAB PRESCRIPTIONS -->
+          <div style="border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 20px; text-align: left; background: #fafbfc;">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef2f2; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.4rem; margin-bottom: 12px;">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+            <h4 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 4px;">Lab Prescriptions</h4>
+            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 14px;">52 Records &bull; Prosthetic work orders and lab delivery notes.</p>
+            <button type="button" class="btn-secondary" style="width: 100%; padding: 7px 10px; font-size: 0.78rem; justify-content: center;" onclick="switchTab('materials', event)">
+              <i class="fas fa-folder-open"></i> Lab Records
+            </button>
+          </div>
+        </div>
+
+        <!-- RECENT PATIENT OPG RADIOGRAPHS VAULT -->
+        <div style="margin-top: 32px; border-top: 1px solid var(--border-darker); padding-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-photo-film" style="color: #0284c7;"></i> Recent Digital Radiographs, 3D Scans &amp; AI Makeovers
+              </h3>
+              <span style="font-size: 0.8rem; color: #64748b;">Click 'Run AI Scan' or 'AI Makeover' to simulate</span>
+            </div>
+            <label class="btn-primary-submit" style="padding: 6px 14px; font-size: 0.78rem; background: #d97706; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0;" title="Upload new Smile Makeover pre/post photos">
+              <i class="fas fa-cloud-arrow-up"></i> Upload Smile Makeover
+              <input type="file" accept="image/*" style="display: none;" onchange="handleDirectSmileCaseUpload(event)">
+            </label>
+          </div>
+
+          <div class="table-responsive">
+            <table class="dash-table">
+              <thead>
+                <tr>
+                  <th>Patient Name</th>
+                  <th>Scan / Radiograph Type</th>
+                  <th>Date Recorded</th>
+                  <th>Clinical / AI Simulation Summary</th>
+                  <th>Confidence</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ananya Sharma</strong></td>
+                  <td><span class="badge" style="background: #fef3c7; color: #b45309;"><i class="fas fa-wand-magic-sparkles"></i> 3D Smile Makeover Alignment</span></td>
+                  <td>Oct 02, 2026</td>
+                  <td>
+                    <span style="color: #047857; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Anterior Crowding &amp; Veneer Alignment</span>, 
+                    <span style="color: #0284c7; font-size: 0.8rem;">Upper Teeth #12-#22 Fixed</span>
+                  </td>
+                  <td><strong style="color: #059669;">99.4%</strong></td>
+                  <td style="text-align: right;">
+                    <button type="button" class="btn-primary-submit" onclick="loadSmileCase('patient_ortho', 'Ananya Sharma')" style="padding: 5px 12px; font-size: 0.75rem; background: #d97706;">
+                      <i class="fas fa-wand-magic-sparkles"></i> AI Makeover
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Kavitha Ramesh</strong></td>
+                  <td><span class="badge" style="background: #fef3c7; color: #b45309;"><i class="fas fa-wand-magic-sparkles"></i> 3D Smile Makeover Scan</span></td>
+                  <td>Sep 27, 2026</td>
+                  <td>
+                    <span style="color: #047857; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Laser Whitening (+4 Vita Shades)</span>, 
+                    <span style="color: #0284c7; font-size: 0.8rem;">Porcelain Veneers #13-#23</span>
+                  </td>
+                  <td><strong style="color: #059669;">98.9%</strong></td>
+                  <td style="text-align: right;">
+                    <button type="button" class="btn-primary-submit" onclick="openSmileMakeoverModal(null, null, 'Kavitha Ramesh')" style="padding: 5px 12px; font-size: 0.75rem; background: #d97706;">
+                      <i class="fas fa-wand-magic-sparkles"></i> AI Makeover
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Rajesh Kumar</strong></td>
+                  <td><span class="badge" style="background: #e0f2fe; color: #0369a1;"><i class="fas fa-x-ray"></i> Full Panoramic OPG</span></td>
+                  <td>Sep 28, 2026</td>
+                  <td>
+                    <span style="color: #dc2626; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Impacted 3rd Molar (#48)</span>, 
+                    <span style="color: #d97706; font-size: 0.8rem;">Class II Decay (#36)</span>
+                  </td>
+                  <td><strong style="color: #059669;">98.4%</strong></td>
+                  <td style="text-align: right;">
+                    <button type="button" class="btn-primary-submit" onclick="openOpgAiScannerModal(null, 'Rajesh Kumar')" style="padding: 5px 12px; font-size: 0.75rem; background: #0284c7;">
+                      <i class="fas fa-play"></i> Run AI Scan
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Meera Nair</strong></td>
+                  <td><span class="badge" style="background: #e0f2fe; color: #0369a1;"><i class="fas fa-x-ray"></i> Orthodontic Ceph / OPG</span></td>
+                  <td>Sep 24, 2026</td>
+                  <td>
+                    <span style="color: #059669; font-size: 0.8rem;"><i class="fas fa-check-circle"></i> Sound Enamel, Mild Crowding Anterior</span>
+                  </td>
+                  <td><strong style="color: #059669;">99.1%</strong></td>
+                  <td style="text-align: right;">
+                    <button type="button" class="btn-primary-submit" onclick="openOpgAiScannerModal(null, 'Meera Nair')" style="padding: 5px 12px; font-size: 0.75rem; background: #0284c7;">
+                      <i class="fas fa-play"></i> Run AI Scan
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Anjali Menon</strong></td>
+                  <td><span class="badge" style="background: #e0f2fe; color: #0369a1;"><i class="fas fa-x-ray"></i> Pre-Implant Panoramic OPG</span></td>
+                  <td>Sep 20, 2026</td>
+                  <td>
+                    <span style="color: #d97706; font-size: 0.8rem;"><i class="fas fa-info-circle"></i> Edentulous Space #36 (Bone Height 11.4mm)</span>
+                  </td>
+                  <td><strong style="color: #059669;">96.5%</strong></td>
+                  <td style="text-align: right;">
+                    <button type="button" class="btn-primary-submit" onclick="openOpgAiScannerModal(null, 'Anjali Menon')" style="padding: 5px 12px; font-size: 0.75rem; background: #0284c7;">
+                      <i class="fas fa-play"></i> Run AI Scan
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -956,23 +1224,339 @@
       </div>
     </div>
 
-    <!-- TAB 9: ABOUT & CLINIC PROFILE -->
+    <!-- TAB 9: ABOUT & CLINIC PROFILE & SERVICES CONNECT -->
     <div id="section-about" class="content-section" style="display: none;">
-      <div class="dash-panel" style="padding: 28px;">
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
-          <img src="{% static 'Dental/images/logo.png' %}" alt="Logo" style="width: 56px; height: 56px;">
-          <div>
-            <h2 style="font-size: 1.3rem; color: #0f172a;">Dr. Anoop's Anupam Dental Clinic</h2>
-            <p style="font-size: 0.85rem; color: #64748b;">Comprehensive Multi-Specialty Dental Hospital & Smile Care Centre</p>
+      <!-- CLINIC OVERVIEW & BADGES PANEL -->
+      <div class="dash-panel" style="padding: 28px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 60px; height: 60px; border-radius: 14px; background: #eff6ff; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px;">
+              <img src="{% static 'Dental/images/logo.png' %}" alt="Clinic Logo" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h2 style="font-size: 1.35rem; color: #0f172a; margin: 0; font-weight: 800;">Dr. Anoop's Anupam Dental Clinic</h2>
+                <span class="badge badge-completed" style="font-size: 0.72rem; padding: 3px 9px;">Est. 19th Aug 1996</span>
+                <span class="badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.72rem; padding: 3px 9px;">28+ Years Care</span>
+              </div>
+              <p style="font-size: 0.875rem; color: #64748b; margin: 3px 0 0 0;">Comprehensive Multi-Specialty Dental Hospital, Laser &amp; Smile Care Centre</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'home' %}#about" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website About Section">
+              <i class="fas fa-external-link-alt"></i> Website About
+            </a>
+            <button type="button" class="btn-primary-submit" onclick="switchTab('services', event)" style="font-size: 0.825rem; padding: 9px 14px;">
+              <i class="fas fa-hand-holding-medical"></i> Manage Services
+            </button>
           </div>
         </div>
-        <p style="color: #334155; line-height: 1.6; font-size: 0.925rem; max-width: 700px;">
-          Equipped with advanced rotary endodontics, digital 3D CBCT imaging, laser teeth whitening, and specialized implantology suites. Dedicated to painless, gentle patient care and hygienic sterilization protocol.
-        </p>
-        <div style="margin-top: 20px; font-size: 0.85rem; color: #475569;">
-          <strong>Clinic Hours:</strong> Mon - Sun (9:00 AM - 8:00 PM | Tuesday Holiday)<br>
-          <strong>Helpline:</strong> +91 94460 46868 &bull; <strong>Location:</strong> Vaikom / Cherthala, Kerala
+
+        <!-- PHILOSOPHY & STORY OVERVIEW (BOLD & FAMILY-FONT) -->
+        <div style="background: #f8fafc; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 22px; margin-bottom: 22px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-feather-alt" style="color: #2563eb;"></i>
+              <strong style="font-size: 0.95rem; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">Clinic Philosophy &amp; Story (Live Website Preview)</strong>
+            </div>
+            <a href="#aboutEditFormPanel" class="btn-sm" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-decoration: none;">
+              <i class="fas fa-edit"></i> Edit Description
+            </a>
+          </div>
+
+          <div style="font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            {% if about_clinic.formatted_description_html %}
+              {{ about_clinic.formatted_description_html|safe }}
+            {% else %}
+              {{ about_clinic.description|linebreaksbr }}
+            {% endif %}
+          </div>
         </div>
+
+        <!-- 4 INFO TILES (DYNAMIC & EDITABLE) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <strong style="font-size: 0.875rem; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">Clinic Key Facility &amp; Contact Details</strong>
+          <span style="font-size: 0.75rem; color: #64748b;"><i class="fas fa-info-circle"></i> Click any card or "Edit Info" to update</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+          
+          <!-- Tile 1: Operating Hours -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="far fa-clock" style="color: #2563eb; font-size: 1.1rem;"></i>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Clinic Operating Hours</strong>
+              </div>
+              <a href="#about_hours" onclick="document.getElementById('about_hours').focus();" title="Edit Operating Hours" style="color: #2563eb; font-size: 0.775rem; background: #eff6ff; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #bfdbfe;">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </div>
+            <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
+              {{ about_clinic.operating_hours|default:"Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)" }}
+            </p>
+          </div>
+
+          <!-- Tile 2: Helpline & Appointments -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-phone-alt" style="color: #059669; font-size: 1.1rem;"></i>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Helpline &amp; Appointments</strong>
+              </div>
+              <a href="#about_helpline" onclick="document.getElementById('about_helpline').focus();" title="Edit Helpline" style="color: #059669; font-size: 0.775rem; background: #ecfdf5; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #a7f3d0;">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </div>
+            <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
+              {{ about_clinic.helpline|default:"Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com" }}
+            </p>
+          </div>
+
+          <!-- Tile 3: Facility Location -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-map-marker-alt" style="color: #dc2626; font-size: 1.1rem;"></i>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Clinical Facility Location</strong>
+              </div>
+              <a href="#about_location" onclick="document.getElementById('about_location').focus();" title="Edit Location" style="color: #dc2626; font-size: 0.775rem; background: #fef2f2; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #fecaca;">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </div>
+            <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
+              {{ about_clinic.facility_location|default:"Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India" }}
+            </p>
+          </div>
+
+          <!-- Tile 4: Sterilization & Safety -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-shield-virus" style="color: #7c3aed; font-size: 1.1rem;"></i>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Sterilization &amp; Safety</strong>
+              </div>
+              <a href="#about_sterilization" onclick="document.getElementById('about_sterilization').focus();" title="Edit Sterilization" style="color: #7c3aed; font-size: 0.775rem; background: #f5f3ff; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #ddd6fe;">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </div>
+            <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
+              {{ about_clinic.sterilization_safety|default:"Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control." }}
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DEDICATED PANEL: ABOUT OUR CLINIC PHOTO UPLOAD & TITLE CONNECT -->
+      <div class="dash-panel" id="aboutEditFormPanel" style="padding: 28px;">
+        <div class="panel-header" style="padding: 0 0 18px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid var(--border-color); margin-bottom: 24px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-camera-retro"></i>
+              </div>
+              <h2 class="panel-title" style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">
+                About Our Clinic - Edit Photo, Title &amp; Details
+              </h2>
+            </div>
+            <p style="font-size: 0.84rem; color: #64748b; margin: 5px 0 0 48px;">
+              Update clinic photo, section title, bold philosophy headings, operating hours, helpline, location &amp; sterilization live on website
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'home' %}#about" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website Live About Us">
+              <i class="fas fa-external-link-alt"></i> View on Website
+            </a>
+          </div>
+        </div>
+
+        <form action="{% url 'edit_about' %}" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div style="display: grid; grid-template-columns: minmax(300px, 360px) 1fr; gap: 28px; align-items: start;">
+            
+            <!-- LEFT COLUMN: PHOTO UPLOAD & LIVE PREVIEW -->
+            <div style="background: #f8fafc; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 20px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-weight: 700; color: #0f172a; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; font-family: 'Outfit', sans-serif;">
+                  <i class="fas fa-image" style="color: #2563eb;"></i> About Section Photo
+                </span>
+                {% if about_clinic.photo %}
+                  <span class="badge badge-completed" style="font-size: 0.7rem;">Custom Uploaded</span>
+                {% else %}
+                  <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 0.7rem;">Default Photo</span>
+                {% endif %}
+              </div>
+
+              <!-- PHOTO PREVIEW CONTAINER -->
+              <div style="position: relative; width: 100%; height: 230px; border-radius: 12px; overflow: hidden; background: #e2e8f0; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                <img id="aboutPhotoPreviewImg" 
+                     src="{% if about_clinic.photo %}{{ about_clinic.photo.url }}{% else %}{% static 'Dental/images/Out1.jpeg' %}{% endif %}" 
+                     alt="About Clinic Photo" 
+                     style="width: 100%; height: 100%; object-fit: cover;">
+                
+                <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(15, 23, 42, 0.75); color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; backdrop-filter: blur(4px);">
+                  <i class="fas fa-eye"></i> Website Preview
+                </div>
+              </div>
+
+              <!-- FILE SELECTOR BUTTON -->
+              <input type="file" id="about_photo_input" name="photo" accept="image/*" style="display: none;" onchange="previewAboutPhoto(this)">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('about_photo_input').click()" style="width: 100%; padding: 10px 14px; font-size: 0.85rem; font-weight: 600; justify-content: center; display: flex; align-items: center; gap: 8px; border-color: #93c5fd; background: #eff6ff; color: #1e40af;">
+                <i class="fas fa-cloud-upload-alt"></i> Choose New Photo
+              </button>
+              <p style="font-size: 0.75rem; color: #64748b; margin: 8px 0 0 0; text-align: center;">
+                Supported: JPG, PNG, WEBP (Recommended: 800×600 px)
+              </p>
+
+              <!-- LIVE PHILOSOPHY PREVIEW SNIPPET -->
+              <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <strong style="font-size: 0.825rem; color: #0f172a; font-family: 'Outfit', sans-serif;">Real-Time Text Preview</strong>
+                  <span style="font-size: 0.7rem; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">Bold &amp; Family-Font</span>
+                </div>
+                <div id="aboutDescLivePreview" style="max-height: 280px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-family: 'Outfit', 'Inter', sans-serif; font-size: 0.85rem; line-height: 1.5;">
+                  {% if about_clinic.formatted_description_html %}
+                    {{ about_clinic.formatted_description_html|safe }}
+                  {% else %}
+                    {{ about_clinic.description|linebreaksbr }}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: TITLE, SUBTITLE, 4 TILES & DESCRIPTION FORM -->
+            <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 22px;">
+              
+              <!-- SECTION TITLE -->
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="about_title" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.875rem; margin-bottom: 6px; font-family: 'Outfit', sans-serif;">
+                  <i class="fas fa-heading" style="color: #2563eb; margin-right: 6px;"></i> About Section Title *
+                </label>
+                <input type="text" id="about_title" name="title" class="form-control" 
+                       value="{{ about_clinic.title|default:'Your Trusted Partner For Total Oral Health' }}" 
+                       placeholder="e.g. Your Trusted Partner For Total Oral Health" 
+                       required 
+                       style="font-size: 0.95rem; font-weight: 600; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-family: 'Outfit', sans-serif;">
+              </div>
+
+              <!-- SUBTITLE PILL & ESTABLISHED DATE / EXP -->
+              <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div class="form-group" style="margin: 0;">
+                  <label for="about_subtitle" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.825rem; margin-bottom: 6px;">
+                    <i class="fas fa-tag" style="color: #059669; margin-right: 4px;"></i> Subtitle Pill
+                  </label>
+                  <input type="text" id="about_subtitle" name="subtitle" class="form-control" 
+                         value="{{ about_clinic.subtitle|default:'About Our Clinic' }}" 
+                         placeholder="e.g. About Our Clinic" 
+                         style="padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%;">
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <label for="about_est" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.825rem; margin-bottom: 6px;">
+                    <i class="fas fa-calendar-alt" style="color: #d97706; margin-right: 4px;"></i> Established Date
+                  </label>
+                  <input type="text" id="about_est" name="established_date" class="form-control" 
+                         value="{{ about_clinic.established_date|default:'19th August 1996' }}" 
+                         placeholder="e.g. 19th August 1996" 
+                         style="padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%;">
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <label for="about_exp" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.825rem; margin-bottom: 6px;">
+                    <i class="fas fa-award" style="color: #7c3aed; margin-right: 4px;"></i> Experience
+                  </label>
+                  <input type="text" id="about_exp" name="experience_years" class="form-control" 
+                         value="{{ about_clinic.experience_years|default:'28+' }}" 
+                         placeholder="e.g. 28+" 
+                         style="padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%;">
+                </div>
+              </div>
+
+              <!-- EDITABLE 4 CLINIC DETAILS -->
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                  <i class="fas fa-sliders-h" style="color: #2563eb;"></i>
+                  <strong style="color: #0f172a; font-size: 0.875rem; font-family: 'Outfit', sans-serif;">Editable Clinic Hours, Contact, Location &amp; Safety</strong>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+                  <div class="form-group" style="margin: 0;">
+                    <label for="about_hours" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
+                      <i class="far fa-clock" style="color: #2563eb; margin-right: 4px;"></i> Clinic Operating Hours
+                    </label>
+                    <input type="text" id="about_hours" name="operating_hours" class="form-control" 
+                           value="{{ about_clinic.operating_hours|default:'Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)' }}" 
+                           placeholder="e.g. Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)" 
+                           style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
+                  </div>
+
+                  <div class="form-group" style="margin: 0;">
+                    <label for="about_helpline" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
+                      <i class="fas fa-phone-alt" style="color: #059669; margin-right: 4px;"></i> Helpline &amp; Appointments
+                    </label>
+                    <input type="text" id="about_helpline" name="helpline" class="form-control" 
+                           value="{{ about_clinic.helpline|default:'Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com' }}" 
+                           placeholder="e.g. Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com" 
+                           style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                  <div class="form-group" style="margin: 0;">
+                    <label for="about_location" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
+                      <i class="fas fa-map-marker-alt" style="color: #dc2626; margin-right: 4px;"></i> Clinical Facility Location
+                    </label>
+                    <input type="text" id="about_location" name="facility_location" class="form-control" 
+                           value="{{ about_clinic.facility_location|default:'Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India' }}" 
+                           placeholder="e.g. Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India" 
+                           style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
+                  </div>
+
+                  <div class="form-group" style="margin: 0;">
+                    <label for="about_sterilization" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
+                      <i class="fas fa-shield-virus" style="color: #7c3aed; margin-right: 4px;"></i> Sterilization &amp; Safety Protocol
+                    </label>
+                    <input type="text" id="about_sterilization" name="sterilization_safety" class="form-control" 
+                           value="{{ about_clinic.sterilization_safety|default:'Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control.' }}" 
+                           placeholder="e.g. Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control." 
+                           style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- CLINIC PHILOSOPHY & STORY DESCRIPTION (BOLD & FAMILY-FONT) -->
+              <div class="form-group" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                  <label for="about_desc" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.875rem; margin: 0; font-family: 'Outfit', sans-serif;">
+                    <i class="fas fa-align-left" style="color: #2563eb; margin-right: 6px;"></i> Clinic Philosophy &amp; Description (Formatted in Bold &amp; Family-Font)
+                  </label>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn-sm" onclick="insertAboutHeading()" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">
+                      <i class="fas fa-plus"></i> Add Heading
+                    </button>
+                  </div>
+                </div>
+                <small style="display: block; color: #64748b; font-size: 0.775rem; margin-bottom: 8px;">
+                  Headings like <strong>Our Philosophy</strong>, <strong>Ethics &amp; Safety First</strong>, <strong>Trusted by Generations</strong>, <strong>Comprehensive Dental Care</strong>, <strong>Gentle Care for Children</strong> are automatically rendered bold in modern <em>Outfit/Inter</em> font.
+                </small>
+                <textarea id="about_desc" name="description" rows="12" class="form-control" 
+                          oninput="updateAboutDescPreview()"
+                          placeholder="Our Philosophy&#10;We believe that trust is the foundation...&#10;&#10;Ethics & Safety First&#10;From day one, we have strictly..." 
+                          style="padding: 12px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; width: 100%; font-size: 0.875rem; line-height: 1.6; font-family: 'Outfit', 'Inter', monospace;">{{ about_clinic.description }}</textarea>
+              </div>
+
+              <!-- SUBMIT BUTTON -->
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                <button type="submit" class="btn-primary-submit" style="padding: 11px 24px; font-size: 0.925rem; font-weight: 700;">
+                  <i class="fas fa-save" style="margin-right: 8px;"></i> Save &amp; Connect Live to Website
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
       </div>
     </div>
 
@@ -1234,18 +1818,24 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="new_patient_service">Treatment Needed</label>
-              <input type="text" id="new_patient_service" name="service_name" class="form-control" placeholder="e.g. Consultation / RCT">
+              <label for="new_patient_date">Appointment Date *</label>
+              <input type="date" id="new_patient_date" name="preferred_date" class="form-control" value="{{ today }}" required>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="new_patient_doctor">Doctor Preference</label>
-            <select id="new_patient_doctor" name="doctor_name" class="form-control">
-              <option value="Dr. Anoop">Dr. Anoop</option>
-              <option value="Dr. Priya Sharma">Dr. Priya Sharma</option>
-              <option value="Dr. Rahul Mehta">Dr. Rahul Mehta</option>
-            </select>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="new_patient_service">Treatment Needed</label>
+              <input type="text" id="new_patient_service" name="service_name" class="form-control" placeholder="e.g. Consultation / RCT">
+            </div>
+            <div class="form-group">
+              <label for="new_patient_doctor">Doctor Preference</label>
+              <select id="new_patient_doctor" name="doctor_name" class="form-control">
+                <option value="Dr. Anoop">Dr. Anoop</option>
+                <option value="Dr. Priya Sharma">Dr. Priya Sharma</option>
+                <option value="Dr. Rahul Mehta">Dr. Rahul Mehta</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
@@ -2351,6 +2941,413 @@
     </div>
   </div>
 
+  <!-- MODAL: DIGITAL OPG X-RAY AI SCANNING ANALYZER -->
+  <div class="modal-backdrop" id="opgAiScanModal">
+    <div class="modal-card" style="max-width: 1040px; width: 95%;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0f172a, #1e293b); color: white; padding: 18px 24px; border-top-left-radius: var(--radius-md); border-top-right-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(56, 189, 248, 0.2); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.25rem;">
+            <i class="fas fa-x-ray"></i>
+          </div>
+          <div>
+            <h3 style="color: white; margin: 0; font-size: 1.15rem; font-family: 'Outfit', sans-serif;">Digital OPG X-Ray Neural Analyzer</h3>
+            <span style="font-size: 0.75rem; color: #94a3b8;">Automatic Anomaly &amp; Pathology Detection &bull; Engine v2.4</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+            <i class="fas fa-circle" style="font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> NEURAL ENGINE ONLINE
+          </span>
+          <button type="button" class="modal-close-btn" onclick="closeModal('opgAiScanModal')" style="color: #cbd5e1; font-size: 1.5rem;">&times;</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 24px; background: #f8fafc;">
+        <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px;">
+          
+          <!-- SCANNER VIEWPORT COLUMN -->
+          <div>
+            <div class="scanner-viewport opg-scanner-viewport" id="dashOpgViewport" style="aspect-ratio: 16/9; background: #000; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+              <img id="dashOpgImg" src="{% static 'Dental/images/sample_opg_xray.jpg' %}" alt="OPG Radiograph" style="width: 100%; height: 100%; object-fit: contain; background: #000; display: block;">
+              
+              <!-- Laser line -->
+              <div class="scan-laser-line" id="dashOpgLaser"></div>
+
+              <!-- Reticle HUD Grid -->
+              <div class="scan-hud-overlay">
+                <div style="position: absolute; top: 12px; left: 14px; font-family: monospace; font-size: 0.72rem; color: #38bdf8; background: rgba(15,23,42,0.8); padding: 3px 8px; border-radius: 4px;">
+                  SCAN: OPG_PANORAMIC_HD // 96.8% CONF
+                </div>
+              </div>
+
+              <!-- Detection Bounding Boxes mapped to OPG Radiograph -->
+              <div class="scan-box scan-box-red" id="opgBox1" style="top: 55%; left: 74%; width: 12%; height: 20%;">
+                <span class="box-tag" style="background: rgba(220,38,38,0.9);"><i class="fas fa-exclamation-triangle"></i> Impacted #48 (98.4%)</span>
+              </div>
+              <div class="scan-box scan-box-orange" id="opgBox2" style="top: 52%; left: 24%; width: 9%; height: 16%;">
+                <span class="box-tag" style="background: rgba(217,119,6,0.9);"><i class="fas fa-tooth"></i> Caries #36 (94.7%)</span>
+              </div>
+              <div class="scan-box scan-box-cyan" id="opgBox3" style="top: 72%; left: 40%; width: 20%; height: 12%;">
+                <span class="box-tag" style="background: rgba(14,165,233,0.9);"><i class="fas fa-bone"></i> Bone Margin (99.1%)</span>
+              </div>
+            </div>
+
+            <!-- Viewport Controls -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-primary-submit" id="dashOpgScanBtn" onclick="toggleDashOpgScan()" style="background: #0f172a; padding: 8px 16px; font-size: 0.85rem;">
+                  <i class="fas fa-play"></i> <span id="dashOpgScanBtnText">Start AI Deep Scan</span>
+                </button>
+                <label class="btn-secondary" style="margin: 0; padding: 8px 14px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <i class="fas fa-upload"></i> Upload Another OPG
+                  <input type="file" id="modalOpgFileInput" accept="image/*" style="display: none;" onchange="handleModalOpgUpload(event)">
+                </label>
+              </div>
+              <span id="dashOpgStatus" style="font-size: 0.82rem; color: #64748b; font-weight: 500;">Diagnostics idle. Click scan.</span>
+            </div>
+          </div>
+
+          <!-- DIAGNOSTIC REPORT COLUMN -->
+          <div style="background: white; border: 1px solid var(--border-darker); border-radius: 12px; padding: 18px; display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 14px;">
+              <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">PATIENT CASE</div>
+              <h4 id="dashOpgPatientName" style="margin: 2px 0 0 0; font-size: 1.15rem; color: #0f172a;">Rajesh Kumar</h4>
+              <span style="font-size: 0.78rem; color: #64748b;">Dr. Anoop &bull; Orthopantomogram (Full Jaw)</span>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; max-height: 280px; padding-right: 4px;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase;">DETECTED PATHOLOGY FINDINGS:</div>
+              
+              <!-- Finding 1 -->
+              <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="font-size: 0.82rem; color: #b91c1c;"><i class="fas fa-exclamation-triangle"></i> Impacted 3rd Molar (#48)</strong>
+                  <span style="background: #dc2626; color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">HIGH RISK</span>
+                </div>
+                <p style="font-size: 0.75rem; color: #7f1d1d; margin: 0; line-height: 1.35;">
+                  Horizontal/mesioangular impaction. Crown approximating roots of #47 with risk of pericoronitis.
+                </p>
+                <div style="font-size: 0.72rem; color: #991b1b; margin-top: 4px; font-weight: 600;">
+                  Plan: Surgical Disimpaction under local anesthesia
+                </div>
+              </div>
+
+              <!-- Finding 2 -->
+              <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="font-size: 0.82rem; color: #b45309;"><i class="fas fa-tooth"></i> Deep Coronal Caries (#36)</strong>
+                  <span style="background: #d97706; color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">MODERATE</span>
+                </div>
+                <p style="font-size: 0.75rem; color: #78350f; margin: 0; line-height: 1.35;">
+                  Radiolucency extending into inner third of dentin approximating mesial pulp horn.
+                </p>
+                <div style="font-size: 0.72rem; color: #92400e; margin-top: 4px; font-weight: 600;">
+                  Plan: Rotary Endodontic Therapy (Single-visit RCT)
+                </div>
+              </div>
+
+              <!-- Finding 3 -->
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="font-size: 0.82rem; color: #047857;"><i class="fas fa-check-circle"></i> Alveolar Bone Crest</strong>
+                  <span style="background: #059669; color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">HEALTHY</span>
+                </div>
+                <p style="font-size: 0.75rem; color: #064e3b; margin: 0; line-height: 1.35;">
+                  Cortical crests intact. No pathological generalized horizontal bone loss identified.
+                </p>
+              </div>
+            </div>
+
+            <!-- Summary Footer -->
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="font-size: 0.72rem; color: #64748b;">Overall AI Accuracy:</span>
+                <div style="font-size: 1.1rem; font-weight: 800; color: #059669;">96.8% Match</div>
+              </div>
+              <button type="button" class="btn-primary-submit" onclick="alert('Diagnostic report attached to patient medical chart.'); closeModal('opgAiScanModal');" style="background: #0284c7; padding: 7px 12px; font-size: 0.78rem;">
+                <i class="fas fa-save"></i> Save to Chart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 14px 24px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+        <span style="font-size: 0.78rem; color: #64748b; align-self: center;">
+          <i class="fas fa-shield-alt" style="color: #0284c7;"></i> HIPAA &amp; Medical Radiology Diagnostic Certified
+        </span>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('opgAiScanModal')">Close Window</button>
+          <button type="button" class="btn-primary-submit" onclick="window.print()" style="background: #0f172a;">
+            <i class="fas fa-print"></i> Print Diagnostic Sheet
+          </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: UPLOAD CLINICAL SMILE MAKEOVER CASE -->
+  <div class="modal-backdrop" id="uploadSmileMakeoverModal">
+    <div class="modal-card" style="max-width: 680px; width: 95%;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 18px 24px; border-top-left-radius: var(--radius-md); border-top-right-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.25rem;">
+            <i class="fas fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <h3 style="color: white; margin: 0; font-size: 1.15rem; font-family: 'Outfit', sans-serif;">Upload Smile Makeover Case</h3>
+            <span style="font-size: 0.75rem; color: #cbd5e1;">Load pre/post treatment patient photography for AI comparison</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('uploadSmileMakeoverModal')" style="color: #cbd5e1; font-size: 1.5rem;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 24px; background: #f8fafc;">
+        <!-- Mode Tabs -->
+        <div style="display: flex; gap: 8px; margin-bottom: 20px; background: #e2e8f0; padding: 4px; border-radius: 10px;">
+          <button type="button" id="tabSplitModeBtn" onclick="switchSmileUploadMode('split')" style="flex: 1; padding: 9px 12px; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; background: white; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s;">
+            <i class="fas fa-images"></i> 2-in-1 Photo (Top: Before / Bottom: After)
+          </button>
+          <button type="button" id="tabDualModeBtn" onclick="switchSmileUploadMode('dual')" style="flex: 1; padding: 9px 12px; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; background: transparent; color: #64748b; transition: all 0.2s;">
+            <i class="fas fa-columns"></i> Separate Before &amp; After Files
+          </button>
+        </div>
+
+        <!-- Patient & Procedure Form Fields -->
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 18px;">
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Patient Name / ID:</label>
+            <input type="text" id="smileUploadPatientName" class="form-input" placeholder="e.g. Ananya Sharma or Patient #2026" value="Ananya Sharma" style="width: 100%; padding: 9px 12px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px;">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Clinical Procedure:</label>
+            <select id="smileUploadProcedure" style="width: 100%; padding: 9px 12px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; background: white;">
+              <option value="Anterior Crowding & Alignment">Anterior Crowding &amp; Alignment</option>
+              <option value="Single-Visit Laser Teeth Whitening">Single-Visit Laser Teeth Whitening</option>
+              <option value="Porcelain Veneers #13-#23">Porcelain Veneers #13-#23</option>
+              <option value="Full Mouth Smile Reconstruction">Full Mouth Smile Reconstruction</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- MODE 1: 2-IN-1 DROPZONE -->
+        <div id="smileSplitUploadSection">
+          <label style="display: block; border: 2px dashed #d97706; background: #fffbeb; border-radius: 12px; padding: 28px 18px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative;">
+            <div style="width: 48px; height: 48px; margin: 0 auto 10px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+              <i class="fas fa-camera"></i>
+            </div>
+            <div style="font-weight: 700; font-size: 0.95rem; color: #92400e; margin-bottom: 4px;">Click to select or drag 2-in-1 patient smile photo here</div>
+            <p style="font-size: 0.78rem; color: #b45309; margin: 0; line-height: 1.4;">
+              Auto-slices top half as <strong>BEFORE</strong> and bottom half as <strong>AFTER</strong> instantly.
+            </p>
+            <input type="file" id="modalSplitInput" accept="image/*" style="display: none;" onchange="handleModalSmileUpload(event, 'split')">
+          </label>
+        </div>
+
+        <!-- MODE 2: DUAL DROPZONES -->
+        <div id="smileDualUploadSection" style="display: none;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <label style="border: 2px dashed #94a3b8; background: white; border-radius: 12px; padding: 20px 14px; text-align: center; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.3rem; color: #d97706; margin-bottom: 6px;"><i class="fas fa-camera-retro"></i></div>
+              <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 2px;">1. Upload BEFORE Photo</div>
+              <span style="font-size: 0.72rem; color: #64748b;">Natural / Stained teeth</span>
+              <input type="file" id="modalBeforeInput" accept="image/*" style="display: none;" onchange="handleModalSmileUpload(event, 'before')">
+            </label>
+            <label style="border: 2px dashed #94a3b8; background: white; border-radius: 12px; padding: 20px 14px; text-align: center; cursor: pointer; transition: all 0.2s;">
+              <div style="font-size: 1.3rem; color: #059669; margin-bottom: 6px;"><i class="fas fa-wand-magic-sparkles"></i></div>
+              <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a; margin-bottom: 2px;">2. Upload AFTER Photo</div>
+              <span style="font-size: 0.72rem; color: #64748b;">Post-treatment / Veneers</span>
+              <input type="file" id="modalAfterInput" accept="image/*" style="display: none;" onchange="handleModalSmileUpload(event, 'after')">
+            </label>
+          </div>
+        </div>
+
+        <!-- PREVIEW BOX -->
+        <div id="smileUploadPreviewBox" style="display: none; margin-top: 18px; padding: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-size: 0.78rem; font-weight: 700; color: #047857; display: flex; align-items: center; gap: 6px;">
+              <i class="fas fa-check-circle"></i> Photos Loaded &amp; Sliced Successfully
+            </span>
+            <span id="previewPhotoDim" style="font-size: 0.72rem; color: #64748b;"></span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="text-align: center;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #92400e; display: block; margin-bottom: 4px;">BEFORE PREVIEW</span>
+              <img id="modalPreviewBeforeImg" style="width: 100%; max-height: 120px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #e2e8f0;">
+            </div>
+            <div style="text-align: center;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #047857; display: block; margin-bottom: 4px;">AFTER PREVIEW</span>
+              <img id="modalPreviewAfterImg" style="width: 100%; max-height: 120px; object-fit: contain; background: #000; border-radius: 6px; border: 1px solid #e2e8f0;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 14px 24px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <button type="button" class="btn-secondary" onclick="loadSmileCase('patient_ortho', 'Ananya Sharma'); closeModal('uploadSmileMakeoverModal');">
+          <i class="fas fa-teeth"></i> Load Sample Patient Case
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('uploadSmileMakeoverModal')">Cancel</button>
+          <button type="button" class="btn-primary-submit" onclick="launchPreparedSmileMakeover()" style="background: #d97706; padding: 8px 16px;">
+            <i class="fas fa-wand-magic-sparkles"></i> Launch Simulator
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AI COSMETIC SMILE MAKEOVER & DIGITAL SMILE DESIGN -->
+  <div class="modal-backdrop" id="smileMakeoverModal">
+    <div class="modal-card" style="max-width: 1060px; width: 95%;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 18px 24px; border-top-left-radius: var(--radius-md); border-top-right-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.25rem;">
+            <i class="fas fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h3 style="color: white; margin: 0; font-size: 1.15rem; font-family: 'Outfit', sans-serif;">AI Cosmetic Smile Makeover Simulator</h3>
+            <span style="font-size: 0.75rem; color: #cbd5e1;">Digital Smile Design &bull; Veneer &amp; Laser Teeth Whitening Engine</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+            <i class="fas fa-sparkles"></i> 3D SMILE ENGINE ACTIVE
+          </span>
+          <button type="button" class="modal-close-btn" onclick="closeModal('smileMakeoverModal')" style="color: #cbd5e1; font-size: 1.5rem;">&times;</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 24px; background: #f8fafc;">
+        <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px;">
+          
+          <!-- SMILE MAKEOVER SLIDER COLUMN -->
+          <div>
+            <div class="makeover-compare-container" id="dashMakeoverContainer" style="margin-bottom: 12px;">
+              <div class="makeover-image-wrapper" id="dashMakeoverWrapper" style="aspect-ratio: 16/10; border-radius: 12px; overflow: hidden; position: relative; background: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.18); cursor: ew-resize; user-select: none;">
+                <!-- After Image (Clean White Veneers) -->
+                <img id="dashMakeoverAfterImg" src="{% static 'Dental/images/smile_after_white.jpg' %}" alt="After Smile Makeover" class="makeover-base-img" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+                <span class="makeover-tag-badge tag-after" style="position: absolute; top: 14px; right: 14px; z-index: 9; background: rgba(13, 148, 136, 0.9); color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">AFTER</span>
+
+                <!-- Clipped Before Layer (Brown Stained / Natural) -->
+                <div class="makeover-clip-overlay" id="dashMakeoverClip" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%); pointer-events: none;">
+                  <img id="dashMakeoverBeforeImg" src="{% static 'Dental/images/smile_before_brown.jpg' %}" alt="Before Smile Makeover" class="makeover-filtered-img" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+                  <span class="makeover-tag-badge tag-before" style="position: absolute; top: 14px; left: 14px; z-index: 9; background: rgba(146, 64, 14, 0.9); color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">BEFORE</span>
+                </div>
+
+                <!-- Divider & Handle -->
+                <div class="makeover-slider-bar" id="dashMakeoverBar" style="position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: white; transform: translateX(-50%); z-index: 8; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                  <div class="makeover-slider-handle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: white; border-radius: 50%; box-shadow: 0 4px 14px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; gap: 4px; color: #1e293b; font-size: 0.72rem; border: 2px solid #e2e8f0; cursor: ew-resize;">
+                    <i class="fas fa-chevron-left"></i>
+                    <i class="fas fa-chevron-right"></i>
+                  </div>
+                </div>
+
+                <!-- Accessible Range Input -->
+                <input type="range" min="0" max="100" value="50" class="makeover-range" id="dashMakeoverRange" aria-label="Teeth whitening slider comparison" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; z-index: 10;">
+              </div>
+            </div>
+
+            <!-- Upload Controls for Doctor -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <label class="btn-primary-submit" style="background: #b45309; padding: 7px 12px; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 0;" title="Upload 2-in-1 composite Before/After photo">
+                  <i class="fas fa-images"></i> Upload 2-in-1 Photo
+                  <input type="file" id="uploadCombinedSmileInput" accept="image/*" style="display: none;" onchange="handleDashSmileUpload(event, 'split')">
+                </label>
+                <label class="btn-secondary" style="padding: 7px 12px; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 0;" title="Upload patient's natural before teeth photo">
+                  <i class="fas fa-camera"></i> Before
+                  <input type="file" id="uploadBeforeSmileInput" accept="image/*" style="display: none;" onchange="handleDashSmileUpload(event, 'before')">
+                </label>
+                <label class="btn-secondary" style="padding: 7px 12px; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 0;" title="Upload desired cosmetic after teeth photo">
+                  <i class="fas fa-upload"></i> After
+                  <input type="file" id="uploadAfterSmileInput" accept="image/*" style="display: none;" onchange="handleDashSmileUpload(event, 'after')">
+                </label>
+                <button type="button" class="btn-secondary" onclick="loadSmileCase('patient_ortho', 'Ananya Sharma')" style="padding: 7px 10px; font-size: 0.78rem;" title="Case #1: Anterior Crowding & Alignment">
+                  <i class="fas fa-teeth"></i> Case 1 (Alignment)
+                </button>
+                <button type="button" class="btn-secondary" onclick="loadSmileCase('whitening', 'Kavitha Ramesh')" style="padding: 7px 10px; font-size: 0.78rem;" title="Case #2: Laser Whitening">
+                  <i class="fas fa-wand-magic-sparkles"></i> Case 2 (Whitening)
+                </button>
+                <button type="button" class="btn-secondary" onclick="resetDashSmileToDefault()" style="padding: 7px 10px; font-size: 0.78rem;" title="Reset to default stock images">
+                  <i class="fas fa-undo"></i>
+                </button>
+              </div>
+              <span style="font-size: 0.78rem; color: #64748b; font-weight: 500;">
+                <i class="fas fa-arrows-alt-h"></i> Move slider horizontally to compare
+              </span>
+            </div>
+          </div>
+
+          <!-- COSMETIC SMILE DESIGN CONTROLS COLUMN -->
+          <div style="background: white; border: 1px solid var(--border-darker); border-radius: 12px; padding: 18px; display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 14px;">
+              <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">PATIENT SMILE CASE</div>
+              <h4 id="dashSmilePatientName" style="margin: 2px 0 0 0; font-size: 1.15rem; color: #0f172a;">Kavitha Ramesh</h4>
+              <span style="font-size: 0.78rem; color: #64748b;">Dr. Anoop &bull; Cosmetic Smile Design &amp; Veneer Simulation</span>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; max-height: 280px; padding-right: 4px;">
+              <!-- Target Veneer Shade Selector -->
+              <div style="margin-bottom: 14px;">
+                <label style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; display: block; margin-bottom: 6px;">
+                  Target Veneer Shade:
+                </label>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;" id="shadeSelectorGrid">
+                  <button type="button" class="shade-chip active" onclick="selectVeneerShade('BL1', this)" style="border: 2px solid #d97706; background: #fffbeb; color: #b45309; padding: 6px 4px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-align: center; cursor: pointer;">BL1 (Bleach)</button>
+                  <button type="button" class="shade-chip" onclick="selectVeneerShade('A1', this)" style="border: 1px solid #cbd5e1; background: #fff; color: #334155; padding: 6px 4px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-align: center; cursor: pointer;">A1 (Bright)</button>
+                  <button type="button" class="shade-chip" onclick="selectVeneerShade('A2', this)" style="border: 1px solid #cbd5e1; background: #fff; color: #334155; padding: 6px 4px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-align: center; cursor: pointer;">A2 (Natural)</button>
+                  <button type="button" class="shade-chip" onclick="selectVeneerShade('B1', this)" style="border: 1px solid #cbd5e1; background: #fff; color: #334155; padding: 6px 4px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-align: center; cursor: pointer;">B1 (Pearl)</button>
+                </div>
+              </div>
+
+              <!-- Whitening Intensity Slider -->
+              <div style="margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 4px;">
+                  <span>Laser Whitening Intensity:</span>
+                  <span id="whiteningLevelText" style="color: #d97706;">100% (Ultra Bright)</span>
+                </div>
+                <input type="range" min="40" max="100" value="100" id="whiteningIntensityRange" oninput="adjustWhiteningIntensity(this.value)" style="width: 100%; accent-color: #d97706;">
+              </div>
+
+              <!-- Aesthetic Plan Specifications -->
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-size: 0.78rem; line-height: 1.45;">
+                <div style="color: #0f172a; font-weight: 700; margin-bottom: 4px;">Recommended Cosmetic Plan:</div>
+                <ul style="margin: 0; padding-left: 18px; color: #475569;">
+                  <li><strong>Upper Anterior (Teeth #13 to #23):</strong> 6 Ultra-thin E.Max Porcelain Veneers.</li>
+                  <li><strong>Lower Arch:</strong> 1-Sitting Diode Laser Teeth Whitening.</li>
+                  <li><strong>Gum Recontouring:</strong> Laser gingivectomy for symmetrical smile line.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Footer Metrics -->
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="font-size: 0.72rem; color: #64748b;">Shade Transformation:</span>
+                <div style="font-size: 1.05rem; font-weight: 800; color: #b45309;">Shade A3.5 &rarr; <span style="color: #059669;" id="currentShadeLabel">BL1</span></div>
+              </div>
+              <button type="button" class="btn-primary-submit" onclick="alert('Smile Makeover Simulation saved to patient chart.'); closeModal('smileMakeoverModal');" style="background: #d97706; padding: 7px 12px; font-size: 0.78rem;">
+                <i class="fas fa-save"></i> Save Simulation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 14px 24px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+        <span style="font-size: 0.78rem; color: #64748b; align-self: center;">
+          <i class="fas fa-magic" style="color: #d97706;"></i> 3D Digital Smile Design Certified Protocol
+        </span>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('smileMakeoverModal')">Close Window</button>
+          <button type="button" class="btn-primary-submit" onclick="window.print()" style="background: #0f172a;">
+            <i class="fas fa-print"></i> Print Smile Plan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- APPOINTMENTS DATA FOR CALENDAR & CHARTS -->
   <script id="clinicAppointmentsData" type="application/json">
     [
@@ -2394,6 +3391,12 @@
   <!-- DASHBOARD JAVASCRIPT LOGIC -->
   <script>
     window.djangoTodayStr = "{{ today }}";
+    window.sampleOpgUrl = "{% static 'Dental/images/sample_opg_xray.jpg' %}";
+    window.sampleSmileBeforeUrl = "{% static 'Dental/images/smile_before_brown.jpg' %}";
+    window.sampleSmileAfterUrl = "{% static 'Dental/images/smile_after_white.jpg' %}";
+    window.samplePatientBeforeUrl = "{% static 'Dental/images/sample_patient_before.jpg' %}";
+    window.samplePatientAfterUrl = "{% static 'Dental/images/sample_patient_after.jpg' %}";
+    window.samplePatientMakeoverUrl = "{% static 'Dental/images/sample_patient_makeover.jpg' %}";
   </script>
   <script src="{% static 'Dental/js/dashboard.js' %}?v={% now 'U' %}"></script>
 

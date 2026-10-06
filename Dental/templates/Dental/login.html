@@ -299,18 +299,23 @@
       {% csrf_token %}
       
       <div class="form-group">
-        <label class="form-label" for="username">Staff Username</label>
+        <label class="form-label" for="username">Mobile Number / Email / Staff Username</label>
         <div class="input-wrapper">
           <i class="fas fa-user-shield input-icon"></i>
-          <input type="text" id="username" name="username" class="form-input" placeholder="Enter username (e.g. Admin)" value="Admin" required autofocus>
+          <input type="text" id="username" name="username" class="form-input" placeholder="Enter Mobile, Email or Username" value="Anoop" required autofocus>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="password">Password</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+          <a href="javascript:void(0)" onclick="toggleLoginForgot('forgot')" style="color: #0284c7; font-size: 0.775rem; text-decoration: none; font-weight: 600; cursor: pointer;">
+            <i class="fas fa-key"></i> Forgot Password?
+          </a>
+        </div>
         <div class="input-wrapper">
           <i class="fas fa-key input-icon"></i>
-          <input type="password" id="password" name="password" class="form-input" placeholder="Enter password" value="admin123" required>
+          <input type="password" id="password" name="password" class="form-input" placeholder="Enter password" value="anoop123" required>
         </div>
       </div>
 
@@ -319,12 +324,50 @@
       </button>
     </form>
 
-    <div class="quick-login-card">
+    <!-- REPLACE PASSWORD FORM (INLINE ON LOGIN PAGE) -->
+    <form action="{% url 'replace_password' %}" method="POST" id="replacePasswordForm" style="display: none;">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="rep_identifier">Registered Mobile Number / Email</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user-check input-icon"></i>
+          <input type="text" id="rep_identifier" name="identifier" class="form-input" placeholder="Enter Mobile Number or Email" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="rep_new_password">New Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" id="rep_new_password" name="new_password" class="form-input" placeholder="Enter new password (min. 4 chars)" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="rep_confirm_password">Confirm New Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" id="rep_confirm_password" name="confirm_password" class="form-input" placeholder="Re-enter new password" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login" style="background: linear-gradient(135deg, #0284c7, #0369a1); margin-top: 10px;">
+        <i class="fas fa-save"></i> Save Password & Login
+      </button>
+
+      <div style="text-align: center; margin-top: 14px;">
+        <a href="javascript:void(0)" onclick="toggleLoginForgot('login')" style="color: #0284c7; font-size: 0.825rem; font-weight: 600; text-decoration: none; cursor: pointer;">
+          <i class="fas fa-arrow-left"></i> Remember your password? Back to Login
+        </a>
+      </div>
+    </form>
+
+    <div class="quick-login-card" id="quickLoginCard">
       <div class="quick-login-title">
         <i class="fas fa-bolt"></i> One-Click Demo Credentials
       </div>
       <p style="font-size: 0.775rem; color: #64748b; margin-bottom: 8px;">
-        Default Staff: <strong>Admin</strong> &bull; Password: <strong>admin123</strong>
+        Default Staff: <strong>Anoop</strong> &bull; Password: <strong>anoop123</strong>
       </p>
       <button type="button" class="btn-quick-fill" onclick="autoLogin()">
         <i class="fas fa-magic"></i> Auto Fill & Submit
@@ -338,9 +381,34 @@
 
   <script>
     function autoLogin() {
-      document.getElementById('username').value = 'Admin';
-      document.getElementById('password').value = 'admin123';
+      document.getElementById('username').value = 'Anoop';
+      document.getElementById('password').value = 'anoop123';
       document.getElementById('staffLoginForm').submit();
+    }
+
+    function toggleLoginForgot(mode) {
+      const loginForm = document.getElementById('staffLoginForm');
+      const forgotForm = document.getElementById('replacePasswordForm');
+      const quickLogin = document.getElementById('quickLoginCard');
+      const badge = document.querySelector('.portal-badge');
+
+      if (mode === 'forgot') {
+        if (loginForm) loginForm.style.display = 'none';
+        if (forgotForm) forgotForm.style.display = 'block';
+        if (quickLogin) quickLogin.style.display = 'none';
+        if (badge) badge.innerHTML = '<i class="fas fa-key"></i> Reset & Replace Password';
+        const userVal = document.getElementById('username')?.value;
+        const repId = document.getElementById('rep_identifier');
+        if (userVal && repId && !repId.value && userVal !== 'Admin' && userVal !== 'Anoop') {
+          repId.value = userVal;
+        }
+        if (repId) setTimeout(() => repId.focus(), 100);
+      } else {
+        if (loginForm) loginForm.style.display = 'block';
+        if (forgotForm) forgotForm.style.display = 'none';
+        if (quickLogin) quickLogin.style.display = 'block';
+        if (badge) badge.innerHTML = '<i class="fas fa-lock"></i> Staff & Admin Portal';
+      }
     }
   </script>
 

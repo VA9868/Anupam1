@@ -35,9 +35,9 @@
           <span>Dr.Anoop's Anupam Dental Clinic, West Gate Vaikom</span>
         </a>
       </div>
-      <div class="top-badge">
+      <!-- <div class="top-badge">
         <i class="fas fa-shield-virus"></i> 100% Sterilized & Painless Care
-      </div>
+      </div> -->
     </div>
   </div>
 
@@ -72,9 +72,9 @@
         </button>
         {% if user.is_authenticated or patient_name %}
           <div class="user-profile-menu">
-            <button class="circle-login-btn logged-in" title="Account Details">
+            <a href="{% url 'dashboard' %}" class="circle-login-btn logged-in" title="My Dashboard">
               <i class="fas fa-user-check"></i>
-            </button>
+            </a>
             <div class="user-dropdown-card">
               <div class="dropdown-header">
                 <i class="fas fa-user-circle"></i>
@@ -179,16 +179,26 @@
     <div class="about-grid">
       <div class="about-media">
         <div class="about-image-card">
-          <img src="{% static 'Dental/images/Out1.jpeg' %}" alt="Anupam Dental Clinic - Dr. Anoop" class="about-main-img">
+          {% if about_clinic and about_clinic.photo %}
+            <img src="{{ about_clinic.photo.url }}" alt="{{ about_clinic.title }}" class="about-main-img">
+          {% else %}
+            <img src="{% static 'Dental/images/Out1.jpeg' %}" alt="Anupam Dental Clinic - Dr. Anoop" class="about-main-img">
+          {% endif %}
         </div>
       </div>
 
       <div class="about-info">
-        <span class="subtitle-pill">About Our Clinic</span>
-        <h2 class="section-title">Your Trusted Partner For Total Oral Health</h2>
-        <p class="section-desc">
-          <strong>Anupam Dental Clinic</strong>, led by <strong>Dr. Anoop</strong>, has been caring for patients since <strong>19th August 1996</strong>. For nearly three decades, we have remained committed to ethical dentistry, clear communication, and compassionate care.
-        </p>
+        <span class="subtitle-pill">{{ about_clinic.subtitle|default:"About Our Clinic" }}</span>
+        <h2 class="section-title">{{ about_clinic.title|default:"Your Trusted Partner For Total Oral Health" }}</h2>
+        <div class="section-desc about-story-text" style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin-top: 16px;">
+          {% if about_clinic and about_clinic.formatted_description_html %}
+            {{ about_clinic.formatted_description_html|safe }}
+          {% elif about_clinic and about_clinic.description %}
+            {{ about_clinic.description|linebreaksbr }}
+          {% else %}
+            <strong>Anupam Dental Clinic</strong>, led by <strong>Dr. Anoop</strong>, has been caring for patients since <strong>19th August 1996</strong>. For nearly three decades, we have remained committed to ethical dentistry, clear communication, and compassionate care.
+          {% endif %}
+        </div>
 
         <!-- <div class="about-features">
           <div class="feature-card">
@@ -213,6 +223,113 @@
           </div>
         </div> -->
         
+      </div>
+    </div>
+  </section>
+
+  <!-- AI CLINICAL SIMULATION SANDBOX SECTION -->
+  <section class="section ai-sandbox-section" id="ai-sandbox">
+    <div class="sandbox-header-wrap">
+      <span class="sandbox-pill">Simulate Diagnostics</span>
+      <h2 class="sandbox-title">Try Our AI Clinical Simulation Sandbox</h2>
+      <p class="sandbox-desc">Experience firsthand how our advanced dental software helps diagnose anomalies and design perfect smiles.</p>
+    </div>
+
+    <div class="sandbox-grid">
+      <!-- CARD 1: AI X-Ray Scanning Analyzer -->
+      <div class="sandbox-card">
+        <div class="sandbox-card-header">
+          <div class="sandbox-card-title-group">
+            <span class="sandbox-icon-pulse"><i class="fas fa-heart-pulse"></i></span>
+            <h3 class="sandbox-card-title">AI X-Ray Scanning Analyzer</h3>
+          </div>
+          <span class="sandbox-badge badge-demo">Interactive Demo</span>
+        </div>
+        <p class="sandbox-card-desc">Click "Start AI Scan" to simulate automatic caries and bone loss identification using a neural network overlay.</p>
+
+        <div class="scanner-viewport" id="scannerViewport">
+          <img src="{% static 'Dental/images/ai_clinic_scan.jpg' %}" alt="AI Clinic Diagnostics Simulator" class="scanner-img">
+          
+          <!-- Scanning Laser Beam -->
+          <div class="scan-laser-line" id="scanLaserLine"></div>
+          
+          <!-- Holographic HUD Target Grid -->
+          <div class="scan-hud-overlay">
+            <div class="hud-reticle"></div>
+          </div>
+
+          <!-- Bounding Boxes Matching Clinic Simulation -->
+          <div class="scan-box scan-box-red" id="box1" style="top: 38%; left: 15%; width: 14%; height: 26%;">
+            <span class="box-tag"><i class="fas fa-exclamation-triangle"></i> Caries Detected (94.2%)</span>
+          </div>
+          <div class="scan-box scan-box-orange" id="box2" style="top: 52%; left: 40%; width: 19%; height: 18%;">
+            <span class="box-tag"><i class="fas fa-info-circle"></i> Fixture Joint (91.8%)</span>
+          </div>
+          <div class="scan-box scan-box-cyan" id="box3" style="top: 36%; left: 68%; width: 13%; height: 26%;">
+            <span class="box-tag"><i class="fas fa-check-circle"></i> Bone Margin (99.4%)</span>
+          </div>
+        </div>
+
+        <div class="sandbox-card-footer">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="sandbox-scan-btn" id="startScanBtn">
+              <i class="fas fa-play"></i> <span id="scanBtnText">Start AI Scan</span>
+            </button>
+            <!-- <label class="sandbox-scan-btn" style="background: #0284c7; cursor: pointer; margin: 0; padding: 9px 14px;" title="Upload custom Digital OPG X-Ray">
+              <i class="fas fa-upload"></i> <span>Upload OPG</span>
+              <input type="file" id="homeOpgUploadInput" accept="image/*" style="display: none;">
+            </label>
+            <button type="button" class="sandbox-scan-btn" id="homeSampleOpgBtn" data-opg-url="{% static 'Dental/images/sample_opg_xray.jpg' %}" data-clinic-url="{% static 'Dental/images/ai_clinic_scan.jpg' %}" style="background: #334155; padding: 9px 12px;" title="Switch to Panoramic OPG X-Ray Radiograph">
+              <i class="fas fa-x-ray"></i> <span id="opgToggleBtnText">OPG X-Ray</span>
+            </button> -->
+          </div>
+          <span class="sandbox-status-text" id="scanStatusText">Diagnostics idle. Click scan.</span>
+        </div>
+      </div>
+
+      <!-- CARD 2: AI Cosmetic Smile Makeover -->
+      <div class="sandbox-card">
+        <div class="sandbox-card-header">
+          <div class="sandbox-card-title-group">
+            <span class="sandbox-icon-sparkle"><i class="fas fa-wand-magic-sparkles"></i></span>
+            <h3 class="sandbox-card-title">AI Cosmetic Smile Makeover</h3>
+          </div>
+          <span class="sandbox-badge badge-whitening">Whitening / Veneers</span>
+        </div>
+        <p class="sandbox-card-desc">Drag the slider horizontally to simulate a custom laser teeth whitening or veneer alignment.</p>
+
+        <div class="makeover-compare-container" id="makeoverContainer">
+          <!-- Before & After Comparison -->
+          <div class="makeover-image-wrapper" id="makeoverWrapper">
+            <!-- Underneath: After Makeover (Clean White Teeth) -->
+            <img src="{% static 'Dental/images/smile_after_white.jpg' %}" alt="After Smile Makeover - White" class="makeover-base-img makeover-after-img">
+            <span class="makeover-tag-badge tag-after">AFTER</span>
+
+            <!-- Clipped Top Layer: Before Makeover (Brown Stained Teeth) -->
+            <div class="makeover-clip-overlay" id="makeoverClipOverlay">
+              <img src="{% static 'Dental/images/smile_before_brown.jpg' %}" alt="Before Smile Makeover - Brown" class="makeover-filtered-img makeover-before-img">
+              <span class="makeover-tag-badge tag-before">BEFORE</span>
+            </div>
+
+            <!-- Divider Bar & Handle -->
+            <div class="makeover-slider-bar" id="makeoverSliderBar">
+              <div class="makeover-slider-handle">
+                <i class="fas fa-chevron-left"></i>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+            </div>
+
+            <!-- Range input for accessible keyboard navigation -->
+            <input type="range" min="0" max="100" value="50" class="makeover-range" id="makeoverRange" aria-label="Teeth whitening slider comparison">
+          </div>
+        </div>
+
+        <div class="sandbox-card-footer">
+          <div class="sandbox-instruction">
+            <i class="fas fa-arrows-alt-h"></i> <span>Drag slider to compare</span>
+          </div>
+          <span class="sandbox-badge badge-dark">Before vs After Makeover</span>
+        </div>
       </div>
     </div>
   </section>
@@ -261,13 +378,13 @@
         <div class="service-meta" style="display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 14px; border-top: 1px solid #f1f5f9;">
           <span><i class="far fa-clock"></i> {{ s.duration|default:"30-45 Mins" }}</span>
           {% if s.price_estimate %}
-            <span style="color: var(--primary); font-weight: 700;">{{ s.price_estimate }}</span>
+            <!-- <span style="color: var(--primary); font-weight: 700;">{{ s.price_estimate }}</span> -->
           {% endif %}
         </div>
 
-        <button class="btn-outline open-appointment-modal" data-service="{{ s.title }}" style="width: 100%; margin-top: 16px; justify-content: center;">
+        <!-- <button class="btn-outline open-appointment-modal" data-service="{{ s.title }}" style="width: 100%; margin-top: 16px; justify-content: center;">
           <i class="far fa-calendar-check" style="margin-right: 6px;"></i> Book {{ s.title }}
-        </button>
+        </button> -->
       </div>
       {% endfor %}
     </div>
@@ -398,35 +515,51 @@
       <p class="section-desc">Read genuine reviews from patients who experienced gentle, painless dental care at Anupam Dental Clinic.</p>
     </div>
 
-    <div class="testimonials-grid">
-      {% for t in testimonials %}
-      <div class="testimonial-card">
-        <div class="stars">
-          {% for i in "12345" %}
-            {% if forloop.counter <= t.rating|default:5 %}
-              <i class="fas fa-star"></i>
-            {% else %}
-              <i class="far fa-star" style="color: #cbd5e1;"></i>
-            {% endif %}
-          {% endfor %}
-        </div>
-        <p class="review-text">"{{ t.review_text }}"</p>
-        <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px;">
-          {% if t.photo %}
-            <img src="{{ t.photo.url }}" alt="{{ t.patient_name }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-light); flex-shrink: 0;">
-          {% else %}
-            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; flex-shrink: 0;">
-              {{ t.patient_name|slice:":1"|upper }}
-            </div>
-          {% endif %}
+    <!-- CAROUSEL WRAPPER WITH NEXT & PREVIOUS BUTTONS -->
+    <div class="testimonials-carousel-container">
+      <button type="button" class="testimonial-arrow-btn prev-btn" id="prevTestimonialBtn" onclick="slideTestimonials(-1)" aria-label="Previous Testimonials" title="Previous Reviews">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="testimonials-track" id="testimonialsTrack">
+        {% for t in testimonials %}
+        <div class="testimonial-card">
           <div>
-            <div class="patient-name">{{ t.patient_name }}</div>
-            <div class="patient-treatment">Treatment: {{ t.treatment }}</div>
+            <div class="stars">
+              {% for i in "12345" %}
+                {% if forloop.counter <= t.rating|default:5 %}
+                  <i class="fas fa-star"></i>
+                {% else %}
+                  <i class="far fa-star" style="color: #cbd5e1;"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <p class="review-text">"{{ t.review_text }}"</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--gray-border);">
+            {% if t.photo %}
+              <img src="{{ t.photo.url }}" alt="{{ t.patient_name }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-light); flex-shrink: 0;">
+            {% else %}
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; flex-shrink: 0;">
+                {{ t.patient_name|slice:":1"|upper }}
+              </div>
+            {% endif %}
+            <div>
+              <div class="patient-name">{{ t.patient_name }}</div>
+              <div class="patient-treatment">Treatment: {{ t.treatment }}</div>
+            </div>
           </div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
+
+      <button type="button" class="testimonial-arrow-btn next-btn" id="nextTestimonialBtn" onclick="slideTestimonials(1)" aria-label="Next Testimonials" title="Next Reviews">
+        <i class="fas fa-chevron-right"></i>
+      </button>
     </div>
+
+    <!-- CAROUSEL DOTS INDICATOR -->
+    <div class="testimonial-dots" id="testimonialDots"></div>
   </section>
 
   <!-- FOOTER WITH ADDRESS, NAVBAR LINKS AND INTERACTIVE MAP -->
@@ -555,19 +688,21 @@
       <form id="appointmentForm" action="{% url 'book_appointment' %}" method="POST">
         {% csrf_token %}
         
-        <!-- Preferred Date & Service -->
+        <!-- Hidden Service input to maintain service selection from cards / symptom checker -->
+        <input type="hidden" id="service_name" name="service_name" value="General Consultation">
+
+        <!-- Preferred Date & Time Slot -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div class="form-group">
             <label class="form-label" for="preferred_date">Appointment Date *</label>
             <input type="date" class="form-input" id="preferred_date" name="preferred_date" min="{{ today }}" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="service_name">Treatment / Service *</label>
-            <select class="form-select" id="service_name" name="service_name" required>
-              <option value="General Consultation">General Consultation</option>
-              {% for s in services %}
-                <option value="{{ s.title }}">{{ s.title }}</option>
-              {% endfor %}
+            <label class="form-label" for="preferred_time">Preferred Time Slot *</label>
+            <select class="form-select" id="preferred_time" name="preferred_time" required>
+              <option value="Morning (10:00 AM - 12:00 PM)">Morning (09:30 AM - 12:00 PM)</option>
+              <option value="Afternoon (12:00 PM - 04:00 PM)">Afternoon (12:00 PM - 04:00 PM)</option>
+              <option value="Evening (04:00 PM - 08:00 PM)">Evening (04:00 PM - 08:00 PM)</option>
             </select>
           </div>
         </div>
@@ -605,7 +740,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div class="form-group">
             <label class="form-label" for="phone">Phone Number *</label>
-            <input type="tel" class="form-input" id="phone" name="phone" placeholder="+91 9446046868" required>
+            <input type="tel" class="form-input" id="phone" name="phone" placeholder="Primary Phone" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="phone2">Phone Number 2 (Alternate)</label>
@@ -640,34 +775,14 @@
           </div>
         </div>
 
-        <!-- Doctor & Slot
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="form-group">
-            <label class="form-label" for="doctor_name">Doctor Preference</label>
-            <select class="form-select" id="doctor_name" name="doctor_name">
-              <option value="Dr. Anoop">Dr. Anoop (Chief Surgeon)</option>
-              <option value="Dr. Priya Sharma">Dr. Priya Sharma (Orthodontist)</option>
-              <option value="Dr. Rahul Mehta">Dr. Rahul Mehta (Pediatric Dentist)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="preferred_time">Time Slot</label>
-            <select class="form-select" id="preferred_time" name="preferred_time">
-              <option value="Morning (09:30 AM - 12:00 PM)">Morning (09:30 AM - 12:00 PM)</option>
-              <option value="Afternoon (12:00 PM - 04:00 PM)">Afternoon (12:00 PM - 04:00 PM)</option>
-              <option value="Evening (04:00 PM - 08:00 PM)">Evening (04:00 PM - 08:00 PM)</option>
-            </select>
-          </div>
-        </div> -->
-
         <!-- Comments / Commit Notes -->
         <div class="form-group">
-          <label class="form-label" for="notes">Comments / Special Notes</label>
+          <label class="form-label" for="notes">Comments</label>
           <textarea class="form-textarea" id="notes" name="notes" rows="2" placeholder="Mention any specific dental issue, toothache history or comments..."></textarea>
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem; margin-top: 6px;">
-          <i class="fas fa-check-circle"></i> Commit & Book Appointment
+          <i class="fas fa-check-circle"></i> Apply & Save
         </button>
       </form>
     </div>
@@ -692,12 +807,15 @@
       </div>
 
       <!-- MODE SWITCH TABS -->
-      <div style="display: flex; background: var(--slate-light); padding: 4px; border-radius: 12px; margin-bottom: 20px;">
-        <button id="tabLoginBtn" type="button" class="auth-tab-btn active" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+      <div style="display: flex; background: var(--slate-light); padding: 4px; border-radius: 12px; margin-bottom: 20px; gap: 4px;">
+        <button id="tabLoginBtn" type="button" class="auth-tab-btn active" onclick="switchAuthTab('login')">
           <i class="fas fa-sign-in-alt"></i> Login
         </button>
-        <button id="tabRegisterBtn" type="button" class="auth-tab-btn" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+        <button id="tabRegisterBtn" type="button" class="auth-tab-btn" onclick="switchAuthTab('register')">
           <i class="fas fa-user-plus"></i> New Register
+        </button>
+        <button id="tabReplaceBtn" type="button" class="auth-tab-btn" onclick="switchAuthTab('replace')">
+          <i class="fas fa-key"></i> Password
         </button>
       </div>
 
@@ -707,13 +825,23 @@
       <form id="loginForm" action="{% url 'login' %}" method="POST">
         {% csrf_token %}
         <div class="form-group">
-          <label class="form-label" for="login_username">Username / Email / Mobile *</label>
-          <input type="text" class="form-input" id="login_username" name="username" placeholder="Enter Username, Email or Phone" required>
+          <label class="form-label" for="login_username">Mobile Number / Email *</label>
+          <input type="text" class="form-input" id="login_username" name="username" placeholder="Enter Mobile Number or Email" required>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="login_password">Password *</label>
-          <input type="password" class="form-input" id="login_password" name="password" placeholder="Enter Password" required>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="login_password" style="margin-bottom: 0;">Password *</label>
+            <a href="javascript:void(0)" id="linkForgotPassword" onclick="openForgetPassword()" style="font-size: 0.775rem; color: var(--primary); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+              <i class="fas fa-question-circle"></i> Forgot Password?
+            </a>
+          </div>
+          <div style="position: relative;">
+            <input type="password" class="form-input" id="login_password" name="password" placeholder="Enter Password" required style="padding-right: 40px;">
+            <button type="button" onclick="togglePasswordVisibility('login_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 4px;" aria-label="Toggle password view">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 13px; font-size: 0.95rem; margin-top: 8px;">
@@ -721,7 +849,7 @@
         </button>
       </form>
 
-      <!-- REGISTER FORM -->
+      <!-- REGISTER FORM (WITHOUT MANUAL USERNAME) -->
       <form id="registerForm" action="{% url 'register' %}" method="POST" style="display: none;">
         {% csrf_token %}
         <div class="form-group">
@@ -730,23 +858,68 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="reg_username">Username *</label>
-          <input type="text" class="form-input" id="reg_username" name="username" placeholder="Choose a username" required>
+          <label class="form-label" for="reg_phone">Mobile Number *</label>
+          <input type="tel" class="form-input" id="reg_phone" name="phone" placeholder="Enter 10-digit mobile number" required>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="reg_email">Email / Mobile Number</label>
-          <input type="text" class="form-input" id="reg_email" name="email" placeholder="e.g. name@email.com or 9876543210">
+          <label class="form-label" for="reg_email">Email Address (Optional)</label>
+          <input type="email" class="form-input" id="reg_email" name="email" placeholder="e.g. name@email.com">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="reg_password">Create Password *</label>
-          <input type="password" class="form-input" id="reg_password" name="password" placeholder="Enter password" required>
+          <div style="position: relative;">
+            <input type="password" class="form-input" id="reg_password" name="password" placeholder="Enter password (min. 4 chars)" required style="padding-right: 40px;">
+            <button type="button" onclick="togglePasswordVisibility('reg_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 4px;" aria-label="Toggle password view">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 13px; font-size: 0.95rem; margin-top: 8px; background: linear-gradient(135deg, #059669, #10b981);">
-          <i class="fas fa-user-check"></i> Register New Account
+          <i class="fas fa-user-check"></i> Register Account & Connect
         </button>
+      </form>
+
+      <!-- PASSWORD (FORGOT PASSWORD & REPLACE) FORM -->
+      <form id="replacePasswordForm" action="{% url 'replace_password' %}" method="POST" style="display: none;">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="replace_identifier">Registered Mobile Number / Email *</label>
+          <input type="text" class="form-input" id="replace_identifier" name="identifier" placeholder="Enter Mobile Number or Email" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="replace_new_password">New Password *</label>
+          <div style="position: relative;">
+            <input type="password" class="form-input" id="replace_new_password" name="new_password" placeholder="Enter new password (min. 4 chars)" required style="padding-right: 40px;">
+            <button type="button" onclick="togglePasswordVisibility('replace_new_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 4px;" aria-label="Toggle password view">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="replace_confirm_password">Confirm Password *</label>
+          <div style="position: relative;">
+            <input type="password" class="form-input" id="replace_confirm_password" name="confirm_password" placeholder="Re-enter new password" required style="padding-right: 40px;">
+            <button type="button" onclick="togglePasswordVisibility('replace_confirm_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 4px;" aria-label="Toggle password view">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <small id="passwordMatchHint" style="display: none; font-size: 0.775rem; margin-top: 5px;"></small>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 13px; font-size: 0.95rem; margin-top: 8px; background: linear-gradient(135deg, #0284c7, #0369a1);">
+          <i class="fas fa-save"></i> Save Password & Login
+        </button>
+
+        <div style="text-align: center; margin-top: 12px; font-size: 0.8rem;">
+          <a href="javascript:void(0)" id="backToLoginLink" onclick="switchAuthTab('login')" style="color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer;">
+            <i class="fas fa-arrow-left"></i> Remember your password? Back to Login
+          </a>
+        </div>
       </form>
 
       <div style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--slate-body); border-top: 1px solid var(--gray-border); padding-top: 12px;">

@@ -177,8 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => {
             if (appointmentModal) appointmentModal.classList.remove('active');
             document.body.style.overflow = 'auto';
-            alert(data.message);
-          }, 800);
+            if (data.redirect_url) {
+              window.location.href = data.redirect_url;
+            } else {
+              alert(data.message);
+            }
+          }, 1200);
         } else {
           if (appointmentAlert) {
             appointmentAlert.style.display = 'block';
@@ -247,27 +251,134 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Auth Tab Switchers (Login vs Register)
+  // Auth Tab Switchers (Login vs Register vs Replace Password)
   const tabLoginBtn = document.getElementById('tabLoginBtn');
   const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+  const tabReplaceBtn = document.getElementById('tabReplaceBtn');
   const registerForm = document.getElementById('registerForm');
+  const replacePasswordForm = document.getElementById('replacePasswordForm');
+  const linkForgotPassword = document.getElementById('linkForgotPassword');
+  const backToLoginLink = document.getElementById('backToLoginLink');
 
-  if (tabLoginBtn && tabRegisterBtn && loginForm && registerForm) {
-    tabLoginBtn.addEventListener('click', () => {
-      tabLoginBtn.classList.add('active');
-      tabRegisterBtn.classList.remove('active');
-      loginForm.style.display = 'block';
-      registerForm.style.display = 'none';
-      if (loginAlert) loginAlert.style.display = 'none';
-    });
+  function switchAuthTab(tab) {
+    if (loginAlert) loginAlert.style.display = 'none';
 
-    tabRegisterBtn.addEventListener('click', () => {
-      tabRegisterBtn.classList.add('active');
-      tabLoginBtn.classList.remove('active');
-      registerForm.style.display = 'block';
-      loginForm.style.display = 'none';
-      if (loginAlert) loginAlert.style.display = 'none';
+    // Reset tab button states
+    if (tabLoginBtn) tabLoginBtn.classList.remove('active');
+    if (tabRegisterBtn) tabRegisterBtn.classList.remove('active');
+    if (tabReplaceBtn) tabReplaceBtn.classList.remove('active');
+
+    // Hide all forms
+    if (loginForm) loginForm.style.display = 'none';
+    if (registerForm) registerForm.style.display = 'none';
+    if (replacePasswordForm) replacePasswordForm.style.display = 'none';
+
+    // Activate selected tab & form
+    if (tab === 'login') {
+      if (tabLoginBtn) tabLoginBtn.classList.add('active');
+      if (loginForm) loginForm.style.display = 'block';
+    } else if (tab === 'register') {
+      if (tabRegisterBtn) tabRegisterBtn.classList.add('active');
+      if (registerForm) registerForm.style.display = 'block';
+    } else if (tab === 'replace') {
+      if (tabReplaceBtn) tabReplaceBtn.classList.add('active');
+      if (replacePasswordForm) replacePasswordForm.style.display = 'block';
+    }
+  }
+
+  window.switchAuthTab = switchAuthTab;
+
+  window.togglePasswordVisibility = function(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (icon) {
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    } else {
+      input.type = 'password';
+      if (icon) {
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+  };
+
+  window.openForgetPassword = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    switchAuthTab('replace');
+    const loginUser = document.getElementById('login_username');
+    const replaceId = document.getElementById('replace_identifier');
+    const newPass = document.getElementById('replace_new_password');
+    if (loginUser && replaceId && loginUser.value.trim() && !replaceId.value.trim()) {
+      replaceId.value = loginUser.value.trim();
+    }
+    if (replaceId && replaceId.value.trim() && newPass) {
+      setTimeout(() => newPass.focus(), 150);
+    } else if (replaceId) {
+      setTimeout(() => replaceId.focus(), 150);
+    }
+  };
+
+  // Live password matching indicator for Replace Password
+  const replaceNewPass = document.getElementById('replace_new_password');
+  const replaceConfirmPass = document.getElementById('replace_confirm_password');
+  const matchHint = document.getElementById('passwordMatchHint');
+
+  function checkPasswordMatch() {
+    if (!replaceNewPass || !replaceConfirmPass || !matchHint) return;
+    const v1 = replaceNewPass.value;
+    const v2 = replaceConfirmPass.value;
+    if (!v2) {
+      matchHint.style.display = 'none';
+      return;
+    }
+    matchHint.style.display = 'block';
+    if (v1 === v2) {
+      matchHint.style.color = '#16a34a';
+      matchHint.innerHTML = '<i class="fas fa-check-circle"></i> Passwords match';
+    } else {
+      matchHint.style.color = '#dc2626';
+      matchHint.innerHTML = '<i class="fas fa-times-circle"></i> Passwords do not match';
+    }
+  }
+
+  if (replaceNewPass) replaceNewPass.addEventListener('input', checkPasswordMatch);
+  if (replaceConfirmPass) replaceConfirmPass.addEventListener('input', checkPasswordMatch);
+
+  if (tabLoginBtn) tabLoginBtn.addEventListener('click', () => switchAuthTab('login'));
+  if (tabRegisterBtn) tabRegisterBtn.addEventListener('click', () => switchAuthTab('register'));
+  if (tabReplaceBtn) tabReplaceBtn.addEventListener('click', () => switchAuthTab('replace'));
+  
+  if (linkForgotPassword) {
+    linkForgotPassword.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.openForgetPassword();
     });
+  }
+
+  if (backToLoginLink) {
+    backToLoginLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchAuthTab('login');
+    });
+  }
+
+  const pendingAuthTab = sessionStorage.getItem('openAuth');
+  if (pendingAuthTab && loginModal) {
+    sessionStorage.removeItem('openAuth');
+    loginModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    switchAuthTab(pendingAuthTab);
+  } else if (window.location.hash === '#forgot-password' || window.location.hash === '#replace-password') {
+    window.openForgetPassword();
   }
 
   const handleAjaxAuthForm = (formElement) => {
@@ -320,4 +431,304 @@ document.addEventListener('DOMContentLoaded', () => {
 
   handleAjaxAuthForm(loginForm);
   handleAjaxAuthForm(registerForm);
+  handleAjaxAuthForm(replacePasswordForm);
+
+  // =========================================================
+  // AI CLINICAL SIMULATION SANDBOX CONTROLS
+  // =========================================================
+  const startScanBtn = document.getElementById('startScanBtn');
+  const scanBtnText = document.getElementById('scanBtnText');
+  const scanStatusText = document.getElementById('scanStatusText');
+  const scannerViewport = document.getElementById('scannerViewport');
+  let isScanning = false;
+  let scanTimer = null;
+
+  if (startScanBtn && scannerViewport) {
+    startScanBtn.addEventListener('click', () => {
+      if (isScanning) {
+        // Reset scan
+        clearTimeout(scanTimer);
+        isScanning = false;
+        scannerViewport.classList.remove('scanning-running', 'scanning-active');
+        if (scanBtnText) scanBtnText.textContent = 'Start AI Scan';
+        startScanBtn.querySelector('i').className = 'fas fa-play';
+        if (scanStatusText) {
+          scanStatusText.textContent = 'Diagnostics idle. Click scan.';
+          scanStatusText.style.color = '#64748b';
+        }
+      } else {
+        // Start scan simulation
+        isScanning = true;
+        scannerViewport.classList.add('scanning-running');
+        scannerViewport.classList.remove('scanning-active');
+        if (scanBtnText) scanBtnText.textContent = 'Scanning...';
+        startScanBtn.querySelector('i').className = 'fas fa-spinner fa-spin';
+        if (scanStatusText) {
+          scanStatusText.textContent = 'Running neural network detection...';
+          scanStatusText.style.color = '#0284c7';
+        }
+
+        scanTimer = setTimeout(() => {
+          scannerViewport.classList.remove('scanning-running');
+          scannerViewport.classList.add('scanning-active');
+          if (scanBtnText) scanBtnText.textContent = 'Reset Scan';
+          startScanBtn.querySelector('i').className = 'fas fa-redo';
+          if (scanStatusText) {
+            scanStatusText.innerHTML = '<strong style="color: #10b981;">✓ 3 Pathologies Identified</strong> (Caries, Joint, Margin)';
+          }
+        }, 1800);
+      }
+    });
+
+    // Homepage OPG Upload & Sample Switcher
+    const homeOpgUploadInput = document.getElementById('homeOpgUploadInput');
+    const homeSampleOpgBtn = document.getElementById('homeSampleOpgBtn');
+    const opgToggleBtnText = document.getElementById('opgToggleBtnText');
+    const scannerImg = scannerViewport.querySelector('.scanner-img');
+    const box1 = document.getElementById('box1');
+    const box2 = document.getElementById('box2');
+    const box3 = document.getElementById('box3');
+    let isOpgMode = false;
+
+    function switchToOpgMode(imageSrc) {
+      isOpgMode = true;
+      if (scannerImg) {
+        scannerImg.src = imageSrc;
+        scannerImg.style.objectFit = 'contain';
+        scannerImg.style.background = '#000';
+      }
+      if (opgToggleBtnText) opgToggleBtnText.textContent = 'Clinic View';
+      if (box1) {
+        box1.style.cssText = 'top: 55%; left: 74%; width: 12%; height: 20%;';
+        const tag1 = box1.querySelector('.box-tag');
+        if (tag1) tag1.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Impacted #48 (98.4%)';
+      }
+      if (box2) {
+        box2.style.cssText = 'top: 52%; left: 24%; width: 9%; height: 16%;';
+        const tag2 = box2.querySelector('.box-tag');
+        if (tag2) tag2.innerHTML = '<i class="fas fa-tooth"></i> Caries #36 (94.7%)';
+      }
+      if (box3) {
+        box3.style.cssText = 'top: 72%; left: 40%; width: 20%; height: 12%;';
+        const tag3 = box3.querySelector('.box-tag');
+        if (tag3) tag3.innerHTML = '<i class="fas fa-bone"></i> Bone Margin (99.1%)';
+      }
+    }
+
+    function switchToClinicMode(imageSrc) {
+      isOpgMode = false;
+      if (scannerImg) {
+        scannerImg.src = imageSrc;
+        scannerImg.style.objectFit = 'cover';
+        scannerImg.style.background = 'transparent';
+      }
+      if (opgToggleBtnText) opgToggleBtnText.textContent = 'OPG X-Ray';
+      if (box1) {
+        box1.style.cssText = 'top: 38%; left: 15%; width: 14%; height: 26%;';
+        const tag1 = box1.querySelector('.box-tag');
+        if (tag1) tag1.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Caries Detected (94.2%)';
+      }
+      if (box2) {
+        box2.style.cssText = 'top: 52%; left: 40%; width: 19%; height: 18%;';
+        const tag2 = box2.querySelector('.box-tag');
+        if (tag2) tag2.innerHTML = '<i class="fas fa-info-circle"></i> Fixture Joint (91.8%)';
+      }
+      if (box3) {
+        box3.style.cssText = 'top: 36%; left: 68%; width: 13%; height: 26%;';
+        const tag3 = box3.querySelector('.box-tag');
+        if (tag3) tag3.innerHTML = '<i class="fas fa-check-circle"></i> Bone Margin (99.4%)';
+      }
+    }
+
+    if (homeSampleOpgBtn) {
+      homeSampleOpgBtn.addEventListener('click', () => {
+        const opgUrl = homeSampleOpgBtn.getAttribute('data-opg-url');
+        const clinicUrl = homeSampleOpgBtn.getAttribute('data-clinic-url');
+        if (!isOpgMode) {
+          switchToOpgMode(opgUrl);
+        } else {
+          switchToClinicMode(clinicUrl);
+        }
+        if (!isScanning) startScanBtn.click();
+      });
+    }
+
+    if (homeOpgUploadInput) {
+      homeOpgUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          switchToOpgMode(evt.target.result);
+          if (!isScanning) startScanBtn.click();
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+      });
+    }
+  }
+
+  // AI Cosmetic Smile Makeover Slider (Horizontal Resize on Pointer Move & Drag)
+  const makeoverWrapper = document.getElementById('makeoverWrapper');
+  const makeoverRange = document.getElementById('makeoverRange');
+  const makeoverClipOverlay = document.getElementById('makeoverClipOverlay');
+  const makeoverSliderBar = document.getElementById('makeoverSliderBar');
+
+  if (makeoverWrapper && makeoverClipOverlay && makeoverSliderBar) {
+    let isDragging = false;
+
+    const setMakeoverPercent = (percent) => {
+      const clamped = Math.max(0, Math.min(100, percent));
+      makeoverClipOverlay.style.clipPath = `polygon(0 0, ${clamped}% 0, ${clamped}% 100%, 0 100%)`;
+      makeoverSliderBar.style.left = `${clamped}%`;
+      if (makeoverRange) {
+        makeoverRange.value = clamped;
+      }
+    };
+
+    const calculatePercentFromPointer = (e) => {
+      const rect = makeoverWrapper.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const x = clientX - rect.left;
+      return (x / rect.width) * 100;
+    };
+
+    // 1. Pointer Move (instantly resizes horizontally following the mouse cursor)
+    makeoverWrapper.addEventListener('mousemove', (e) => {
+      setMakeoverPercent(calculatePercentFromPointer(e));
+    });
+
+    // 2. Pointer Down & Drag (supports click, touch, and stylus drag)
+    makeoverWrapper.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      try { makeoverWrapper.setPointerCapture(e.pointerId); } catch (_) {}
+      setMakeoverPercent(calculatePercentFromPointer(e));
+    });
+
+    makeoverWrapper.addEventListener('pointermove', (e) => {
+      if (isDragging || e.pointerType === 'mouse') {
+        setMakeoverPercent(calculatePercentFromPointer(e));
+      }
+    });
+
+    const stopDragging = (e) => {
+      isDragging = false;
+      try { if (e && e.pointerId) makeoverWrapper.releasePointerCapture(e.pointerId); } catch (_) {}
+    };
+
+    makeoverWrapper.addEventListener('pointerup', stopDragging);
+    makeoverWrapper.addEventListener('pointercancel', stopDragging);
+
+    // 3. Mobile Touch Drag
+    makeoverWrapper.addEventListener('touchmove', (e) => {
+      setMakeoverPercent(calculatePercentFromPointer(e));
+    }, { passive: true });
+
+    // 4. Keyboard / Accessible Range Input
+    if (makeoverRange) {
+      makeoverRange.addEventListener('input', (e) => {
+        setMakeoverPercent(parseFloat(e.target.value));
+      });
+    }
+
+    // Initialize at center (50%)
+    setMakeoverPercent(50);
+  }
+
+  // =========================================================
+  // TESTIMONIALS CAROUSEL (3 PER VIEW WITH NEXT & PREVIOUS)
+  // =========================================================
+  window.slideTestimonials = function(direction) {
+    const track = document.getElementById('testimonialsTrack');
+    if (!track) return;
+    const card = track.querySelector('.testimonial-card');
+    if (!card) return;
+
+    const gap = 24;
+    const cardWidth = card.offsetWidth + gap;
+    // Moves 1 box (card) per click for granular browsing
+    const scrollAmount = cardWidth;
+    const maxScrollLeft = track.scrollWidth - track.clientWidth;
+
+    if (direction > 0) {
+      if (track.scrollLeft >= maxScrollLeft - 10) {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    } else {
+      if (track.scrollLeft <= 10) {
+        track.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
+      } else {
+        track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      }
+    }
+  };
+
+  const initTestimonialsCarousel = () => {
+    const track = document.getElementById('testimonialsTrack');
+    const dotsContainer = document.getElementById('testimonialDots');
+    if (!track || !dotsContainer) return;
+
+    const cards = track.querySelectorAll('.testimonial-card');
+    if (cards.length === 0) return;
+
+    const updateDots = () => {
+      const card = cards[0];
+      const gap = 24;
+      const cardWidth = card.offsetWidth + gap;
+      const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+      const totalSteps = Math.max(1, Math.round(maxScrollLeft / cardWidth) + 1);
+
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < totalSteps; i++) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = `testimonial-dot ${i === 0 ? 'active' : ''}`;
+        dot.setAttribute('aria-label', `Go to review ${i + 1}`);
+        dot.addEventListener('click', () => {
+          track.scrollTo({ left: Math.min(i * cardWidth, maxScrollLeft), behavior: 'smooth' });
+        });
+        dotsContainer.appendChild(dot);
+      }
+    };
+
+    updateDots();
+    window.addEventListener('resize', updateDots);
+
+    // Update active dot on scroll
+    track.addEventListener('scroll', () => {
+      const card = cards[0];
+      const gap = 24;
+      const cardWidth = card.offsetWidth + gap;
+      const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+      const totalSteps = Math.max(1, Math.round(maxScrollLeft / cardWidth) + 1);
+      const scrollLeft = track.scrollLeft;
+      const stepIndex = Math.min(totalSteps - 1, Math.round(scrollLeft / cardWidth));
+      const dots = dotsContainer.querySelectorAll('.testimonial-dot');
+      dots.forEach((d, idx) => {
+        if (idx === stepIndex) d.classList.add('active');
+        else d.classList.remove('active');
+      });
+    }, { passive: true });
+
+    // Auto-slide every 5 seconds, pause on hover
+    let autoSlideTimer = setInterval(() => {
+      window.slideTestimonials(1);
+    }, 5000);
+
+    const container = track.closest('.testimonials-carousel-container');
+    if (container) {
+      container.addEventListener('mouseenter', () => clearInterval(autoSlideTimer));
+      container.addEventListener('mouseleave', () => {
+        clearInterval(autoSlideTimer);
+        autoSlideTimer = setInterval(() => {
+          window.slideTestimonials(1);
+        }, 5000);
+      });
+    }
+  };
+
+  initTestimonialsCarousel();
 });
+

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import Sum, Q
-from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice
+from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice, AboutClinic
 import datetime
 
 def home_view(request):
@@ -173,13 +173,48 @@ def home_view(request):
                 'rating': 5,
                 'treatment': 'Kids Dentistry',
                 'review_text': 'Took my 6 year old daughter for cavity filling. Dr. Rahul made her feel so comfortable that she actually enjoyed the visit! Excellent pediatric care.'
+            },
+            {
+                'patient_name': 'Rahul Sharma',
+                'rating': 5,
+                'treatment': 'Painless Root Canal Therapy',
+                'review_text': 'Single-sitting root canal done with zero pain. Dr. Anoop explained the entire procedure before starting. Truly world-class dental facility in Vaikom.'
+            },
+            {
+                'patient_name': 'Ananya Menon',
+                'rating': 5,
+                'treatment': 'Cosmetic Smile Design & Veneers',
+                'review_text': 'Dr. Anoop designed my custom ceramic veneers with such precision. My smile looks completely natural, bright and radiant now! The 3D scanning was quick and comfortable.'
+            },
+            {
+                'patient_name': 'George Mathew',
+                'rating': 5,
+                'treatment': 'Full Mouth Rehabilitation & Zirconia Bridges',
+                'review_text': 'Got full arch fixed zirconia teeth after struggling with loose dentures for years. Can now eat apples and solid food without any discomfort. Truly life-changing dental care!'
+            },
+            {
+                'patient_name': 'Revathi S.',
+                'rating': 5,
+                'treatment': 'Laser Gum Contouring & Smile Styling',
+                'review_text': 'Had laser therapy done for uneven gum line. It was totally painless and healed within 3 days. Dr. Anoop is extremely caring, patient and knowledgeable.'
             }
         ]
+
+    about_clinic = AboutClinic.objects.first()
+    if not about_clinic:
+        about_clinic = AboutClinic.objects.create(
+            title="Your Trusted Partner For Total Oral Health",
+            subtitle="About Our Clinic",
+            description="Anupam Dental Clinic, led by Dr. Anoop, has been caring for patients since 19th August 1996. For nearly three decades, we have remained committed to ethical dentistry, clear communication, and compassionate care.",
+            established_date="19th August 1996",
+            experience_years="28+"
+        )
 
     context = {
         'doctors': doctors,
         'services': services,
         'testimonials': testimonials,
+        'about_clinic': about_clinic,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
         'patient_name': request.session.get('patient_name'),
     }
@@ -240,13 +275,47 @@ def book_appointment_view(request):
                 notes=notes
             )
             display_name = f"{first_name} {last_name}".strip() or patient_name
-            success_msg = f"Thank you {display_name}! Your appointment on {preferred_date} has been requested successfully. Our clinic team will call you at {phone} to confirm."
+            slot_info = f" ({preferred_time})" if preferred_time else ""
+            success_msg = f"Thank you {display_name}! Your appointment on {preferred_date}{slot_info} has been saved and connected successfully. Our clinic team will call you at {phone} to confirm."
             
+            # Connect patient session
+            request.session['patient_phone'] = phone
+            request.session['patient_name'] = display_name
+            
+            # Connect or create Patient User account
+            user = None
+            if phone:
+                user = User.objects.filter(username__iexact=phone).first()
+            if not user and email:
+                user = User.objects.filter(email__iexact=email).first()
+            if not user and phone:
+                try:
+                    f_name = first_name or (display_name.split()[0] if display_name else 'Patient')
+                    l_name = last_name or (' '.join(display_name.split()[1:]) if display_name and len(display_name.split()) > 1 else '')
+                    user = User.objects.create_user(
+                        username=phone,
+                        email=email or '',
+                        first_name=f_name,
+                        last_name=l_name
+                    )
+                    user.is_staff = False
+                    user.save()
+                except Exception:
+                    user = None
+
+            if user:
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success', 'message': success_msg, 'id': appointment.id})
+                return JsonResponse({
+                    'status': 'success',
+                    'message': success_msg,
+                    'id': appointment.id,
+                    'redirect_url': '/dashboardpatient/'
+                })
             
             messages.success(request, success_msg)
-            return redirect('home')
+            return redirect('dashboard_patient')
 
         except Exception as e:
             err_msg = f"Submission error: {str(e)}"
@@ -409,6 +478,16 @@ def dashboard_view(request):
     invoices = Invoice.objects.all().order_by('-created_at')
     services = Service.objects.all().order_by('-id')
 
+    about_clinic = AboutClinic.objects.first()
+    if not about_clinic:
+        about_clinic = AboutClinic.objects.create(
+            title="Your Trusted Partner For Total Oral Health",
+            subtitle="About Our Clinic",
+            description="Anupam Dental Clinic, led by Dr. Anoop, has been caring for patients since 19th August 1996. For nearly three decades, we have remained committed to ethical dentistry, clear communication, and compassionate care.",
+            established_date="19th August 1996",
+            experience_years="28+"
+        )
+
     context = {
         'total_jobs': total_jobs,
         'in_progress_count': in_progress_count,
@@ -420,6 +499,7 @@ def dashboard_view(request):
         'doctors': doctors,
         'services': services,
         'invoices': invoices,
+        'about_clinic': about_clinic,
         'user': request.user,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
         'patient_name': request.user.first_name or request.user.username or "Admin",
@@ -436,24 +516,33 @@ def login_view(request):
         return render(request, 'Dental/login.html')
 
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
+        identifier = request.POST.get('username', '').strip() or request.POST.get('phone', '').strip() or request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
 
-        if not username or not password:
-            err = 'Please enter both Username and Password.'
+        if not identifier or not password:
+            err = 'Please enter Mobile Number / Email and Password.'
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': err}, status=400)
             messages.error(request, err)
             return redirect('login')
 
-        user = authenticate(request, username=username, password=password)
-        if user is None and '@' in username:
-            user_obj = User.objects.filter(email__iexact=username).first()
+        # 1. Direct authentication with identifier as username
+        user = authenticate(request, username=identifier, password=password)
+
+        # 2. If direct fails, lookup User by email or phone/username
+        if user is None:
+            user_obj = User.objects.filter(
+                Q(username__iexact=identifier) | 
+                Q(email__iexact=identifier) | 
+                Q(username__icontains=identifier)
+            ).first()
             if user_obj:
                 user = authenticate(request, username=user_obj.username, password=password)
 
         if user is not None:
             login(request, user)
+            request.session['patient_phone'] = user.username
+            request.session['patient_name'] = user.first_name or user.username
             target_url = '/dashboard/' if user.is_staff else '/dashboardpatient/'
             msg = f"Welcome back, {user.first_name or user.username}!"
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -461,18 +550,39 @@ def login_view(request):
             messages.success(request, msg)
             return redirect('dashboard' if user.is_staff else 'dashboard_patient')
 
-        patient_appointments = Appointment.objects.filter(phone__icontains=username) | Appointment.objects.filter(email__iexact=username)
+        # 3. Check if patient has appointments with this mobile or email
+        patient_appointments = Appointment.objects.filter(phone__icontains=identifier) | Appointment.objects.filter(email__iexact=identifier)
         if patient_appointments.exists():
             latest = patient_appointments.order_by('-created_at').first()
             request.session['patient_phone'] = latest.phone
             request.session['patient_name'] = latest.patient_name
-            msg = f"Welcome, {latest.patient_name}! Opening your dashboard..."
+            
+            # If User doesn't exist yet for this phone, create it with this password
+            user_by_phone = User.objects.filter(username__iexact=latest.phone).first()
+            if not user_by_phone:
+                try:
+                    f_name = latest.first_name or (latest.patient_name.split()[0] if latest.patient_name else 'Patient')
+                    l_name = latest.last_name or (' '.join(latest.patient_name.split()[1:]) if latest.patient_name and len(latest.patient_name.split()) > 1 else '')
+                    new_user = User.objects.create_user(
+                        username=latest.phone,
+                        email=latest.email or '',
+                        password=password,
+                        first_name=f_name,
+                        last_name=l_name
+                    )
+                    new_user.is_staff = False
+                    new_user.save()
+                    login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
+                except Exception:
+                    pass
+
+            msg = f"Welcome, {latest.patient_name}! Connected to your dental dashboard."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboardpatient/'})
             messages.success(request, msg)
             return redirect('dashboard_patient')
 
-        err = 'Invalid Username or Password. Please try again.'
+        err = 'Invalid Mobile Number / Email or Password. Click "Forgot / Replace Password" to reset.'
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': err}, status=400)
         messages.error(request, err)
@@ -484,29 +594,35 @@ def login_view(request):
 def register_view(request):
     if request.method == 'POST':
         full_name = request.POST.get('full_name', '').strip()
-        username = request.POST.get('username', '').strip()
+        phone = request.POST.get('phone', '').strip() or request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
 
-        if not username or not password:
-            err = 'Username and Password are required.'
+        if not phone and email:
+            phone = email
+        if not phone:
+            phone = request.POST.get('identifier', '').strip()
+
+        if not phone or not password:
+            err = 'Mobile Number and Password are required.'
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': err}, status=400)
             messages.error(request, err)
             return redirect('home')
 
-        if User.objects.filter(username__iexact=username).exists():
-            err = f'Username "{username}" is already registered. Please choose another or login.'
+        # Check if already registered
+        if User.objects.filter(Q(username__iexact=phone) | (Q(email__iexact=email) if email else Q(pk__isnull=True))).exists():
+            err = f'An account with "{phone}" is already registered. Please login or use "Replace Password".'
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': err}, status=400)
             messages.error(request, err)
             return redirect('home')
 
         try:
-            first_name = full_name.split()[0] if full_name else username
+            first_name = full_name.split()[0] if full_name else 'Patient'
             last_name = " ".join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else ""
             user = User.objects.create_user(
-                username=username,
+                username=phone,
                 email=email,
                 password=password,
                 first_name=first_name,
@@ -515,8 +631,10 @@ def register_view(request):
             user.is_staff = False
             user.save()
 
-            login(request, user)
-            msg = f"Account registered successfully! Welcome, {user.first_name or user.username}."
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            request.session['patient_phone'] = phone
+            request.session['patient_name'] = full_name or user.first_name
+            msg = f"Account registered successfully! Welcome, {user.first_name}."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboardpatient/'})
             messages.success(request, msg)
@@ -529,6 +647,96 @@ def register_view(request):
             return redirect('home')
 
     return redirect('home')
+
+
+def replace_password_view(request):
+    if request.method == 'POST':
+        identifier = request.POST.get('identifier', '').strip() or request.POST.get('phone', '').strip() or request.POST.get('email', '').strip()
+        new_password = request.POST.get('new_password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if not identifier:
+            err = 'Please enter your registered Mobile Number or Email.'
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': err}, status=400)
+            messages.error(request, err)
+            return redirect('login')
+
+        if not new_password or not confirm_password:
+            err = 'Please enter and confirm your new password.'
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': err}, status=400)
+            messages.error(request, err)
+            return redirect('login')
+
+        if new_password != confirm_password:
+            err = 'New password and Confirm password do not match.'
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': err}, status=400)
+            messages.error(request, err)
+            return redirect('login')
+
+        if len(new_password) < 4:
+            err = 'Password must be at least 4 characters long.'
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': err}, status=400)
+            messages.error(request, err)
+            return redirect('login')
+
+        # 1. Search existing User
+        user = User.objects.filter(
+            Q(username__iexact=identifier) | 
+            Q(email__iexact=identifier) | 
+            Q(username__icontains=identifier)
+        ).first()
+
+        if user:
+            user.set_password(new_password)
+            user.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            request.session['patient_phone'] = user.username
+            request.session['patient_name'] = user.first_name or user.username
+            target_url = '/dashboard/' if user.is_staff else '/dashboardpatient/'
+            msg = f"Password successfully replaced! Welcome back, {user.first_name or user.username}."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': target_url})
+            messages.success(request, msg)
+            return redirect('dashboard' if user.is_staff else 'dashboard_patient')
+
+        # 2. If no User found, check if Appointment exists for this mobile/email
+        appt = Appointment.objects.filter(
+            Q(phone__icontains=identifier) | 
+            Q(email__iexact=identifier)
+        ).order_by('-created_at').first()
+
+        if appt:
+            f_name = appt.first_name or (appt.patient_name.split()[0] if appt.patient_name else 'Patient')
+            l_name = appt.last_name or (' '.join(appt.patient_name.split()[1:]) if appt.patient_name and len(appt.patient_name.split()) > 1 else '')
+            new_user = User.objects.create_user(
+                username=appt.phone,
+                email=appt.email or '',
+                password=new_password,
+                first_name=f_name,
+                last_name=l_name
+            )
+            new_user.is_staff = False
+            new_user.save()
+            login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
+            request.session['patient_phone'] = appt.phone
+            request.session['patient_name'] = appt.patient_name
+            msg = f"Password set and account activated for {appt.patient_name}! Opening your dashboard..."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success', 'message': msg, 'redirect_url': '/dashboardpatient/'})
+            messages.success(request, msg)
+            return redirect('dashboard_patient')
+
+        err = f'No existing account or appointment found for "{identifier}". Please register or book an appointment first.'
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': err}, status=404)
+        messages.error(request, err)
+        return redirect('login')
+
+    return redirect('login')
 
 def logout_view(request):
     logout(request)
@@ -763,6 +971,53 @@ def delete_service_view(request, service_id):
         name = service.title
         service.delete()
         messages.info(request, f"Service '{name}' has been deleted from services-grid.")
+    return redirect('dashboard')
+
+
+def edit_about_view(request):
+    if request.method == 'POST':
+        about = AboutClinic.objects.first()
+        if not about:
+            about = AboutClinic.objects.create()
+
+        title = request.POST.get('title', '').strip()
+        subtitle = request.POST.get('subtitle', '').strip()
+        description = request.POST.get('description', '').strip()
+        established_date = request.POST.get('established_date', '').strip()
+        experience_years = request.POST.get('experience_years', '').strip()
+        operating_hours = request.POST.get('operating_hours', '').strip()
+        helpline = request.POST.get('helpline', '').strip()
+        facility_location = request.POST.get('facility_location', '').strip()
+        sterilization_safety = request.POST.get('sterilization_safety', '').strip()
+
+        if title:
+            about.title = title
+        if subtitle:
+            about.subtitle = subtitle
+        if description:
+            about.description = description
+        if established_date:
+            about.established_date = established_date
+        if experience_years:
+            about.experience_years = experience_years
+        if operating_hours:
+            about.operating_hours = operating_hours
+        if helpline:
+            about.helpline = helpline
+        if facility_location:
+            about.facility_location = facility_location
+        if sterilization_safety:
+            about.sterilization_safety = sterilization_safety
+
+        if 'photo' in request.FILES and request.FILES['photo']:
+            about.photo = request.FILES['photo']
+
+        try:
+            about.save()
+            messages.success(request, "About Our Clinic details, hours, contact & safety updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Error updating About section: {str(e)}")
+
     return redirect('dashboard')
 
 

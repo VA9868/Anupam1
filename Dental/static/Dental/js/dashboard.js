@@ -221,7 +221,13 @@
 
       const headingEl = document.getElementById('pageHeading');
       if (headingEl) {
-        headingEl.textContent = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1);
+        if (sectionKey === 'about') {
+          headingEl.textContent = 'About & Clinic Profile';
+        } else if (sectionKey === 'services') {
+          headingEl.textContent = 'Our Dental Services & Treatments';
+        } else {
+          headingEl.textContent = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1);
+        }
       }
 
       const sidebarEl = document.getElementById('sidebar');
@@ -252,39 +258,92 @@
 
     function openModal(modalId) {
       const modal = document.getElementById(modalId);
-      if (modal) modal.classList.add('active');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+      }
     }
+    window.openModal = openModal;
 
     function closeModal(modalId) {
       const modal = document.getElementById(modalId);
-      if (modal) modal.classList.remove('active');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
     }
+    window.closeModal = closeModal;
+
+    function openUploadSmileMakeoverModal() {
+      openModal('uploadSmileMakeoverModal');
+    }
+    window.openUploadSmileMakeoverModal = openUploadSmileMakeoverModal;
 
     document.querySelectorAll('.modal-backdrop').forEach(modal => {
       modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.classList.remove('active');
+        if (e.target === modal) closeModal(modal.id);
       });
     });
 
-    function filterCasesTable() {
-      const searchEl = document.getElementById('dashboardSearch');
-      if (!searchEl) return;
-      const query = searchEl.value.toLowerCase().trim();
+    function filterCasesTable(customVal) {
+      const topSearch = document.getElementById('dashboardSearch');
+      const tableSearch = document.getElementById('casesSearchInput');
+      const clearBtn = document.getElementById('clearCasesSearchBtn');
+
+      let query = "";
+      if (typeof customVal === 'string') {
+        query = customVal.toLowerCase().trim();
+        if (topSearch && topSearch !== document.activeElement) topSearch.value = customVal;
+        if (tableSearch && tableSearch !== document.activeElement) tableSearch.value = customVal;
+      } else {
+        const activeSearch = (document.activeElement === tableSearch) ? tableSearch : (topSearch || tableSearch);
+        query = (activeSearch ? activeSearch.value : '').toLowerCase().trim();
+        if (topSearch && topSearch !== activeSearch) topSearch.value = query;
+        if (tableSearch && tableSearch !== activeSearch) tableSearch.value = query;
+      }
+
+      if (clearBtn) {
+        clearBtn.style.display = query ? 'block' : 'none';
+      }
+
       const rows = document.querySelectorAll('.case-row');
-      
+      let visibleCount = 0;
       rows.forEach(row => {
         const text = (row.getAttribute('data-search') || '').toLowerCase();
         if (text.includes(query)) {
           row.style.display = '';
+          visibleCount++;
         } else {
           row.style.display = 'none';
         }
       });
+
+      const noResultsRow = document.getElementById('casesNoResultsRow');
+      if (noResultsRow) {
+        noResultsRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+      }
     }
+    window.filterCasesTable = filterCasesTable;
+
+    function clearCasesSearch() {
+      const topSearch = document.getElementById('dashboardSearch');
+      const tableSearch = document.getElementById('casesSearchInput');
+      const clearBtn = document.getElementById('clearCasesSearchBtn');
+      if (topSearch) topSearch.value = '';
+      if (tableSearch) tableSearch.value = '';
+      if (clearBtn) clearBtn.style.display = 'none';
+      filterCasesTable('');
+    }
+    window.clearCasesSearch = clearCasesSearch;
 
     function filterStatus(status) {
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      if (event && event.target) event.target.classList.add('active');
+      const panel = document.querySelector('#section-dashboard .dash-panel');
+      if (panel) {
+        panel.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      }
+      if (event && event.target && event.target.classList.contains('filter-btn')) {
+        event.target.classList.add('active');
+      }
 
       const rows = document.querySelectorAll('.case-row');
       rows.forEach(row => {
@@ -295,6 +354,75 @@
         }
       });
     }
+
+    function filterAppointmentsDate(type, customDate) {
+      const apptSection = document.getElementById('section-appointments');
+      if (apptSection) {
+        apptSection.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      }
+
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const todayVal = `${yyyy}-${mm}-${dd}`;
+
+      const picker = document.getElementById('apptDatePicker');
+
+      if (type === 'all') {
+        const b = document.getElementById('btnApptAll');
+        if (b) b.classList.add('active');
+        if (picker) picker.value = '';
+      } else if (type === 'today') {
+        const b = document.getElementById('btnApptToday');
+        if (b) b.classList.add('active');
+        if (picker) picker.value = todayVal;
+      } else if (type === 'upcoming') {
+        const b = document.getElementById('btnApptUpcoming');
+        if (b) b.classList.add('active');
+      } else if (type === 'past') {
+        const b = document.getElementById('btnApptPast');
+        if (b) b.classList.add('active');
+      } else if (type === 'custom') {
+        if (customDate === todayVal) {
+          const b = document.getElementById('btnApptToday');
+          if (b) b.classList.add('active');
+        }
+      }
+
+      const rows = document.querySelectorAll('.appointment-row');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        let rowDate = (row.getAttribute('data-date') || '').trim();
+        let show = false;
+
+        if (type === 'all') {
+          show = true;
+        } else if (type === 'today') {
+          show = (rowDate === todayVal || rowDate.startsWith(todayVal));
+        } else if (type === 'upcoming') {
+          show = (rowDate >= todayVal);
+        } else if (type === 'past') {
+          show = (rowDate < todayVal);
+        } else if (type === 'custom' && customDate) {
+          show = (rowDate === customDate || rowDate.startsWith(customDate));
+        }
+
+        if (show) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      const noResults = document.getElementById('apptNoResultsRow');
+      if (noResults) {
+        noResults.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+      }
+    }
+    window.filterAppointmentsDate = filterAppointmentsDate;
 
     function openCaseDetails(id, caseId, patient, doctor, type, status, dueDate, amount, notes) {
       document.getElementById('vcTitle').innerHTML = `<i class="fas fa-folder-open" style="color: #2563eb; margin-right: 8px;"></i>Case: ${caseId}`;
@@ -1713,3 +1841,476 @@
       if (document.getElementById('recAmount')) document.getElementById('recAmount').textContent = amount;
       openModal('patientReceiptModal');
     }
+
+    // =========================================================
+    // DIGITAL OPG X-RAY AI SCANNING ANALYZER
+    // =========================================================
+    let isDashOpgScanning = false;
+    let dashOpgScanTimer = null;
+
+    function openOpgAiScannerModal(imageUrl, patientName) {
+      const targetUrl = imageUrl || window.sampleOpgUrl || "/static/Dental/images/sample_opg_xray.jpg";
+      const imgEl = document.getElementById('dashOpgImg');
+      if (imgEl) imgEl.src = targetUrl;
+      
+      const nameEl = document.getElementById('dashOpgPatientName');
+      if (nameEl && patientName) nameEl.textContent = patientName;
+
+      resetDashOpgScan();
+      openModal('opgAiScanModal');
+    }
+
+    function handleOpgDashboardUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        openOpgAiScannerModal(evt.target.result, "Custom Uploaded OPG Patient");
+        // Trigger auto deep scan
+        setTimeout(() => {
+          toggleDashOpgScan();
+        }, 350);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    }
+
+    function handleModalOpgUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const imgEl = document.getElementById('dashOpgImg');
+        if (imgEl) imgEl.src = evt.target.result;
+        const nameEl = document.getElementById('dashOpgPatientName');
+        if (nameEl) nameEl.textContent = file.name.replace(/\.[^/.]+$/, "") + " (Uploaded)";
+        resetDashOpgScan();
+        setTimeout(() => {
+          toggleDashOpgScan();
+        }, 250);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    }
+
+    function toggleDashOpgScan() {
+      const viewport = document.getElementById('dashOpgViewport');
+      const scanBtnText = document.getElementById('dashOpgScanBtnText');
+      const statusEl = document.getElementById('dashOpgStatus');
+      const btn = document.getElementById('dashOpgScanBtn');
+
+      if (!viewport) return;
+
+      if (isDashOpgScanning) {
+        resetDashOpgScan();
+      } else {
+        isDashOpgScanning = true;
+        viewport.classList.add('scanning-running');
+        viewport.classList.remove('scanning-active');
+        if (scanBtnText) scanBtnText.textContent = "Analyzing Neural Layers...";
+        if (btn) btn.querySelector('i').className = "fas fa-spinner fa-spin";
+        if (statusEl) {
+          statusEl.textContent = "Scanning mandibular & maxillary dentition (48%)...";
+          statusEl.style.color = "#0284c7";
+        }
+
+        dashOpgScanTimer = setTimeout(() => {
+          viewport.classList.remove('scanning-running');
+          viewport.classList.add('scanning-active');
+          if (scanBtnText) scanBtnText.textContent = "Reset Scan";
+          if (btn) btn.querySelector('i').className = "fas fa-redo";
+          if (statusEl) {
+            statusEl.innerHTML = '<strong style="color: #10b981;">✓ 3 Pathologies Identified</strong> (Impaction, Caries, Crest)';
+          }
+        }, 1600);
+      }
+    }
+
+    function resetDashOpgScan() {
+      clearTimeout(dashOpgScanTimer);
+      isDashOpgScanning = false;
+      const viewport = document.getElementById('dashOpgViewport');
+      const scanBtnText = document.getElementById('dashOpgScanBtnText');
+      const statusEl = document.getElementById('dashOpgStatus');
+      const btn = document.getElementById('dashOpgScanBtn');
+
+      if (viewport) viewport.classList.remove('scanning-running', 'scanning-active');
+      if (scanBtnText) scanBtnText.textContent = "Start AI Deep Scan";
+      if (btn) btn.querySelector('i').className = "fas fa-play";
+      if (statusEl) {
+        statusEl.textContent = "Diagnostics idle. Click scan.";
+        statusEl.style.color = "#64748b";
+      }
+    }
+
+    // =========================================================
+    // AI COSMETIC SMILE MAKEOVER & DIGITAL SMILE DESIGN
+    // =========================================================
+    let modalPreparedBefore = null;
+    let modalPreparedAfter = null;
+    let modalPreparedAspect = null;
+
+    function openSmileMakeoverModal(beforeImg, afterImg, patientName, aspectRatio) {
+      const defaultBefore = window.samplePatientBeforeUrl || window.sampleSmileBeforeUrl || "/static/Dental/images/sample_patient_before.jpg";
+      const defaultAfter = window.samplePatientAfterUrl || window.sampleSmileAfterUrl || "/static/Dental/images/sample_patient_after.jpg";
+
+      const beforeEl = document.getElementById('dashMakeoverBeforeImg');
+      const afterEl = document.getElementById('dashMakeoverAfterImg');
+      const nameEl = document.getElementById('dashSmilePatientName');
+      const wrapper = document.getElementById('dashMakeoverWrapper');
+
+      const bSrc = beforeImg || defaultBefore;
+      const aSrc = afterImg || defaultAfter;
+
+      if (beforeEl) beforeEl.src = bSrc;
+      if (afterEl) afterEl.src = aSrc;
+      if (nameEl && patientName) nameEl.textContent = patientName;
+
+      if (wrapper) {
+        if (aspectRatio) {
+          wrapper.style.aspectRatio = aspectRatio;
+        } else if (bSrc.includes('sample_patient') || (afterImg && afterImg.includes('sample_patient'))) {
+          wrapper.style.aspectRatio = "576 / 508";
+        } else {
+          wrapper.style.aspectRatio = "16 / 10";
+        }
+      }
+
+      setDashMakeoverPercent(50);
+      openModal('smileMakeoverModal');
+      setupDashMakeoverEvents();
+    }
+    window.openSmileMakeoverModal = openSmileMakeoverModal;
+
+    function loadSmileCase(caseKey, patientName) {
+      if (caseKey === 'patient_ortho') {
+        openSmileMakeoverModal(
+          window.samplePatientBeforeUrl || "/static/Dental/images/sample_patient_before.jpg",
+          window.samplePatientAfterUrl || "/static/Dental/images/sample_patient_after.jpg",
+          patientName || "Ananya Sharma",
+          "576 / 508"
+        );
+      } else {
+        openSmileMakeoverModal(
+          window.sampleSmileBeforeUrl || "/static/Dental/images/smile_before_brown.jpg",
+          window.sampleSmileAfterUrl || "/static/Dental/images/smile_after_white.jpg",
+          patientName || "Kavitha Ramesh",
+          "16 / 10"
+        );
+      }
+    }
+    window.loadSmileCase = loadSmileCase;
+
+    function resetDashSmileToDefault() {
+      loadSmileCase('patient_ortho', 'Ananya Sharma');
+    }
+    window.resetDashSmileToDefault = resetDashSmileToDefault;
+
+    // Helper: Process an image file, auto-detecting 2-in-1 composite (Top: Before, Bottom: After)
+    function processSmileImageFile(file, targetType, callback) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        const img = new Image();
+        img.onload = function() {
+          const w = img.naturalWidth;
+          const h = img.naturalHeight;
+
+          // Check if it's a 2-in-1 composite (vertical split: height > 1.15 * width) or explicitly requested
+          if (targetType === 'split' || (targetType !== 'after' && targetType !== 'before' && h > 1.15 * w)) {
+            const halfH = Math.floor(h / 2);
+
+            // Canvas 1: Top Half (BEFORE)
+            const cBefore = document.createElement('canvas');
+            cBefore.width = w;
+            cBefore.height = halfH;
+            const ctxB = cBefore.getContext('2d');
+            ctxB.drawImage(img, 0, 0, w, halfH, 0, 0, w, halfH);
+            const beforeData = cBefore.toDataURL('image/jpeg', 0.95);
+
+            // Canvas 2: Bottom Half (AFTER)
+            const cAfter = document.createElement('canvas');
+            cAfter.width = w;
+            cAfter.height = h - halfH;
+            const ctxA = cAfter.getContext('2d');
+            ctxA.drawImage(img, 0, halfH, w, h - halfH, 0, 0, w, h - halfH);
+            const afterData = cAfter.toDataURL('image/jpeg', 0.95);
+
+            callback({
+              isSplit: true,
+              beforeData: beforeData,
+              afterData: afterData,
+              aspectRatio: `${w} / ${halfH}`,
+              width: w,
+              height: halfH
+            });
+          } else {
+            callback({
+              isSplit: false,
+              dataUrl: dataUrl,
+              aspectRatio: `${w} / ${h}`,
+              width: w,
+              height: h
+            });
+          }
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleDashSmileUpload(e, targetType) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      processSmileImageFile(file, targetType, function(res) {
+        if (res.isSplit) {
+          openSmileMakeoverModal(
+            res.beforeData,
+            res.afterData,
+            file.name.replace(/\.[^/.]+$/, "") + " (2-in-1 Patient Smile)",
+            res.aspectRatio
+          );
+        } else if (targetType === 'after') {
+          const afterEl = document.getElementById('dashMakeoverAfterImg');
+          if (afterEl) afterEl.src = res.dataUrl;
+        } else {
+          const beforeEl = document.getElementById('dashMakeoverBeforeImg');
+          if (beforeEl) beforeEl.src = res.dataUrl;
+          openSmileMakeoverModal(
+            res.dataUrl,
+            null,
+            file.name.replace(/\.[^/.]+$/, "") + " (Patient Smile)",
+            res.aspectRatio
+          );
+        }
+      });
+      e.target.value = "";
+    }
+    window.handleDashSmileUpload = handleDashSmileUpload;
+
+    // Functions for dedicated Upload Modal
+    function switchSmileUploadMode(mode) {
+      const splitSec = document.getElementById('smileSplitUploadSection');
+      const dualSec = document.getElementById('smileDualUploadSection');
+      const tabSplit = document.getElementById('tabSplitModeBtn');
+      const tabDual = document.getElementById('tabDualModeBtn');
+
+      if (mode === 'split') {
+        if (splitSec) splitSec.style.display = 'block';
+        if (dualSec) dualSec.style.display = 'none';
+        if (tabSplit) {
+          tabSplit.style.background = 'white';
+          tabSplit.style.color = '#0f172a';
+          tabSplit.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }
+        if (tabDual) {
+          tabDual.style.background = 'transparent';
+          tabDual.style.color = '#64748b';
+          tabDual.style.boxShadow = 'none';
+        }
+      } else {
+        if (splitSec) splitSec.style.display = 'none';
+        if (dualSec) dualSec.style.display = 'block';
+        if (tabDual) {
+          tabDual.style.background = 'white';
+          tabDual.style.color = '#0f172a';
+          tabDual.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        }
+        if (tabSplit) {
+          tabSplit.style.background = 'transparent';
+          tabSplit.style.color = '#64748b';
+          tabSplit.style.boxShadow = 'none';
+        }
+      }
+    }
+    window.switchSmileUploadMode = switchSmileUploadMode;
+
+    function handleModalSmileUpload(e, targetType) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      processSmileImageFile(file, targetType, function(res) {
+        const previewBox = document.getElementById('smileUploadPreviewBox');
+        const prevB = document.getElementById('modalPreviewBeforeImg');
+        const prevA = document.getElementById('modalPreviewAfterImg');
+        const prevDim = document.getElementById('previewPhotoDim');
+
+        if (res.isSplit) {
+          modalPreparedBefore = res.beforeData;
+          modalPreparedAfter = res.afterData;
+          modalPreparedAspect = res.aspectRatio;
+
+          if (prevB) prevB.src = res.beforeData;
+          if (prevA) prevA.src = res.afterData;
+          if (prevDim) prevDim.textContent = `${res.width} x ${res.height} px (Top: Before, Bottom: After)`;
+          if (previewBox) previewBox.style.display = 'block';
+
+          // Auto-launch the simulator directly after picking the 2-in-1 photo
+          setTimeout(() => {
+            launchPreparedSmileMakeover();
+          }, 350);
+        } else if (targetType === 'after') {
+          modalPreparedAfter = res.dataUrl;
+          if (prevA) prevA.src = res.dataUrl;
+          if (!modalPreparedAspect) modalPreparedAspect = res.aspectRatio;
+          if (previewBox) previewBox.style.display = 'block';
+        } else {
+          modalPreparedBefore = res.dataUrl;
+          if (prevB) prevB.src = res.dataUrl;
+          modalPreparedAspect = res.aspectRatio;
+          if (!modalPreparedAfter) {
+            modalPreparedAfter = window.samplePatientAfterUrl || window.sampleSmileAfterUrl;
+            if (prevA) prevA.src = modalPreparedAfter;
+          }
+          if (previewBox) previewBox.style.display = 'block';
+        }
+      });
+      e.target.value = "";
+    }
+    window.handleModalSmileUpload = handleModalSmileUpload;
+
+    function handleDirectSmileCaseUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      processSmileImageFile(file, 'auto', function(res) {
+        if (res.isSplit) {
+          openSmileMakeoverModal(
+            res.beforeData,
+            res.afterData,
+            file.name.replace(/\.[^/.]+$/, "") + " (Patient Case)",
+            res.aspectRatio
+          );
+        } else {
+          const defaultAfter = window.samplePatientAfterUrl || window.sampleSmileAfterUrl;
+          openSmileMakeoverModal(
+            res.dataUrl,
+            defaultAfter,
+            file.name.replace(/\.[^/.]+$/, "") + " (Patient Case)",
+            res.aspectRatio
+          );
+        }
+      });
+      e.target.value = "";
+    }
+    window.handleDirectSmileCaseUpload = handleDirectSmileCaseUpload;
+
+    function launchPreparedSmileMakeover() {
+      const pName = document.getElementById('smileUploadPatientName')?.value?.trim() || "Ananya Sharma";
+      closeModal('uploadSmileMakeoverModal');
+
+      const bSrc = modalPreparedBefore || window.samplePatientBeforeUrl;
+      const aSrc = modalPreparedAfter || window.samplePatientAfterUrl;
+      const aspect = modalPreparedAspect || "576 / 508";
+
+      openSmileMakeoverModal(bSrc, aSrc, pName, aspect);
+    }
+    window.launchPreparedSmileMakeover = launchPreparedSmileMakeover;
+
+    function setDashMakeoverPercent(percent) {
+      const clamped = Math.max(0, Math.min(100, percent));
+      const clipEl = document.getElementById('dashMakeoverClip');
+      const barEl = document.getElementById('dashMakeoverBar');
+      const rangeEl = document.getElementById('dashMakeoverRange');
+
+      if (clipEl) clipEl.style.clipPath = `polygon(0 0, ${clamped}% 0, ${clamped}% 100%, 0 100%)`;
+      if (barEl) barEl.style.left = `${clamped}%`;
+      if (rangeEl) rangeEl.value = clamped;
+    }
+
+    let dashMakeoverEventsBound = false;
+    function setupDashMakeoverEvents() {
+      if (dashMakeoverEventsBound) return;
+      dashMakeoverEventsBound = true;
+
+      const wrapper = document.getElementById('dashMakeoverWrapper');
+      const rangeEl = document.getElementById('dashMakeoverRange');
+      if (!wrapper) return;
+
+      let isDragging = false;
+
+      const calcPercent = (e) => {
+        const rect = wrapper.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const x = clientX - rect.left;
+        return (x / rect.width) * 100;
+      };
+
+      wrapper.addEventListener('mousemove', (e) => {
+        setDashMakeoverPercent(calcPercent(e));
+      });
+
+      wrapper.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        try { wrapper.setPointerCapture(e.pointerId); } catch (_) {}
+        setDashMakeoverPercent(calcPercent(e));
+      });
+
+      wrapper.addEventListener('pointermove', (e) => {
+        if (isDragging || e.pointerType === 'mouse') {
+          setDashMakeoverPercent(calcPercent(e));
+        }
+      });
+
+      const stopDrag = (e) => {
+        isDragging = false;
+        try { if (e && e.pointerId) wrapper.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+
+      wrapper.addEventListener('pointerup', stopDrag);
+      wrapper.addEventListener('pointercancel', stopDrag);
+
+      wrapper.addEventListener('touchmove', (e) => {
+        setDashMakeoverPercent(calcPercent(e));
+      }, { passive: true });
+
+      if (rangeEl) {
+        rangeEl.addEventListener('input', (e) => {
+          setDashMakeoverPercent(parseFloat(e.target.value));
+        });
+      }
+    }
+
+    function selectVeneerShade(shade, btnEl) {
+      document.querySelectorAll('#shadeSelectorGrid .shade-chip').forEach(chip => {
+        chip.style.border = '1px solid #cbd5e1';
+        chip.style.background = '#fff';
+        chip.style.color = '#334155';
+        chip.classList.remove('active');
+      });
+
+      if (btnEl) {
+        btnEl.style.border = '2px solid #d97706';
+        btnEl.style.background = '#fffbeb';
+        btnEl.style.color = '#b45309';
+        btnEl.classList.add('active');
+      }
+
+      const labelEl = document.getElementById('currentShadeLabel');
+      if (labelEl) labelEl.textContent = shade;
+
+      const afterEl = document.getElementById('dashMakeoverAfterImg');
+      if (afterEl) {
+        if (shade === 'BL1') afterEl.style.filter = 'brightness(1.15) contrast(1.08)';
+        else if (shade === 'A1') afterEl.style.filter = 'brightness(1.06) contrast(1.04)';
+        else if (shade === 'A2') afterEl.style.filter = 'brightness(1.0) contrast(1.0)';
+        else if (shade === 'B1') afterEl.style.filter = 'brightness(1.1) contrast(1.05)';
+      }
+    }
+
+    function adjustWhiteningIntensity(val) {
+      const textEl = document.getElementById('whiteningLevelText');
+      if (textEl) textEl.textContent = `${val}% (${val > 80 ? 'Ultra Bright' : (val > 60 ? 'Natural Bright' : 'Subtle Clean')})`;
+
+      const afterEl = document.getElementById('dashMakeoverAfterImg');
+      if (afterEl) {
+        const factor = 0.8 + (val / 100) * 0.35;
+        afterEl.style.filter = `brightness(${factor.toFixed(2)}) contrast(1.06)`;
+      }
+    }
+
+
