@@ -62,6 +62,7 @@
         <li><a href="#services">Services</a></li>
         <li><a href="#symptom-checker">Symptom Checker</a></li>
         <li><a href="#doctors">Team</a></li>
+        <li><a href="#gallery">Gallery</a></li>
         <li><a href="#testimonials">Reviews</a></li>
       </ul>
 
@@ -465,15 +466,97 @@
           <div style="font-size: 0.85rem; color: var(--dark-navy); font-weight: 600; margin-bottom: 16px;">
             <i class="far fa-calendar-alt" style="color: var(--primary);"></i> Available: {{ doc.available_days }}
           </div>
-
-          <button class="btn-primary open-appointment-modal" data-doctor="{{ doc.name }}" style="width: 100%; justify-content: center;">
+          
+          <!-- <button class="btn-primary open-appointment-modal" data-doctor="{{ doc.name }}" style="width: 100%; justify-content: center;">
             Book Consultation
-          </button>
+          </button> -->
         </div>
       </div>
       {% endfor %}
     </div>
   </section>
+
+  <!-- CLINIC & SMILE GALLERY SECTION ("Meet team next new Gallexy photo next and previous with automatic connect") -->
+  <section class="section gallery-section" id="gallery">
+    <div class="section-header">
+      <span class="subtitle-pill"><i class="fas fa-camera-retro"></i> Visual Showcase</span>
+      <h2 class="section-title">Clinic Gallery</h2>
+      <p class="section-desc">Experience our modern clinic ambience, cutting-edge dental technology, and genuine smile transformations designed by Dr. Anoop.</p>
+    </div>
+
+    <!-- GALLERY FILTER BUTTONS -->
+
+    <!-- GALLERY CAROUSEL CONTAINER -->
+    <div class="gallery-carousel-wrapper" id="galleryCarouselWrapper">
+      <!-- PREVIOUS BUTTON -->
+      <button type="button" class="gallery-nav-btn prev-btn" id="prevGalleryBtn" onclick="slideGallery(-1)" aria-label="Previous Gallery Photos" title="Previous Photos">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <!-- SLIDES TRACK -->
+      <div class="gallery-track" id="galleryTrack">
+        {% if gallery_photos %}
+          {% for p in gallery_photos %}
+          <div class="gallery-card">
+            <div class="gallery-img-box">
+              <img src="{{ p.image.url }}" alt="Clinic Photo" loading="lazy" class="gallery-img">
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          {% for p in fallback_gallery %}
+          <div class="gallery-card">
+            <div class="gallery-img-box">
+              <img src="{{ p.image_url }}" alt="Clinic Photo" loading="lazy" class="gallery-img">
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- NEXT BUTTON -->
+      <button type="button" class="gallery-nav-btn next-btn" id="nextGalleryBtn" onclick="slideGallery(1)" aria-label="Next Gallery Photos" title="Next Photos">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- GALLERY CONNECT & STATUS BAR -->
+    <div class="gallery-controls-bar">
+      <!-- AUTOPLAY INDICATOR & TOGGLE -->
+      <!-- <div class="gallery-autoplay-status" id="galleryAutoplayStatus" onclick="toggleGalleryAutoplay()" title="Click to Pause / Resume Auto Slideshow">
+        <span class="status-indicator-dot pulse-active" id="autoplayIndicatorDot"></span>
+        <span class="status-indicator-text" id="autoplayIndicatorText">Auto Connect: Active (Slides every 3.5s)</spa  n>
+        <i class="fas fa-pause-circle" id="autoplayIcon" style="margin-left: 6px; font-size: 0.9rem;"></i>
+      </div> -->
+
+      <!-- CONNECTED DOT INDICATORS -->
+      <div class="gallery-dots" id="galleryDots"></div>
+    </div>
+  </section>
+
+  <!-- GALLERY LIGHTBOX MODAL -->
+  <div class="gallery-lightbox" id="galleryLightbox" onclick="closeGalleryLightbox(event)">
+    <div class="gallery-lightbox-dialog" onclick="event.stopPropagation()">
+      <button type="button" class="gallery-lightbox-close" onclick="closeGalleryLightbox()" aria-label="Close Lightbox">&times;</button>
+      <div class="gallery-lightbox-media">
+        <img id="lightboxImg" src="" alt="Gallery Image Full Preview">
+      </div>
+      <div class="gallery-lightbox-footer">
+        <div>
+          <h3 id="lightboxTitle" style="color: white; margin: 0 0 4px 0; font-size: 1.15rem; font-family: 'Outfit', sans-serif;"></h3>
+          <p id="lightboxCaption" style="color: #cbd5e1; margin: 0; font-size: 0.875rem; font-family: 'Inter', sans-serif;"></p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-sm" onclick="lightboxNavigate(-1)" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; cursor: pointer;">
+            <i class="fas fa-chevron-left"></i> Prev
+          </button>
+          <button type="button" class="btn-sm" onclick="lightboxNavigate(1)" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 6px 12px; cursor: pointer;">
+            Next <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- OUR PARTNERS / TRUSTED ASSOCIATES SECTION -->
   <section class="section partners-section" id="partners">
@@ -595,6 +678,7 @@
           <li><a href="#services"> Dental Services</a></li>
           <li><a href="#symptom-checker"> Symptom Checker</a></li>
           <li><a href="#doctors"> Doctor Team</a></li>
+          <li><a href="#gallery"> Clinic Gallery</a></li>
           <li><a href="#testimonials"> Patient Reviews</a></li>
         </ul>
       </div>

@@ -730,5 +730,229 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   initTestimonialsCarousel();
+
+  // =========================================================
+  // CLINIC & SMILE GALLERY CAROUSEL WITH AUTO CONNECT
+  // =========================================================
+  let galleryAutoSlideTimer = null;
+  let isGalleryAutoplayActive = true;
+  let activeLightboxIndex = 0;
+  let currentVisibleGalleryCards = [];
+
+  window.slideGallery = function(direction) {
+    const track = document.getElementById('galleryTrack');
+    if (!track) return;
+    const cards = track.querySelectorAll('.gallery-card:not([style*="display: none"])');
+    if (cards.length === 0) return;
+
+    const card = cards[0];
+    const gap = 24;
+    const cardWidth = card.offsetWidth + gap;
+    const maxScrollLeft = track.scrollWidth - track.clientWidth;
+
+    if (direction > 0) {
+      if (track.scrollLeft >= maxScrollLeft - 15) {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        track.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    } else {
+      if (track.scrollLeft <= 15) {
+        track.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
+      } else {
+        track.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      }
+    }
+  };
+
+  window.toggleGalleryAutoplay = function() {
+    isGalleryAutoplayActive = !isGalleryAutoplayActive;
+    const dot = document.getElementById('autoplayIndicatorDot');
+    const text = document.getElementById('autoplayIndicatorText');
+    const icon = document.getElementById('autoplayIcon');
+
+    if (isGalleryAutoplayActive) {
+      if (dot) dot.className = 'status-indicator-dot pulse-active';
+      if (text) text.textContent = 'Auto Connect: Active (Slides every 3.5s)';
+      if (icon) icon.className = 'fas fa-pause-circle';
+      startGalleryAutoplay();
+    } else {
+      if (dot) dot.className = 'status-indicator-dot';
+      if (text) text.textContent = 'Auto Connect: Paused (Click to resume)';
+      if (icon) icon.className = 'fas fa-play-circle';
+      stopGalleryAutoplay();
+    }
+  };
+
+  const startGalleryAutoplay = () => {
+    stopGalleryAutoplay();
+    if (!isGalleryAutoplayActive) return;
+    galleryAutoSlideTimer = setInterval(() => {
+      window.slideGallery(1);
+    }, 3500);
+  };
+
+  const stopGalleryAutoplay = () => {
+    if (galleryAutoSlideTimer) {
+      clearInterval(galleryAutoSlideTimer);
+      galleryAutoSlideTimer = null;
+    }
+  };
+
+  const initGalleryCarousel = () => {
+    const track = document.getElementById('galleryTrack');
+    const dotsContainer = document.getElementById('galleryDots');
+    if (!track || !dotsContainer) return;
+
+    const allCards = Array.from(track.querySelectorAll('.gallery-card'));
+    if (allCards.length === 0) return;
+
+    const updateDots = () => {
+      const visibleCards = allCards.filter(c => c.style.display !== 'none');
+      if (visibleCards.length === 0) {
+        dotsContainer.innerHTML = '';
+        return;
+      }
+
+      const card = visibleCards[0];
+      const gap = 24;
+      const cardWidth = card.offsetWidth + gap;
+      const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+      const totalSteps = Math.max(1, Math.round(maxScrollLeft / cardWidth) + 1);
+
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < totalSteps; i++) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = `gallery-dot ${i === 0 ? 'active' : ''}`;
+        dot.setAttribute('aria-label', `Go to photo slide ${i + 1}`);
+        dot.addEventListener('click', () => {
+          track.scrollTo({ left: Math.min(i * cardWidth, maxScrollLeft), behavior: 'smooth' });
+        });
+        dotsContainer.appendChild(dot);
+      }
+    };
+
+    updateDots();
+    window.addEventListener('resize', updateDots);
+
+    // Track scroll event to highlight active dot
+    track.addEventListener('scroll', () => {
+      const visibleCards = allCards.filter(c => c.style.display !== 'none');
+      if (visibleCards.length === 0) return;
+
+      const card = visibleCards[0];
+      const gap = 24;
+      const cardWidth = card.offsetWidth + gap;
+      const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+      const totalSteps = Math.max(1, Math.round(maxScrollLeft / cardWidth) + 1);
+      const scrollLeft = track.scrollLeft;
+      const stepIndex = Math.min(totalSteps - 1, Math.round(scrollLeft / cardWidth));
+
+      const dots = dotsContainer.querySelectorAll('.gallery-dot');
+      dots.forEach((d, idx) => {
+        if (idx === stepIndex) d.classList.add('active');
+        else d.classList.remove('active');
+      });
+    }, { passive: true });
+
+    // Category filter tabs
+    const filterTabs = document.querySelectorAll('.gallery-tab-btn');
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const filter = tab.getAttribute('data-filter');
+
+        allCards.forEach(c => {
+          const cardCat = c.getAttribute('data-category');
+          if (filter === 'all' || cardCat === filter) {
+            c.style.display = 'flex';
+          } else {
+            c.style.display = 'none';
+          }
+        });
+
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+        setTimeout(updateDots, 100);
+      });
+    });
+
+    // Pause on hover, resume on leave
+    const wrapper = document.getElementById('galleryCarouselWrapper');
+    if (wrapper) {
+      wrapper.addEventListener('mouseenter', stopGalleryAutoplay);
+      wrapper.addEventListener('mouseleave', () => {
+        if (isGalleryAutoplayActive) startGalleryAutoplay();
+      });
+    }
+
+    startGalleryAutoplay();
+  };
+
+  // LIGHTBOX MODAL FUNCTIONALITY
+  window.openGalleryLightbox = function(imgUrl, title, caption) {
+    const modal = document.getElementById('galleryLightbox');
+    const imgEl = document.getElementById('lightboxImg');
+    const titleEl = document.getElementById('lightboxTitle');
+    const captionEl = document.getElementById('lightboxCaption');
+
+    if (!modal || !imgEl) return;
+
+    imgEl.src = imgUrl;
+    if (titleEl) titleEl.textContent = title || 'Clinic Photo';
+    if (captionEl) captionEl.textContent = caption || '';
+
+    // Collect all visible cards for next/prev lightbox browsing
+    const track = document.getElementById('galleryTrack');
+    if (track) {
+      currentVisibleGalleryCards = Array.from(track.querySelectorAll('.gallery-card:not([style*="display: none"])'));
+      const activeCard = currentVisibleGalleryCards.find(c => {
+        const img = c.querySelector('.gallery-img');
+        return img && img.src.includes(imgUrl);
+      });
+      activeLightboxIndex = activeCard ? currentVisibleGalleryCards.indexOf(activeCard) : 0;
+    }
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeGalleryLightbox = function(event) {
+    if (event && event.target && event.target.id !== 'galleryLightbox' && !event.target.classList.contains('gallery-lightbox-close')) {
+      return;
+    }
+    const modal = document.getElementById('galleryLightbox');
+    if (modal) modal.classList.remove('show');
+    document.body.style.overflow = '';
+  };
+
+  window.lightboxNavigate = function(direction) {
+    if (!currentVisibleGalleryCards || currentVisibleGalleryCards.length === 0) return;
+    activeLightboxIndex = (activeLightboxIndex + direction + currentVisibleGalleryCards.length) % currentVisibleGalleryCards.length;
+    const card = currentVisibleGalleryCards[activeLightboxIndex];
+    if (!card) return;
+
+    const img = card.querySelector('.gallery-img');
+    const title = card.querySelector('.gallery-title');
+    const desc = card.querySelector('.gallery-desc');
+
+    if (img) document.getElementById('lightboxImg').src = img.src;
+    if (title) document.getElementById('lightboxTitle').textContent = title.textContent;
+    if (desc) document.getElementById('lightboxCaption').textContent = desc.textContent;
+  };
+
+  // Keyboard navigation for lightbox
+  document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('galleryLightbox');
+    if (modal && modal.classList.contains('show')) {
+      if (e.key === 'Escape') window.closeGalleryLightbox();
+      if (e.key === 'ArrowRight') window.lightboxNavigate(1);
+      if (e.key === 'ArrowLeft') window.lightboxNavigate(-1);
+    }
+  });
+
+  initGalleryCarousel();
 });
+
 

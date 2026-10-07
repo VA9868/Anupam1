@@ -38,6 +38,14 @@
     }
     function previewAboutPhoto(input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const statusEl = document.getElementById('aboutPhotoStatusText');
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color: #16a34a; font-weight: 600;"><i class="fas fa-check-circle"></i> Ready to save: ${file.name}</span>`;
+        }
+        const quickSaveBtn = document.getElementById('aboutQuickSaveBtn');
+        if (quickSaveBtn) quickSaveBtn.style.display = 'inline-flex';
+
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = document.getElementById('aboutPhotoPreviewImg');
@@ -45,7 +53,52 @@
             img.src = e.target.result;
           }
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function previewGalleryPhoto(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const statusEl = document.getElementById('galleryPhotoStatusText');
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color: #16a34a; font-weight: 600;"><i class="fas fa-check-circle"></i> Selected: ${file.name} (${(file.size/1024).toFixed(1)} KB)</span>`;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('galleryPhotoPreviewImg');
+          const placeholder = document.getElementById('galleryUploadPlaceholder');
+          if (img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+          }
+          if (placeholder) {
+            placeholder.style.display = 'none';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    function previewGalleryPhotoInput(input, imgId, placeholderId, statusId) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const statusEl = document.getElementById(statusId);
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color: #16a34a; font-weight: 600;"><i class="fas fa-check-circle"></i> Selected: ${file.name} (${(file.size/1024).toFixed(1)} KB)</span>`;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById(imgId);
+          const placeholder = document.getElementById(placeholderId);
+          if (img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+          }
+          if (placeholder) {
+            placeholder.style.display = 'none';
+          }
+        };
+        reader.readAsDataURL(file);
       }
     }
     function updateAboutDescPreview() {
@@ -80,6 +133,8 @@
     window.closeModal = closeModal;
     window.openUploadSmileMakeoverModal = openUploadSmileMakeoverModal;
     window.previewAboutPhoto = previewAboutPhoto;
+    window.previewGalleryPhoto = previewGalleryPhoto;
+    window.previewGalleryPhotoInput = previewGalleryPhotoInput;
     window.updateAboutDescPreview = updateAboutDescPreview;
     window.insertAboutHeading = insertAboutHeading;
   </script>
@@ -464,20 +519,26 @@
           </button>
         </div>
 
-        <!-- APPOINTMENTS DATE FILTER PILLS (TODAY / NOW DATE ONLY) -->
+        <!-- APPOINTMENTS DATE FILTER PILLS (NOW DATE) -->
         <div class="filter-pills" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <button class="filter-btn active" id="btnApptAll" onclick="filterAppointmentsDate('all')">All Appointments ({{ appointments.count }})</button>
             <button class="filter-btn" id="btnApptToday" onclick="filterAppointmentsDate('today')">
-              <i class="fas fa-calendar-day" style="color: #2563eb; margin-right: 4px;"></i>Today / Now Date Only ({{ today }})
+              <i class="fas fa-calendar-day" style="color: #2563eb; margin-right: 4px;"></i>Now Date ({{ today }})
             </button>
             <button class="filter-btn" id="btnApptUpcoming" onclick="filterAppointmentsDate('upcoming')">Upcoming</button>
             <button class="filter-btn" id="btnApptPast" onclick="filterAppointmentsDate('past')">Past</button>
+
+            <!-- PATIENT NAME SEARCH -->
+            <div style="position: relative; display: flex; align-items: center; margin-left: 4px;">
+              <i class="fas fa-search" style="position: absolute; left: 10px; color: #94a3b8; font-size: 0.78rem; pointer-events: none;"></i>
+              <input type="text" id="apptPatientSearchInput" placeholder="Search patient name..." onkeyup="filterAppointmentsSearch(this.value)" style="padding: 6px 12px 6px 28px; font-size: 0.82rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; width: 190px; outline: none; transition: border-color 0.2s ease;" onfocus="this.style.borderColor='#2563eb';" onblur="this.style.borderColor='#cbd5e1';">
+            </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <label for="apptDatePicker" style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin: 0;">Filter Date:</label>
             <input type="date" id="apptDatePicker" class="form-control" value="{{ today }}" onchange="filterAppointmentsDate('custom', this.value)" style="width: auto; padding: 6px 10px; font-size: 0.82rem; border-radius: 8px; border: 1px solid #cbd5e1;">
-            <button type="button" class="btn-secondary" onclick="filterAppointmentsDate('all')" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px;">Reset</button>
+            <button type="button" class="btn-secondary" onclick="document.getElementById('apptPatientSearchInput').value=''; filterAppointmentsSearch(''); filterAppointmentsDate('all');" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px;">Reset</button>
           </div>
         </div>
 
@@ -497,7 +558,7 @@
             </thead>
             <tbody>
               {% for a in appointments %}
-                <tr class="appointment-row" data-date="{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}">
+                <tr class="appointment-row" data-date="{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}" data-patient="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'' }}{% endif %}">
                   <td><strong>{{ a.formatted_id }}</strong></td>
                   <td class="patient-interactive-cell">
                     <a href="javascript:void(0)" class="patient-link-btn" title="Click to open Teeth Chart &amp; Payment"
@@ -581,8 +642,8 @@
                         onclick="openClinicalHubFromBtn(this, 'payment')">
                         <i class="fas fa-credit-card"></i>
                       </button>
-                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1" target="_blank" class="btn-action-icon" title="Print Registration Slip">
-                        <i class="fas fa-print"></i>
+                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=appointment" target="_blank" class="btn-action-icon" title="Print Registration Slip">
+                        <i class="fas fa-id-card"></i>
                       </a>
                     </div>
                   </td>
@@ -702,6 +763,12 @@
                         onclick="openClinicalHubFromBtn(this, 'payment')">
                         <i class="fas fa-credit-card"></i>
                       </button>
+                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (Single Card)">
+                        <i class="fas fa-id-card"></i>
+                      </a>
+                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=0&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (8-Card Grid A4)">
+                        <i class="fas fa-th-large"></i>
+                      </a>
                     </div>
                   </td>
                 </tr>
@@ -782,7 +849,7 @@
         <div class="panel-header" style="padding: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
           <div>
             <h2 class="panel-title" style="display: flex; align-items: center; gap: 10px;">
-              <i class="fas fa-hand-holding-medical" style="color: var(--primary-blue);"></i> Our Dental Services &amp; Treatments
+              <i class="fas fa-hand-holding-medical" style="color: var(--primary-blue);"></i> Services
             </h2>
             <p style="font-size: 0.825rem; color: #64748b; margin-top: 3px;">
               Upload new clinical services, custom image banners, pricing &amp; tariffs directly connected to the website's services-grid
@@ -1243,9 +1310,9 @@
             </div>
           </div>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="{% url 'home' %}#about" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website About Section">
+            <!-- <a href="{% url 'home' %}#about" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website About Section">
               <i class="fas fa-external-link-alt"></i> Website About
-            </a>
+            </a> -->
             <button type="button" class="btn-primary-submit" onclick="switchTab('services', event)" style="font-size: 0.825rem; padding: 9px 14px;">
               <i class="fas fa-hand-holding-medical"></i> Manage Services
             </button>
@@ -1366,9 +1433,9 @@
           </div>
 
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <a href="{% url 'home' %}#about" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website Live About Us">
+            <!-- <a href="{% url 'home' %}#about" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website Live About Us">
               <i class="fas fa-external-link-alt"></i> View on Website
-            </a>
+            </a> -->
           </div>
         </div>
 
@@ -1403,10 +1470,15 @@
 
               <!-- FILE SELECTOR BUTTON -->
               <input type="file" id="about_photo_input" name="photo" accept="image/*" style="display: none;" onchange="previewAboutPhoto(this)">
-              <button type="button" class="btn-secondary" onclick="document.getElementById('about_photo_input').click()" style="width: 100%; padding: 10px 14px; font-size: 0.85rem; font-weight: 600; justify-content: center; display: flex; align-items: center; gap: 8px; border-color: #93c5fd; background: #eff6ff; color: #1e40af;">
-                <i class="fas fa-cloud-upload-alt"></i> Choose New Photo
-              </button>
-              <p style="font-size: 0.75rem; color: #64748b; margin: 8px 0 0 0; text-align: center;">
+              <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('about_photo_input').click()" style="flex: 1; padding: 10px 14px; font-size: 0.85rem; font-weight: 600; justify-content: center; display: flex; align-items: center; gap: 8px; border-color: #93c5fd; background: #eff6ff; color: #1e40af;">
+                  <i class="fas fa-cloud-upload-alt"></i> Choose New Photo
+                </button>
+                <button type="submit" id="aboutQuickSaveBtn" class="btn-primary" style="display: none; padding: 10px 14px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; background: #059669; border: none; color: white; border-radius: 8px; cursor: pointer; align-items: center; gap: 6px;" title="Save About Photo Immediately">
+                  <i class="fas fa-save"></i> Save Now
+                </button>
+              </div>
+              <p id="aboutPhotoStatusText" style="font-size: 0.75rem; color: #64748b; margin: 8px 0 0 0; text-align: center;">
                 Supported: JPG, PNG, WEBP (Recommended: 800×600 px)
               </p>
 
@@ -1558,6 +1630,234 @@
           </div>
         </form>
       </div>
+
+      <!-- DEDICATED PANEL: CLINIC & SMILE GALLERY - PHOTO UPLOAD & MANAGER IN ABOUT -->
+      <div class="dash-panel" id="aboutGalleryManagerPanel" style="padding: 28px; margin-top: 24px;">
+        <div class="panel-header" style="padding: 0 0 18px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid var(--border-color); margin-bottom: 24px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-images"></i>
+              </div>
+              <div>
+                <h2 class="panel-title" style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">
+                  Clinic &amp; Smile Gallery - Photo Upload &amp; Manager
+                </h2>
+                <span class="badge badge-completed" style="margin-top: 4px; display: inline-block;">
+                  {{ gallery_photos|length }} Active Photos in Website Gallery
+                </span>
+              </div>
+            </div>
+            <p style="font-size: 0.84rem; color: #64748b; margin: 5px 0 0 48px;">
+              Upload clinic interior, modern equipment, smile makeover, and sterilization photos connected directly to the website gallery slider.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'home' %}#gallery" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;" title="Open Website Live Gallery">
+              <i class="fas fa-external-link-alt"></i> View Live Gallery on Website
+            </a>
+          </div>
+        </div>
+
+        <!-- TWO ROW LAYOUT: UPLOAD NEW PHOTO (ROW 1) + ACTIVE PHOTOS LIST (ROW 2) -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          
+          <!-- ROW 1: UPLOAD NEW PHOTO FORM -->
+          <div style="background: #f8fafc; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+                <i class="fas fa-cloud-upload-alt" style="color: #2563eb;"></i> Upload New Gallery Photo
+              </h3>
+              <span style="font-size: 0.775rem; color: #64748b;">
+                JPG, PNG, WEBP &bull; Recommended 1200 &times; 800px (Landscape or 4:3)
+              </span>
+            </div>
+
+            <form action="{% url 'upload_gallery_photo' %}" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              <!-- PHOTO DROP/PREVIEW ZONE -->
+              <div style="position: relative; width: 100%; height: 160px; border-radius: 12px; overflow: hidden; background: #ffffff; border: 2px dashed #93c5fd; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;" onclick="document.getElementById('about_gallery_photo_input').click()">
+                <div id="aboutGalleryUploadPlaceholder" style="text-align: center; padding: 16px;">
+                  <i class="fas fa-cloud-upload-alt" style="font-size: 2.2rem; color: #2563eb; margin-bottom: 8px;"></i>
+                  <div style="font-size: 0.88rem; font-weight: 700; color: #0f172a;">Click to browse or drop clinic photo here</div>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Click anywhere inside this area to select an image from your computer</div>
+                </div>
+                <img id="aboutGalleryPhotoPreviewImg" src="" alt="Gallery Preview" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+              </div>
+              <input type="file" id="about_gallery_photo_input" name="photo" accept="image/*" required style="display: none;" onchange="previewGalleryPhotoInput(this, 'aboutGalleryPhotoPreviewImg', 'aboutGalleryUploadPlaceholder', 'aboutGalleryPhotoStatusText')">
+              
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; flex-wrap: wrap;">
+                <div id="aboutGalleryPhotoStatusText" style="font-size: 0.8rem; color: #64748b;"></div>
+                <!-- SUBMIT BUTTON -->
+                <button type="submit" class="btn-primary-submit" style="padding: 10px 24px; font-size: 0.925rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-save"></i> Save Photo to Gallery
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ROW 2: ACTIVE GALLERY PHOTOS GRID -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">
+                <i class="fas fa-images" style="color: #2563eb; margin-right: 6px;"></i> Active Gallery Photos ({{ gallery_photos|length }})
+              </h3>
+              <span style="font-size: 0.775rem; color: #64748b;">
+                Changes appear instantly on the live website
+              </span>
+            </div>
+
+            {% if gallery_photos %}
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;">
+                {% for p in gallery_photos %}
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                  <div style="position: relative; width: 100%; height: 160px; background: #e2e8f0; overflow: hidden;">
+                    <img src="{{ p.image.url }}" alt="{{ p.title|default:'Clinic Photo' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div style="padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; background: #fafafa;">
+                    <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-calendar-alt"></i> {{ p.created_at|date:"M d, Y" }}</span>
+                    <form action="{% url 'delete_gallery_photo' p.id %}" method="POST" onsubmit="return confirm('Remove this photo from the website gallery?');" style="margin: 0;">
+                      {% csrf_token %}
+                      <button type="submit" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Delete Photo">
+                        <i class="fas fa-trash-alt"></i> Delete
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div style="text-align: center; padding: 36px 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 12px;">
+                  <i class="fas fa-images"></i>
+                </div>
+                <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 1rem; font-family: 'Outfit', sans-serif;">No Custom Gallery Photos Uploaded Yet</h4>
+                <p style="margin: 0 auto 16px auto; color: #64748b; font-size: 0.85rem; max-width: 480px; line-height: 1.5;">
+                  The website is currently displaying built-in high-definition showcase photos in the auto-connecting gallery carousel. Upload clinic photos above to add them live to the website!
+                </p>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('about_gallery_photo_input').click()" style="padding: 8px 16px; font-size: 0.85rem;">
+                  <i class="fas fa-plus"></i> Select Photo to Upload
+                </button>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- DEDICATED TAB: GALLERY PHOTO MANAGER (ACCESSIBLE VIA SIDEBAR 'GALLERY') -->
+    <div id="section-gallery" class="content-section" style="display: none;">
+      <div class="dash-panel" style="padding: 28px;">
+        <div class="panel-header" style="padding: 0 0 18px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid var(--border-color); margin-bottom: 24px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-camera-retro"></i>
+              </div>
+              <h2 class="panel-title" style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">
+                Website Photo Gallery Manager
+              </h2>
+            </div>
+            <p style="font-size: 0.84rem; color: #64748b; margin: 5px 0 0 48px;">
+              Upload &amp; manage all photos displayed in the auto-sliding photo gallery on the homepage.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'home' %}#gallery" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;">
+              <i class="fas fa-external-link-alt"></i> View Live Gallery
+            </a>
+            <button type="button" class="btn-primary-submit" onclick="switchTab('about', event)" style="font-size: 0.825rem; padding: 8px 14px;">
+              <i class="fas fa-info-circle"></i> About Section Details
+            </button>
+          </div>
+        </div>
+
+        <!-- TWO ROW LAYOUT: UPLOAD NEW PHOTO (ROW 1) + ACTIVE PHOTOS LIST (ROW 2) -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <!-- ROW 1: UPLOAD FORM -->
+          <div style="background: #f8fafc; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif;">
+                <i class="fas fa-cloud-upload-alt" style="color: #2563eb;"></i> Upload Photo
+              </h3>
+              <span style="font-size: 0.775rem; color: #64748b;">
+                JPG, PNG, WEBP &bull; Recommended 1200 &times; 800px (Landscape or 4:3)
+              </span>
+            </div>
+
+            <form action="{% url 'upload_gallery_photo' %}" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div style="position: relative; width: 100%; height: 160px; border-radius: 12px; overflow: hidden; background: #ffffff; border: 2px dashed #93c5fd; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;" onclick="document.getElementById('sec_gallery_photo_input').click()">
+                <div id="secGalleryUploadPlaceholder" style="text-align: center; padding: 16px;">
+                  <i class="fas fa-cloud-upload-alt" style="font-size: 2.2rem; color: #2563eb; margin-bottom: 8px;"></i>
+                  <div style="font-size: 0.88rem; font-weight: 700; color: #0f172a;">Click to browse or drop clinic photo here</div>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Click anywhere inside this area to select an image from your computer</div>
+                </div>
+                <img id="secGalleryPhotoPreviewImg" src="" alt="Gallery Preview" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+              </div>
+              <input type="file" id="sec_gallery_photo_input" name="photo" accept="image/*" required style="display: none;" onchange="previewGalleryPhotoInput(this, 'secGalleryPhotoPreviewImg', 'secGalleryUploadPlaceholder', 'secGalleryPhotoStatusText')">
+
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; flex-wrap: wrap;">
+                <div id="secGalleryPhotoStatusText" style="font-size: 0.8rem; color: #64748b;"></div>
+                <!-- SUBMIT BUTTON -->
+                <button type="submit" class="btn-primary-submit" style="padding: 10px 24px; font-size: 0.925rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-save"></i> Save Photo to Gallery
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ROW 2: ACTIVE GALLERY PHOTOS GRID -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: var(--radius-md); padding: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">
+                <i class="fas fa-images" style="color: #2563eb; margin-right: 6px;"></i> Active Gallery Photos ({{ gallery_photos|length }})
+              </h3>
+              <a href="{% url 'home' %}#gallery" target="_blank" style="font-size: 0.775rem; color: #2563eb; text-decoration: none; font-weight: 600;">
+                <i class="fas fa-external-link-alt"></i> Preview on Website
+              </a>
+            </div>
+
+            {% if gallery_photos %}
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;">
+                {% for p in gallery_photos %}
+                <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff; display: flex; flex-direction: column; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                  <div style="position: relative; width: 100%; height: 160px; background: #e2e8f0; overflow: hidden;">
+                    <img src="{{ p.image.url }}" alt="{{ p.title|default:'Clinic Photo' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div style="padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; background: #fafafa;">
+                    <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-calendar-alt"></i> {{ p.created_at|date:"M d, Y" }}</span>
+                    <form action="{% url 'delete_gallery_photo' p.id %}" method="POST" onsubmit="return confirm('Remove this photo from the website gallery?');" style="margin: 0;">
+                      {% csrf_token %}
+                      <button type="submit" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Delete Photo">
+                        <i class="fas fa-trash-alt"></i> Delete
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div style="text-align: center; padding: 36px 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 12px;">
+                  <i class="fas fa-images"></i>
+                </div>
+                <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 1rem; font-family: 'Outfit', sans-serif;">No Custom Gallery Photos Uploaded Yet</h4>
+                <p style="margin: 0 auto 16px auto; color: #64748b; font-size: 0.85rem; max-width: 480px; line-height: 1.5;">
+                  The website is currently displaying built-in high-definition showcase photos in the auto-connecting gallery carousel. Upload clinic photos above to add them live to the website!
+                </p>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('sec_gallery_photo_input').click()" style="padding: 8px 16px; font-size: 0.85rem;">
+                  <i class="fas fa-plus"></i> Select Photo to Upload
+                </button>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- TAB 10: PERSONAL / TREATMENTS VIEW -->
@@ -1606,24 +1906,27 @@
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 8px;">
-          <!-- Card 1: 8-Slip Grid PDF -->
+          <!-- Card 1: Patient Registration Slip (Single & 8-Card Grid) -->
           <div style="border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 18px; background: #f8fafc; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                <span class="badge badge-completed" style="font-size: 0.72rem;">2×4 A4 Grid Sheet</span>
+                <span class="badge badge-completed" style="font-size: 0.72rem;">Single &amp; 8-Card Grid</span>
                 <i class="fas fa-print" style="color: #64748b;"></i>
               </div>
-              <h4 style="font-size: 0.975rem; color: #0f172a; margin-bottom: 6px;">Patient Registration Slip Grid</h4>
+              <h4 style="font-size: 0.975rem; color: #0f172a; margin-bottom: 6px;">Patient Registration Slip</h4>
               <p style="font-size: 0.8rem; color: #64748b; line-height: 1.45; margin-bottom: 14px;">
-                Prints 8 official Anupam Dental Clinic slips on an A4 sheet with cut guidelines. Supports single card or 8-card grid.
+                Official Anupam Dental Clinic patient registration slip. Supports Single Card or 8-Card Grid (A4) format.
               </p>
             </div>
             <div style="display: flex; gap: 8px;">
               <button type="button" class="btn-primary-submit" onclick="openSlipGridModal()" style="flex: 1; justify-content: center; font-size: 0.8rem; padding: 8px 12px; background: #2563eb;">
-                <i class="fas fa-external-link-alt"></i> Connect &amp; Open Grid
+                <i class="fas fa-external-link-alt"></i> Print Registration Slip
               </button>
-              <a href="{% url 'print_slip_grid' %}" target="_blank" class="btn-sm" style="background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" title="Open Direct Blank Grid">
-                <i class="fas fa-print"></i>
+              <a href="{% url 'print_slip_grid' %}?single_card=1&source=personal" target="_blank" class="btn-sm" style="background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" title="Open Direct Blank Single Card">
+                <i class="fas fa-id-card"></i>
+              </a>
+              <a href="{% url 'print_slip_grid' %}?single_card=0&source=personal" target="_blank" class="btn-sm" style="background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" title="Open Direct Blank 8-Card Grid">
+                <i class="fas fa-th-large"></i>
               </a>
             </div>
           </div>
@@ -2370,29 +2673,37 @@
     <div class="modal-card" style="max-width: 620px;">
       <div class="modal-header">
         <h3>
-          <i class="fas fa-th-large" style="color: #2563eb; margin-right: 8px;"></i>Patient Slip Grid PDF (2×4 A4)
+          <i class="fas fa-id-card" style="color: #2563eb; margin-right: 8px;"></i>Patient Registration Slip (Single &amp; 8-Card Grid)
         </h3>
         <button type="button" class="modal-close-btn" onclick="closeModal('slipGridModal')">&times;</button>
       </div>
       <div class="modal-body">
         <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">
-          Connect and print official Anupam Dental Clinic 8-slip grid sheets on A4 format with cut guidelines.
+          Print official Anupam Dental Clinic patient registration slip as a Single Card or 8-Card Grid on A4 format.
         </p>
 
         <div style="background: #f8fafc; border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 14px; margin-bottom: 18px;">
-          <label style="font-weight: 700; font-size: 0.85rem; color: #0f172a; display: block; margin-bottom: 10px;">Select Print Mode:</label>
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- <label style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer;">
-              <input type="radio" name="slip_mode" value="filled_one" checked onchange="toggleSlipPrefillMode('filled')">
-              <strong>Pre-filled Patient Slip &mdash; 1 Card on Grid</strong> <span style="color: #64748b; font-size: 0.775rem;">(First card filled, remaining 7 blank)</span>
-            </label> -->
+          <label style="font-weight: 700; font-size: 0.85rem; color: #0f172a; display: block; margin-bottom: 10px;">Select Format:</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer; padding: 10px 14px; background: #fff; border: 1.5px solid #2563eb; border-radius: 6px;">
+              <input type="radio" name="slip_format" value="single_card" checked onchange="toggleSlipFormat(this.value)">
+              <span><i class="fas fa-id-card" style="color: #2563eb; margin-right: 4px;"></i><strong>Single Card</strong></span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer; padding: 10px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px;">
+              <input type="radio" name="slip_format" value="8_card" onchange="toggleSlipFormat(this.value)">
+              <span><i class="fas fa-th-large" style="color: #2563eb; margin-right: 4px;"></i><strong>8-Card Grid (A4)</strong></span>
+            </label>
+          </div>
+
+          <label style="font-weight: 700; font-size: 0.85rem; color: #0f172a; display: block; margin-bottom: 10px;">Select Mode:</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer;">
-              <input type="radio" name="slip_mode" value="single_card" onchange="toggleSlipPrefillMode('filled')">
-              <strong>Single Card Only (1 Standalone Card)</strong> <span style="color: #64748b; font-size: 0.775rem;">(Individual slip)</span>
+              <input type="radio" name="slip_mode" value="filled" checked onchange="toggleSlipPrefillMode('filled')">
+              <strong>Pre-filled Patient Slip</strong> <span style="color: #64748b; font-size: 0.775rem;">(Fill patient details below)</span>
             </label>
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer;">
               <input type="radio" name="slip_mode" value="blank" onchange="toggleSlipPrefillMode('blank')">
-              <strong>Blank Grid Sheet (8 Blank Slips)</strong> <span style="color: #64748b; font-size: 0.775rem;">(For counter manual writing)</span>
+              <strong>Blank Registration Slip</strong> <span style="color: #64748b; font-size: 0.775rem;">(Empty fields for manual writing)</span>
             </label>
           </div>
         </div>
@@ -2434,7 +2745,7 @@
             </div>
             <div class="form-group">
               <label for="grid_date">Date</label>
-              <input type="text" id="grid_date" class="form-control" value="{{ today }}">
+              <input type="text" id="grid_date" class="form-control" placeholder="DD/MM/YYYY (Optional)" value="">
             </div>
           </div>
 
@@ -2458,7 +2769,7 @@
             <input type="text" id="grid_address" class="form-control" placeholder="e.g. Vaikom, Kottayam">
           </div>
 
-          <div style="margin-top: 10px;">
+          <div id="gridPrefillAllWrap" style="margin-top: 10px; display: none;">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;">
               <input type="checkbox" id="grid_prefill_all">
               <span>Print this patient's details across all 8 slips on the sheet</span>
@@ -2470,7 +2781,7 @@
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="closeModal('slipGridModal')">Cancel</button>
         <button type="button" class="btn-primary-submit" onclick="generateSlipGridPDF()" style="background: #2563eb;">
-          <i class="fas fa-print"></i> Open &amp; Print Grid PDF
+          <i class="fas fa-print"></i> Open &amp; Print Slip PDF
         </button>
       </div>
     </div>

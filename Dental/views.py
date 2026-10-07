@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import Sum, Q
-from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice, AboutClinic
+from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice, AboutClinic, GalleryPhoto
 import datetime
 
 def home_view(request):
@@ -210,11 +210,56 @@ def home_view(request):
             experience_years="28+"
         )
 
+    gallery_photos = GalleryPhoto.objects.all()
+    if not gallery_photos.exists():
+        fallback_gallery = [
+            {
+                'title': 'Anupam Dental Clinic Exterior',
+                'caption': 'Modern dental healthcare center located at West Gate Vaikom with ample patient parking.',
+                'image_url': '/static/Dental/images/Out1.jpeg',
+                'category_label': 'Clinic Facility',
+            },
+            {
+                'title': 'AI Diagnostics & Radiography Suite',
+                'caption': 'Digital intraoral diagnostics and 3D panoramic imaging suite with instant analysis.',
+                'image_url': '/static/Dental/images/ai_clinic_scan.jpg',
+                'category_label': 'Modern Technology',
+            },
+            {
+                'title': 'Laser Teeth Whitening Transformation',
+                'caption': 'Single-visit painless laser teeth whitening restoring natural radiant brightness.',
+                'image_url': '/static/Dental/images/smile_after_white.jpg',
+                'category_label': 'Smile Transformation',
+            },
+            {
+                'title': 'Cosmetic Smile Makeover & Veneers',
+                'caption': 'Custom digital smile design and precision porcelain veneers crafted by Dr. Anoop.',
+                'image_url': '/static/Dental/images/smile_makeover.jpg',
+                'category_label': 'Smile Makeover',
+            },
+            {
+                'title': 'Advanced Dental Operatory Station',
+                'caption': 'Ergonomic operatory equipped with class-B sterilization, surgical lighting & micro-tools.',
+                'image_url': '/static/Dental/images/Teeth.jpg',
+                'category_label': 'Operatory & Surgery',
+            },
+            {
+                'title': 'Smile Reconstruction Case Study',
+                'caption': 'Full-mouth functional & aesthetic smile rehabilitation with lifetime warranty implants.',
+                'image_url': '/static/Dental/images/sample_patient_makeover.jpg',
+                'category_label': 'Clinical Results',
+            },
+        ]
+    else:
+        fallback_gallery = None
+
     context = {
         'doctors': doctors,
         'services': services,
         'testimonials': testimonials,
         'about_clinic': about_clinic,
+        'gallery_photos': gallery_photos,
+        'fallback_gallery': fallback_gallery,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
         'patient_name': request.session.get('patient_name'),
     }
@@ -500,6 +545,7 @@ def dashboard_view(request):
         'services': services,
         'invoices': invoices,
         'about_clinic': about_clinic,
+        'gallery_photos': GalleryPhoto.objects.all(),
         'user': request.user,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
         'patient_name': request.user.first_name or request.user.username or "Admin",
@@ -1021,6 +1067,54 @@ def edit_about_view(request):
     return redirect('dashboard')
 
 
+def upload_gallery_photo_view(request):
+    if not (request.user.is_authenticated and request.user.is_staff):
+        messages.error(request, "Staff authorization required to upload gallery photos.")
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        photo_file = request.FILES.get('photo')
+        title = request.POST.get('title', '').strip() or "Clinic Photo"
+        category = request.POST.get('category', 'clinic').strip() or "clinic"
+        caption = request.POST.get('caption', '').strip()
+
+        if not photo_file:
+            messages.error(request, "Please select an image file to upload for the gallery.")
+            return redirect('dashboard')
+
+        try:
+            item = GalleryPhoto.objects.create(
+                title=title,
+                caption=caption,
+                image=photo_file,
+                category=category
+            )
+            messages.success(request, "Gallery photo uploaded and saved successfully! It is now live in the website gallery.")
+        except Exception as e:
+            messages.error(request, f"Failed to upload gallery photo: {str(e)}")
+
+    return redirect('dashboard')
+
+
+def delete_gallery_photo_view(request, photo_id):
+    if not (request.user.is_authenticated and request.user.is_staff):
+        messages.error(request, "Staff authorization required.")
+        return redirect('dashboard')
+
+    photo = get_object_or_404(GalleryPhoto, id=photo_id)
+    title = photo.title
+    try:
+        if photo.image and hasattr(photo.image, 'path'):
+            import os
+            if os.path.isfile(photo.image.path):
+                os.remove(photo.image.path)
+    except Exception:
+        pass
+    photo.delete()
+    messages.info(request, f"Gallery photo '{title}' removed successfully.")
+    return redirect('dashboard')
+
+
 def new_invoice_view(request):
     if request.method == 'POST':
         patient_name = request.POST.get('patient_name', '').strip()
@@ -1112,13 +1206,16 @@ def delete_case_view(request, case_id):
 def print_slip_grid_view(request):
     reg_no = request.GET.get('reg_no', '').strip()
     pid = request.GET.get('pid', '').strip()
-    date_val = request.GET.get('date', datetime.date.today().strftime('%d/%m/%Y')).strip()
+    date_val = request.GET.get('date', '').strip()
     name = request.GET.get('name', '').strip()
     age = request.GET.get('age', '').strip()
     gender = request.GET.get('gender', '').strip()
     address = request.GET.get('address', '').strip()
     prefill_all = request.GET.get('prefill_all', '0') == '1'
-    single_card = request.GET.get('single_card', '0') == '1'
+    source = request.GET.get('source', request.GET.get('from', '')).strip().lower()
+    single_card = request.GET.get('single_card', '1') == '1'
+    if source == 'appointment':
+        single_card = True
 
     context = {
         'reg_no': reg_no,
@@ -1130,6 +1227,7 @@ def print_slip_grid_view(request):
         'address': address,
         'prefill_all': prefill_all,
         'single_card': single_card,
+        'source': source,
     }
     return render(request, 'Dental/print_slip_grid.html', context)
 

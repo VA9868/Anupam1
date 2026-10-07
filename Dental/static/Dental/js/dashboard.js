@@ -222,9 +222,11 @@
       const headingEl = document.getElementById('pageHeading');
       if (headingEl) {
         if (sectionKey === 'about') {
-          headingEl.textContent = 'About & Clinic Profile';
+          headingEl.textContent = 'About';
+        } else if (sectionKey === 'gallery') {
+          headingEl.textContent = 'Clinic & Smile Gallery';
         } else if (sectionKey === 'services') {
-          headingEl.textContent = 'Our Dental Services & Treatments';
+          headingEl.textContent = 'Services';
         } else {
           headingEl.textContent = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1);
         }
@@ -355,7 +357,60 @@
       });
     }
 
+    let currentApptDateType = 'all';
+    let currentApptCustomDate = '';
+    let currentApptSearchQuery = '';
+
+    function applyAppointmentsFilter() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const todayVal = `${yyyy}-${mm}-${dd}`;
+
+      const rows = document.querySelectorAll('.appointment-row');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        let rowDate = (row.getAttribute('data-date') || '').trim();
+        let showDate = false;
+
+        if (currentApptDateType === 'all') {
+          showDate = true;
+        } else if (currentApptDateType === 'today') {
+          showDate = (rowDate === todayVal || rowDate.startsWith(todayVal));
+        } else if (currentApptDateType === 'upcoming') {
+          showDate = (rowDate >= todayVal);
+        } else if (currentApptDateType === 'past') {
+          showDate = (rowDate < todayVal);
+        } else if (currentApptDateType === 'custom' && currentApptCustomDate) {
+          showDate = (rowDate === currentApptCustomDate || rowDate.startsWith(currentApptCustomDate));
+        }
+
+        let showSearch = true;
+        if (currentApptSearchQuery) {
+          const patientName = (row.getAttribute('data-patient') || row.innerText || '').toLowerCase();
+          showSearch = patientName.includes(currentApptSearchQuery);
+        }
+
+        if (showDate && showSearch) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      const noResults = document.getElementById('apptNoResultsRow');
+      if (noResults) {
+        noResults.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+      }
+    }
+
     function filterAppointmentsDate(type, customDate) {
+      currentApptDateType = type;
+      currentApptCustomDate = customDate || '';
+
       const apptSection = document.getElementById('section-appointments');
       if (apptSection) {
         apptSection.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -390,39 +445,16 @@
         }
       }
 
-      const rows = document.querySelectorAll('.appointment-row');
-      let visibleCount = 0;
-
-      rows.forEach(row => {
-        let rowDate = (row.getAttribute('data-date') || '').trim();
-        let show = false;
-
-        if (type === 'all') {
-          show = true;
-        } else if (type === 'today') {
-          show = (rowDate === todayVal || rowDate.startsWith(todayVal));
-        } else if (type === 'upcoming') {
-          show = (rowDate >= todayVal);
-        } else if (type === 'past') {
-          show = (rowDate < todayVal);
-        } else if (type === 'custom' && customDate) {
-          show = (rowDate === customDate || rowDate.startsWith(customDate));
-        }
-
-        if (show) {
-          row.style.display = '';
-          visibleCount++;
-        } else {
-          row.style.display = 'none';
-        }
-      });
-
-      const noResults = document.getElementById('apptNoResultsRow');
-      if (noResults) {
-        noResults.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
-      }
+      applyAppointmentsFilter();
     }
+
+    function filterAppointmentsSearch(query) {
+      currentApptSearchQuery = (query || '').toLowerCase().trim();
+      applyAppointmentsFilter();
+    }
+
     window.filterAppointmentsDate = filterAppointmentsDate;
+    window.filterAppointmentsSearch = filterAppointmentsSearch;
 
     function openCaseDetails(id, caseId, patient, doctor, type, status, dueDate, amount, notes) {
       document.getElementById('vcTitle').innerHTML = `<i class="fas fa-folder-open" style="color: #2563eb; margin-right: 8px;"></i>Case: ${caseId}`;
@@ -841,6 +873,14 @@
       }
     }
 
+    function toggleSlipFormat(val) {
+      const prefillWrap = document.getElementById('gridPrefillAllWrap');
+      if (prefillWrap) {
+        prefillWrap.style.display = (val === '8_card') ? 'block' : 'none';
+      }
+    }
+    window.toggleSlipFormat = toggleSlipFormat;
+
     function loadPatientIntoSlip(selectEl) {
       if (!selectEl || !selectEl.value) return;
       const opt = selectEl.options[selectEl.selectedIndex];
@@ -862,8 +902,11 @@
     }
 
     function generateSlipGridPDF() {
-      const mode = document.querySelector('input[name="slip_mode"]:checked')?.value || 'filled_one';
-      let url = '/dashboard/print-slip-grid/';
+      const format = document.querySelector('input[name="slip_format"]:checked')?.value || 'single_card';
+      const mode = document.querySelector('input[name="slip_mode"]:checked')?.value || 'filled';
+      const isSingle = (format === 'single_card');
+      let url = `/dashboard/print-slip-grid/?single_card=${isSingle ? '1' : '0'}&source=personal`;
+
       if (mode === 'blank') {
         window.open(url, '_blank');
         closeModal('slipGridModal');
@@ -878,12 +921,12 @@
       const gender = encodeURIComponent((document.getElementById('grid_gender')?.value || '').trim());
       const address = encodeURIComponent((document.getElementById('grid_address')?.value || '').trim());
       const prefillAll = document.getElementById('grid_prefill_all')?.checked ? '1' : '0';
-      const singleCard = (mode === 'single_card') ? '1' : '0';
 
-      url += `?reg_no=${reg}&pid=${pid}&date=${date}&name=${name}&age=${age}&gender=${gender}&address=${address}&prefill_all=${prefillAll}&single_card=${singleCard}`;
+      url += `&reg_no=${reg}&pid=${pid}&date=${date}&name=${name}&age=${age}&gender=${gender}&address=${address}&prefill_all=${prefillAll}`;
       window.open(url, '_blank');
       closeModal('slipGridModal');
     }
+    window.generateSlipGridPDF = generateSlipGridPDF;
 
     // ==========================================
     // CASE DETAILS BUTTON HELPER

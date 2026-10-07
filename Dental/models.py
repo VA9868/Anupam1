@@ -213,3 +213,25 @@ We offer special care and attention to pediatric patients, creating a friendly a
     def __str__(self):
         return self.title
 
+
+class GalleryPhoto(models.Model):
+    CATEGORY_CHOICES = [
+        ('clinic', 'Clinic Interior & Operatory'),
+        ('equipment', 'Advanced Dental Technology'),
+        ('smile', 'Smile Transformations'),
+        ('sterilization', 'Sterilization & Patient Safety'),
+    ]
+
+    title = models.CharField(max_length=150, default="Clinic Gallery Photo")
+    caption = models.CharField(max_length=250, blank=True, default="")
+    image = models.ImageField(upload_to='gallery/', help_text="Clinic or Smile photo")
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='clinic')
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-id']
+
+    def __str__(self):
+        return f"{self.title} ({self.get_category_display()})"
+
