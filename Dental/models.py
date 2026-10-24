@@ -181,10 +181,38 @@ We offer special care and attention to pediatric patients, creating a friendly a
     experience_years = models.CharField(max_length=50, default="28+", blank=True)
     established_date = models.CharField(max_length=100, default="19th August 1996", blank=True)
     operating_hours = models.CharField(max_length=200, default="Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)", blank=True)
-    helpline = models.CharField(max_length=200, default="Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com", blank=True)
+    helpline = models.CharField(max_length=200, default="+91 94460 46868", blank=True)
+    email = models.CharField(max_length=150, default="anoopkranupam@gmail.com", blank=True, help_text="Official clinic email address")
     facility_location = models.CharField(max_length=250, default="Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India", blank=True)
     sterilization_safety = models.CharField(max_length=300, default="Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control.", blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def clean_helpline(self):
+        if not self.helpline:
+            return "+91 94460 46868"
+        # If helpline has '| Email:', split it
+        if '|' in self.helpline:
+            part = self.helpline.split('|')[0]
+            part = part.replace('Call / WhatsApp:', '').replace('Call:', '').replace('WhatsApp:', '').strip()
+            return part or "+91 94460 46868"
+        return self.helpline.replace('Call / WhatsApp:', '').replace('Call:', '').replace('WhatsApp:', '').strip()
+
+    @property
+    def clean_email(self):
+        if hasattr(self, 'email') and self.email and self.email.strip():
+            return self.email.strip()
+        if self.helpline and 'Email:' in self.helpline:
+            return self.helpline.split('Email:')[-1].strip()
+        return "anoopkranupam@gmail.com"
+
+    @property
+    def clean_whatsapp_digits(self):
+        val = self.clean_helpline
+        digits = ''.join(c for c in val if c.isdigit())
+        if len(digits) == 10:
+            return '91' + digits
+        return digits or '919446046868'
 
     @property
     def formatted_description_html(self):

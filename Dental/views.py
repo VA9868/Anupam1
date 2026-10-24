@@ -442,7 +442,20 @@ def dashboard_patient_view(request):
         greeting_icon = "fas fa-moon"
         greeting_subtext = "Wishing you a peaceful night! Don't forget your nightly 2-minute brushing routine."
 
-    testimonials = Testimonial.objects.all().order_by('-id')
+    # Patient's own testimonial: only show reviews submitted by this patient (removes the 6 generic boxes)
+    my_testi_ids = request.session.get('my_testimonial_ids', [])
+    patient_query = Q(id__in=my_testi_ids)
+    if display_name and display_name != 'Patient':
+        patient_query |= Q(patient_name__iexact=display_name)
+    if request.user.is_authenticated:
+        if request.user.first_name:
+            patient_query |= Q(patient_name__icontains=request.user.first_name)
+        if request.user.username:
+            patient_query |= Q(patient_name__icontains=request.user.username)
+    if 'patient_name' in request.session and request.session['patient_name']:
+        patient_query |= Q(patient_name__iexact=request.session['patient_name'])
+
+    testimonials = Testimonial.objects.filter(patient_query).order_by('-id')
     services = Service.objects.all().order_by('title')
 
     context = {
@@ -480,7 +493,6 @@ def upload_testimonial_view(request):
 
         treatment = request.POST.get('treatment', '').strip() or 'General Dental Care'
         review_text = request.POST.get('review_text', '').strip()
-        photo = request.FILES.get('photo')
 
         if review_text:
             testimonial = Testimonial(
@@ -489,10 +501,16 @@ def upload_testimonial_view(request):
                 treatment=treatment,
                 review_text=review_text
             )
-            if photo:
-                testimonial.photo = photo
             testimonial.save()
-            messages.success(request, "Thank you! Your testimonial has been uploaded and published successfully.")
+
+            # Store in session so this patient always sees their uploaded testimonial
+            my_ids = request.session.get('my_testimonial_ids', [])
+            if testimonial.id not in my_ids:
+                my_ids.append(testimonial.id)
+                request.session['my_testimonial_ids'] = my_ids
+                request.session.modified = True
+
+            messages.success(request, "Thank you! Your testimonial has been uploaded and published to 'What Our Patients Say' on the clinic homepage!")
         else:
             messages.error(request, "Please enter your review text before submitting.")
 
@@ -1033,6 +1051,7 @@ def edit_about_view(request):
         experience_years = request.POST.get('experience_years', '').strip()
         operating_hours = request.POST.get('operating_hours', '').strip()
         helpline = request.POST.get('helpline', '').strip()
+        email = request.POST.get('email', '').strip()
         facility_location = request.POST.get('facility_location', '').strip()
         sterilization_safety = request.POST.get('sterilization_safety', '').strip()
 
@@ -1050,6 +1069,8 @@ def edit_about_view(request):
             about.operating_hours = operating_hours
         if helpline:
             about.helpline = helpline
+        if email:
+            about.email = email
         if facility_location:
             about.facility_location = facility_location
         if sterilization_safety:

@@ -642,9 +642,9 @@
                         onclick="openClinicalHubFromBtn(this, 'payment')">
                         <i class="fas fa-credit-card"></i>
                       </button>
-                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=appointment" target="_blank" class="btn-action-icon" title="Print Registration Slip">
+                      <!-- <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=appointment" target="_blank" class="btn-action-icon" title="Print Registration Slip">
                         <i class="fas fa-id-card"></i>
-                      </a>
+                      </a> -->
                     </div>
                   </td>
                 </tr>
@@ -703,7 +703,7 @@
                       <span>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:"Patient" }}{% endif %}</span>
                       <i class="fas fa-external-link-alt patient-link-icon"></i>
                     </a>
-                    <div class="patient-quick-pills">
+                    <!-- <div class="patient-quick-pills">
                       <button type="button" class="btn-quick-pill btn-pill-chart" title="Open Teeth Chart"
                          data-id="{{ a.id }}"
                          data-code="{{ a.formatted_id }}"
@@ -728,7 +728,7 @@
                          onclick="openClinicalHubFromBtn(this, 'payment')">
                         <i class="fas fa-receipt"></i> Payment
                       </button>
-                    </div>
+                    </div> -->
                   </td>
                   <td>{{ a.phone }}</td>
                   <td>{{ a.age|default:"-" }} / {{ a.gender|default:"-" }}</td>
@@ -766,9 +766,9 @@
                       <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (Single Card)">
                         <i class="fas fa-id-card"></i>
                       </a>
-                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=0&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (8-Card Grid A4)">
+                      <!-- <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=0&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (8-Card Grid A4)">
                         <i class="fas fa-th-large"></i>
-                      </a>
+                      </a> -->
                     </div>
                   </td>
                 </tr>
@@ -1340,13 +1340,13 @@
           </div>
         </div>
 
-        <!-- 4 INFO TILES (DYNAMIC & EDITABLE) -->
+        <!-- 3 INFO TILES (CONNECTED TO WEBSITE FOOTER & CONTACT) -->
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
           <strong style="font-size: 0.875rem; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">Clinic Key Facility &amp; Contact Details</strong>
-          <span style="font-size: 0.75rem; color: #64748b;"><i class="fas fa-info-circle"></i> Click any card or "Edit Info" to update</span>
+          <span style="font-size: 0.75rem; color: #64748b;"><i class="fas fa-link" style="color: #059669;"></i> Connected live to index.html Footer Clinic Address</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;">
           
           <!-- Tile 1: Operating Hours -->
           <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
@@ -1360,59 +1360,72 @@
               </a>
             </div>
             <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
-              {{ about_clinic.operating_hours|default:"Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)" }}
+              {{ about_clinic.operating_hours|default:"Mon - Sun: 10:00 AM – 8:00 PM (Tuesday Holiday)" }}
             </p>
+            <div style="margin-top: 6px; font-size: 0.725rem; color: #2563eb; display: flex; align-items: center; gap: 4px;">
+              <i class="fas fa-check-circle"></i> Live on Header &amp; Footer
+            </div>
           </div>
 
-          <!-- Tile 2: Helpline & Appointments -->
+          <!-- Tile 2: Helpline & Appointments (Call / WhatsApp) -->
           <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-phone-alt" style="color: #059669; font-size: 1.1rem;"></i>
-                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Helpline &amp; Appointments</strong>
+                <i class="fab fa-whatsapp" style="color: #16a34a; font-size: 1.15rem;"></i>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Helpline (Call / WhatsApp)</strong>
               </div>
-              <a href="#about_helpline" onclick="document.getElementById('about_helpline').focus();" title="Edit Helpline" style="color: #059669; font-size: 0.775rem; background: #ecfdf5; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #a7f3d0;">
+              <a href="#about_helpline" onclick="document.getElementById('about_helpline').focus();" title="Edit Call / WhatsApp" style="color: #16a34a; font-size: 0.775rem; background: #ecfdf5; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #a7f3d0;">
                 <i class="fas fa-edit"></i> Edit
               </a>
             </div>
-            <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
-              {{ about_clinic.helpline|default:"Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com" }}
+            <p style="font-size: 0.85rem; color: #0f172a; font-weight: 600; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
+              {{ about_clinic.clean_helpline|default:"+91 94460 46868" }}
             </p>
+            <div style="margin-top: 6px; font-size: 0.725rem; color: #16a34a; display: flex; align-items: center; gap: 4px;">
+              <i class="fas fa-check-circle"></i> Live on Call &amp; WhatsApp Links
+            </div>
           </div>
 
-          <!-- Tile 3: Facility Location -->
+          <!-- Tile 3: Official Email (Next Box) -->
+          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-envelope-open-text" style="color: #ea580c; font-size: 1.1rem;"></i>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Official Email Contact</strong>
+              </div>
+              <a href="#about_email" onclick="document.getElementById('about_email').focus();" title="Edit Email" style="color: #ea580c; font-size: 0.775rem; background: #fff7ed; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #ffedd5;">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </div>
+            <p style="font-size: 0.85rem; color: #0f172a; font-weight: 600; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif; word-break: break-all;">
+              {{ about_clinic.clean_email|default:"anoopkranupam@gmail.com" }}
+            </p>
+            <div style="margin-top: 6px; font-size: 0.725rem; color: #ea580c; display: flex; align-items: center; gap: 4px;">
+              <i class="fas fa-check-circle"></i> Live on Website Footer Email
+            </div>
+          </div>
+
+          <!-- Tile 4: Facility Location & Clinic Address -->
           <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-map-marker-alt" style="color: #dc2626; font-size: 1.1rem;"></i>
-                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Clinical Facility Location</strong>
+                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Clinic Address &amp; Location</strong>
               </div>
               <a href="#about_location" onclick="document.getElementById('about_location').focus();" title="Edit Location" style="color: #dc2626; font-size: 0.775rem; background: #fef2f2; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #fecaca;">
                 <i class="fas fa-edit"></i> Edit
               </a>
             </div>
             <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
-              {{ about_clinic.facility_location|default:"Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India" }}
+              {{ about_clinic.facility_location|default:"Anupam Dental Clinic, West Gate Vaikom, Kottayam Dist, Kerala" }}
             </p>
-          </div>
-
-          <!-- Tile 4: Sterilization & Safety -->
-          <div style="background: #ffffff; border: 1.5px solid var(--border-darker); border-radius: 10px; padding: 16px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-shield-virus" style="color: #7c3aed; font-size: 1.1rem;"></i>
-                <strong style="color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', 'Inter', sans-serif;">Sterilization &amp; Safety</strong>
-              </div>
-              <a href="#about_sterilization" onclick="document.getElementById('about_sterilization').focus();" title="Edit Sterilization" style="color: #7c3aed; font-size: 0.775rem; background: #f5f3ff; padding: 3px 8px; border-radius: 4px; text-decoration: none; border: 1px solid #ddd6fe;">
-                <i class="fas fa-edit"></i> Edit
-              </a>
+            <div style="margin-top: 6px; font-size: 0.725rem; color: #dc2626; display: flex; align-items: center; gap: 4px;">
+              <i class="fas fa-check-circle"></i> Live on index.html Footer Address
             </div>
-            <p style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
-              {{ about_clinic.sterilization_safety|default:"Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control." }}
-            </p>
           </div>
 
         </div>
+
       </div>
 
       <!-- DEDICATED PANEL: ABOUT OUR CLINIC PHOTO UPLOAD & TITLE CONNECT -->
@@ -1548,52 +1561,56 @@
 
               <!-- EDITABLE 4 CLINIC DETAILS -->
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
-                  <i class="fas fa-sliders-h" style="color: #2563eb;"></i>
-                  <strong style="color: #0f172a; font-size: 0.875rem; font-family: 'Outfit', sans-serif;">Editable Clinic Hours, Contact, Location &amp; Safety</strong>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-sliders-h" style="color: #2563eb;"></i>
+                    <strong style="color: #0f172a; font-size: 0.875rem; font-family: 'Outfit', sans-serif;">Editable Clinic Hours, Contact &amp; Footer Address</strong>
+                  </div>
+                  <span style="font-size: 0.75rem; color: #059669; font-weight: 600;"><i class="fas fa-link"></i> Live Connected to index.html Footer</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                   <div class="form-group" style="margin: 0;">
                     <label for="about_hours" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
                       <i class="far fa-clock" style="color: #2563eb; margin-right: 4px;"></i> Clinic Operating Hours
                     </label>
                     <input type="text" id="about_hours" name="operating_hours" class="form-control" 
-                           value="{{ about_clinic.operating_hours|default:'Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)' }}" 
-                           placeholder="e.g. Mon - Sun: 9:00 AM – 8:00 PM (Tuesday Holiday)" 
+                           value="{{ about_clinic.operating_hours|default:'Mon - Sun: 10:00 AM – 8:00 PM (Tuesday Holiday)' }}" 
+                           placeholder="e.g. Mon - Sun: 10:00 AM – 8:00 PM (Tuesday Holiday)" 
                            style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
                   </div>
 
                   <div class="form-group" style="margin: 0;">
                     <label for="about_helpline" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
-                      <i class="fas fa-phone-alt" style="color: #059669; margin-right: 4px;"></i> Helpline &amp; Appointments
+                      <i class="fab fa-whatsapp" style="color: #16a34a; margin-right: 4px;"></i> Helpline &amp; Appointments (Call / WhatsApp)
                     </label>
                     <input type="text" id="about_helpline" name="helpline" class="form-control" 
-                           value="{{ about_clinic.helpline|default:'Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com' }}" 
-                           placeholder="e.g. Call / WhatsApp: +91 94460 46868 | Email: info@anupamdental.com" 
+                           value="{{ about_clinic.clean_helpline|default:'+91 94460 46868' }}" 
+                           placeholder="e.g. +91 94460 46868" 
                            style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
                   </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                   <div class="form-group" style="margin: 0;">
-                    <label for="about_location" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
-                      <i class="fas fa-map-marker-alt" style="color: #dc2626; margin-right: 4px;"></i> Clinical Facility Location
+                    <label for="about_email" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
+                      <i class="fas fa-envelope" style="color: #ea580c; margin-right: 4px;"></i> Official Email Contact (Next Box)
                     </label>
-                    <input type="text" id="about_location" name="facility_location" class="form-control" 
-                           value="{{ about_clinic.facility_location|default:'Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India' }}" 
-                           placeholder="e.g. Anupam Dental Clinic, Vaikom / Cherthala, Kerala, India" 
+                    <input type="email" id="about_email" name="email" class="form-control" 
+                           value="{{ about_clinic.clean_email|default:'anoopkranupam@gmail.com' }}" 
+                           placeholder="e.g. anoopkranupam@gmail.com" 
                            style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
                   </div>
 
                   <div class="form-group" style="margin: 0;">
-                    <label for="about_sterilization" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
-                      <i class="fas fa-shield-virus" style="color: #7c3aed; margin-right: 4px;"></i> Sterilization &amp; Safety Protocol
+                    <label for="about_location" style="display: block; font-weight: 700; color: #0f172a; font-size: 0.8rem; margin-bottom: 5px;">
+                      <i class="fas fa-map-marker-alt" style="color: #dc2626; margin-right: 4px;"></i> Clinic Address &amp; Location <span style="color: #059669; font-weight: normal; font-size: 0.72rem;">(Live on Footer)</span>
                     </label>
-                    <input type="text" id="about_sterilization" name="sterilization_safety" class="form-control" 
-                           value="{{ about_clinic.sterilization_safety|default:'Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control.' }}" 
-                           placeholder="e.g. Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control." 
+                    <input type="text" id="about_location" name="facility_location" class="form-control" 
+                           value="{{ about_clinic.facility_location|default:'Anupam Dental Clinic, West Gate Vaikom, Kottayam Dist, Kerala' }}" 
+                           placeholder="e.g. Anupam Dental Clinic, West Gate Vaikom, Kottayam Dist, Kerala" 
                            style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem;">
+                    <input type="hidden" name="sterilization_safety" value="{{ about_clinic.sterilization_safety|default:'Class-B 7-Step Autoclaving, UV sterilization chambers, 100% infection control.' }}">
                   </div>
                 </div>
               </div>
@@ -1999,7 +2016,7 @@
                 <th>Treatment</th>
                 <th style="width: 160px;">Rate</th>
                 <th style="width: 160px;">Amount</th>
-                <th style="text-align: right; width: 140px;">Actions</th>
+                <th style="text-align: right; width: 180px;">Actions</th>
               </tr>
             </thead>
             <tbody id="personalTreatmentsTableBody">
@@ -3007,6 +3024,42 @@
               <label class="surface-checkbox-label"><input type="checkbox" id="surf_l" onchange="toggleToothSurface('L')"> <strong>L</strong> (Lingual/Palatal)</label>
             </div>
 
+            <!-- DOCTOR & PURPOSE (CONNECTED TO TAB DOCTOR) -->
+            <div class="form-grid-2" style="margin-bottom: 14px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="selToothDoctor"><i class="fas fa-user-md" style="color: #2563eb; margin-right: 5px;"></i>Doctor</label>
+                <select id="selToothDoctor" class="form-control">
+                  <option value="">-- Select Doctor --</option>
+                  {% for doc in doctors %}
+                    <option value="{{ doc.name }}" {% if forloop.first %}selected{% endif %}>{{ doc.name }}{% if doc.designation %} ({{ doc.designation }}){% endif %}</option>
+                  {% empty %}
+                    <option value="Dr. Anoop" selected>Dr. Anoop (Chief Dental Surgeon)</option>
+                    <option value="Dr. Priya Sharma">Dr. Priya Sharma (Consultant Orthodontist)</option>
+                    <option value="Dr. Rahul Mehta">Dr. Rahul Mehta (Pediatric Dentist)</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="selToothPurpose"><i class="fas fa-bullseye" style="color: #059669; margin-right: 5px;"></i>Purpose</label>
+                <select id="selToothPurpose" class="form-control" onchange="handlePurposeSelect(this.value)">
+                  <option value="">-- Select Purpose --</option>
+                  <option value="Consultation & Diagnosis">Consultation &amp; Diagnosis</option>
+                  <option value="Root Canal Therapy (Endodontics)">Root Canal Therapy (Endodontics)</option>
+                  <option value="Crown & Bridge (Prosthodontics)">Crown &amp; Bridge (Prosthodontics)</option>
+                  <option value="Cavity Restoration / Filling">Cavity Restoration / Filling</option>
+                  <option value="Dental Implant & Surgery">Dental Implant &amp; Surgery</option>
+                  <option value="Scaling & Deep Cleaning">Scaling &amp; Deep Cleaning</option>
+                  <option value="Tooth Extraction / Surgery">Tooth Extraction / Surgery</option>
+                  <option value="Cosmetic & Smile Makeover">Cosmetic &amp; Smile Makeover</option>
+                  <option value="Laser Teeth Whitening">Laser Teeth Whitening</option>
+                  <option value="Orthodontics & Aligners">Orthodontics &amp; Aligners</option>
+                  <option value="Pediatric / Kids Dentistry">Pediatric / Kids Dentistry</option>
+                  <option value="Emergency Pain Relief">Emergency Pain Relief</option>
+                </select>
+              </div>
+            </div>
+
             <!-- PROCEDURE RECOMMENDATION & BILLING QUICK CONNECT -->
             <div class="form-grid-2" style="margin-bottom: 14px;">
               <div class="form-group" style="margin-bottom: 0;">
@@ -3175,9 +3228,9 @@
                     <select id="hubPayMode" class="form-control">
                       <option value="UPI">UPI (GPay/Paytm)</option>
                       <option value="Cash">Cash</option>
-                      <option value="Credit Card">Credit Card</option>
-                      <option value="Debit Card">Debit Card</option>
-                      <option value="Net Banking">Net Banking</option>
+                      <option value="HDFC">HDFC</option>
+                      <option value="SBI">SBI</option>
+                      <option value="Federal Bank">Federal Bank</option>
                     </select>
                   </div>
                 </div>
@@ -3215,7 +3268,7 @@
       <div class="modal-body" id="printableReceiptArea">
         <div class="receipt-print-wrapper">
           <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
-            <h2 style="font-size: 1.35rem; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">Dr. Anoop's Dental Clinic</h2>
+            <h2 style="font-size: 1.35rem; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">Dr. Anoop's Anupam Dental Clinic</h2>
             <p style="font-size: 0.775rem; color: #64748b; margin: 2px 0 0 0;">Specialized Smile Care &amp; Implant Centre &bull; Ph: +91 94460 46868</p>
           </div>
           

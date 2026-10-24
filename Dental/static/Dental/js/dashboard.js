@@ -743,12 +743,12 @@
             </td>
             <td style="font-weight: 600; color: #334155;">₹${rateFormatted}</td>
             <td style="font-weight: 700; color: #059669;">₹${amountFormatted}</td>
-            <td style="text-align: right;">
-              <button type="button" class="btn-sm" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer; margin-right: 6px;" onclick="openEditTreatmentModal(${origIdx})" title="Edit Treatment">
+            <td style="text-align: right; white-space: nowrap;">
+              <button type="button" class="btn-sm" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer; margin-right: 6px; display: inline-flex; align-items: center; gap: 5px;" onclick="openEditTreatmentModal(${origIdx})" title="Edit Treatment">
                 <i class="fas fa-edit"></i> Edit
               </button>
-              <button type="button" class="btn-sm" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer;" onclick="deleteTreatment(${origIdx})" title="Delete Treatment">
-                <i class="fas fa-trash-alt"></i>
+              <button type="button" class="btn-sm" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" onclick="deleteTreatment(${origIdx})" title="Delete Treatment">
+                <i class="fas fa-trash-alt"></i> Delete
               </button>
             </td>
           </tr>
@@ -1425,6 +1425,23 @@
         if (chk) chk.checked = surfaces.includes(s.toUpperCase());
       });
 
+      // Update Doctor & Purpose
+      const docEl = document.getElementById('selToothDoctor');
+      if (docEl) {
+        if (state.doctor) {
+          docEl.value = state.doctor;
+        } else if (activeHubPatient && activeHubPatient.doctor) {
+          docEl.value = activeHubPatient.doctor;
+        } else if (docEl.options.length > 1) {
+          docEl.selectedIndex = 1;
+        }
+      }
+
+      const purposeEl = document.getElementById('selToothPurpose');
+      if (purposeEl) {
+        purposeEl.value = state.purpose || '';
+      }
+
       // Update Procedure & Price
       const procEl = document.getElementById('selToothProcedure');
       if (procEl) procEl.value = state.procedure || '';
@@ -1521,6 +1538,29 @@
       currentPatientChart[activeToothId].surfaces = surfaces;
     }
 
+    function handlePurposeSelect(purpose) {
+      const procEl = document.getElementById('selToothProcedure');
+      const priceEl = document.getElementById('selToothPrice');
+      if (!procEl) return;
+
+      const purposeMapping = {
+        'Root Canal Therapy (Endodontics)': { proc: 'Single-Visit Root Canal Treatment (RCT)', price: 3500 },
+        'Crown & Bridge (Prosthodontics)': { proc: 'Multi-layer Zirconia Crown', price: 5500 },
+        'Cavity Restoration / Filling': { proc: 'Composite Tooth Restoration / Filling', price: 1200 },
+        'Dental Implant & Surgery': { proc: 'Titanium Dental Implant Fixture', price: 18000 },
+        'Scaling & Deep Cleaning': { proc: 'Ultrasonic Scaling & Deep Cleaning', price: 1200 },
+        'Tooth Extraction / Surgery': { proc: 'Surgical / Atraumatic Extraction', price: 1500 },
+        'Laser Teeth Whitening': { proc: 'Laser Teeth Whitening', price: 2999 },
+        'Cosmetic & Smile Makeover': { proc: 'Porcelain Ceramic Veneer', price: 6500 }
+      };
+
+      const match = purposeMapping[purpose];
+      if (match) {
+        procEl.value = match.proc;
+        if (priceEl) priceEl.value = match.price;
+      }
+    }
+
     function handleProcedureSelect(procName) {
       const procEl = document.getElementById('selToothProcedure');
       const priceEl = document.getElementById('selToothPrice');
@@ -1534,7 +1574,7 @@
     function saveCurrentToothData() {
       if (!activeToothId) return;
       if (!currentPatientChart[activeToothId]) {
-        currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], notes: '', procedure: '', price: '' };
+        currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], doctor: '', purpose: '', notes: '', procedure: '', price: '' };
       }
 
       const activeBtn = document.querySelector('.btn-cond-choice.active');
@@ -1546,6 +1586,8 @@
         if (chk && chk.checked) surfaces.push(s.toUpperCase());
       });
 
+      const doc = document.getElementById('selToothDoctor')?.value || '';
+      const purpose = document.getElementById('selToothPurpose')?.value || '';
       const proc = document.getElementById('selToothProcedure')?.value || '';
       const price = parseFloat(document.getElementById('selToothPrice')?.value) || 0;
       const notes = document.getElementById('selToothNotes')?.value || '';
@@ -1553,6 +1595,8 @@
       currentPatientChart[activeToothId] = {
         condition: cond,
         surfaces: surfaces,
+        doctor: doc,
+        purpose: purpose,
         procedure: proc,
         price: price,
         notes: notes
@@ -1561,6 +1605,9 @@
       savePatientChartData();
       renderOdontogramArch();
       selectTooth(activeToothId);
+
+      // Connect saved tooth condition directly to Payment (Total Billed & Balance Due)
+      renderPatientBillingLedger();
 
       // Brief toast confirmation
       const saveBtn = event?.target?.closest('button');
@@ -1577,10 +1624,11 @@
 
     function resetCurrentTooth() {
       if (!activeToothId) return;
-      currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], notes: '', procedure: '', price: '' };
+      currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], doctor: '', purpose: '', notes: '', procedure: '', price: '' };
       savePatientChartData();
       renderOdontogramArch();
       selectTooth(activeToothId);
+      renderPatientBillingLedger();
     }
 
     function resetAllTeethChart() {
@@ -1589,6 +1637,7 @@
         savePatientChartData();
         renderOdontogramArch();
         selectTooth(activeToothId);
+        renderPatientBillingLedger();
       }
     }
 
@@ -1699,6 +1748,19 @@
     // ==========================================
     // PATIENT BILLING & PAYMENT LEDGER LOGIC
     // ==========================================
+    function quickBillToothProcedure(toothId, procedure, amount) {
+      switchHubTab('payment');
+      const payTrt = document.getElementById('hubPayTreatment');
+      const payAmt = document.getElementById('hubPayAmount');
+      if (payTrt) {
+        payTrt.value = procedure.toLowerCase().includes(String(toothId).toLowerCase()) ? procedure : `Tooth #${toothId} - ${procedure}`;
+      }
+      if (payAmt) {
+        payAmt.value = amount;
+        payAmt.focus();
+      }
+    }
+
     function renderPatientBillingLedger() {
       const patientName = (activeHubPatient.name || '').trim().toLowerCase();
       const nameInput = document.getElementById('hubPayPatientName');
@@ -1711,9 +1773,47 @@
         return invPatient === patientName || invPatient.includes(patientName) || patientName.includes(invPatient);
       });
 
+      // Gather diagnosed tooth procedures from currentPatientChart (saved tooth conditions)
+      const isPed = (hubDentitionMode === 'pediatric');
+      const dataset = isPed ? PEDIATRIC_TEETH : ADULT_TEETH;
+      const chartItems = [];
+
+      for (const toothId in currentPatientChart) {
+        const tState = currentPatientChart[toothId];
+        const fee = parseFloat(tState?.price) || 0;
+        const procName = tState?.procedure?.trim() || '';
+        if (fee > 0 || procName) {
+          const tInfo = dataset[toothId] || ADULT_TEETH[toothId] || { name: 'Tooth #' + toothId };
+          chartItems.push({
+            toothId: toothId,
+            toothName: tInfo.name,
+            procedure: procName || `${tInfo.name} Procedure`,
+            amount: fee,
+            doctor: tState.doctor || activeHubPatient.doctor || 'Dr. Anoop',
+            purpose: tState.purpose || 'Dental Procedure',
+            condition: tState.condition || 'treated'
+          });
+        }
+      }
+
+      // Check which chart procedures already have a paid/recorded invoice
+      const unbilledChartItems = [];
+      chartItems.forEach(ci => {
+        const hasInv = invoices.some(inv => {
+          const invTrt = (inv.treatment || '').toLowerCase();
+          return invTrt.includes(`tooth #${ci.toothId.toLowerCase()}`) || 
+                 invTrt.includes(`tooth ${ci.toothId.toLowerCase()}`) ||
+                 (invTrt.includes(ci.procedure.toLowerCase()) && Math.abs(parseFloat(inv.amount) - ci.amount) < 1);
+        });
+        if (!hasInv) {
+          unbilledChartItems.push(ci);
+        }
+      });
+
       let totalBilled = 0;
       let totalPaid = 0;
 
+      // 1. Add recorded invoices
       invoices.forEach(inv => {
         const amt = parseFloat(inv.amount) || 0;
         totalBilled += amt;
@@ -1724,9 +1824,15 @@
         }
       });
 
+      // 2. Add unbilled tooth procedures from saved tooth conditions into Total Billed
+      unbilledChartItems.forEach(ci => {
+        totalBilled += ci.amount;
+      });
+
+      // 3. Balance Due is Total Billed minus Total Paid
       const balanceDue = Math.max(0, totalBilled - totalPaid);
 
-      // Update counters
+      // Update Total Billed, Total Paid, and Balance Due stat cards
       const billEl = document.getElementById('hubTotalBilled');
       if (billEl) billEl.textContent = totalBilled.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -1741,32 +1847,64 @@
         dueWrap.style.color = balanceDue > 0 ? '#dc2626' : '#059669';
       }
 
+      const totalItemsCount = invoices.length + unbilledChartItems.length;
       const countBadge = document.getElementById('hubPaymentCountBadge');
-      if (countBadge) countBadge.textContent = invoices.length;
+      if (countBadge) countBadge.textContent = totalItemsCount;
 
       const countTag = document.getElementById('hubInvoiceCountTag');
-      if (countTag) countTag.textContent = `${invoices.length} ${invoices.length === 1 ? 'Invoice' : 'Invoices'}`;
+      if (countTag) countTag.textContent = `${totalItemsCount} ${totalItemsCount === 1 ? 'Entry' : 'Entries'}`;
 
       // Render table rows
       const tbody = document.getElementById('hubPatientInvoicesBody');
       if (!tbody) return;
 
-      if (invoices.length === 0) {
+      if (totalItemsCount === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="7" class="empty-row-td">
               <i class="fas fa-file-invoice-dollar" style="font-size: 1.8rem; margin-bottom: 6px; display: block; color: #cbd5e1;"></i>
-              No billing entries recorded for ${escapeHtml(activeHubPatient.name)}. Use the form on the right to create an invoice or add treatment from the Teeth Chart.
+              No billing entries recorded for ${escapeHtml(activeHubPatient.name)}. Select tooth conditions and save procedures on the Teeth Chart, or record payment on the right.
             </td>
           </tr>
         `;
         return;
       }
 
-      tbody.innerHTML = invoices.map(inv => {
+      let html = '';
+
+      // First render unbilled chart procedures from saved tooth conditions
+      unbilledChartItems.forEach(ci => {
+        const amtFormatted = Number(ci.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        html += `
+          <tr style="background: #f0fdf4;">
+            <td><strong style="color: #059669; font-weight: 700;"><i class="fas fa-tooth" style="font-size: 0.75rem;"></i> TOOTH #${escapeHtml(ci.toothId)}</strong></td>
+            <td><span style="font-size: 0.75rem; color: #059669; font-weight: 600;"><i class="fas fa-check-circle"></i> Chart Saved</span></td>
+            <td>
+              <strong>${escapeHtml(ci.procedure)}</strong>
+              <div style="font-size: 0.725rem; color: #64748b;">${escapeHtml(ci.doctor)} &bull; ${escapeHtml(ci.purpose)}</div>
+            </td>
+            <td style="font-weight: 800; color: #0f172a;">₹${amtFormatted}</td>
+            <td><span style="font-size: 0.775rem; color: #94a3b8;">Pending Bill</span></td>
+            <td>
+              <span class="badge badge-overdue" style="cursor: pointer;" onclick="quickBillToothProcedure('${escapeHtml(ci.toothId)}', '${escapeHtml(ci.procedure)}', ${ci.amount})" title="Click to Record Payment">
+                <i class="fas fa-exclamation-circle"></i> Balance Due
+              </span>
+            </td>
+            <td style="text-align: right;">
+              <button type="button" class="btn-sm" style="background: #059669; color: #ffffff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                      onclick="quickBillToothProcedure('${escapeHtml(ci.toothId)}', '${escapeHtml(ci.procedure)}', ${ci.amount})" title="Record Payment for Tooth #${escapeHtml(ci.toothId)}">
+                <i class="fas fa-credit-card"></i> Pay Now
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      // Then render recorded invoices
+      invoices.forEach(inv => {
         const amtFormatted = Number(inv.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const isPaid = (inv.payment_status === 'Paid');
-        return `
+        html += `
           <tr>
             <td><strong style="color: #2563eb; font-weight: 700;">${escapeHtml(inv.invoice_id)}</strong></td>
             <td>${escapeHtml(inv.created_at || 'Today')}</td>
@@ -1786,7 +1924,9 @@
             </td>
           </tr>
         `;
-      }).join('');
+      });
+
+      tbody.innerHTML = html;
     }
 
     function handleHubRecordPayment(e) {

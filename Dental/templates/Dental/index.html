@@ -24,16 +24,16 @@
       <div class="top-info">
         <div class="top-info-item">
           <i class="fas fa-phone-alt"></i>
-          <span>Emergency / Call: <strong>+91 9446046868</strong></span>
+          <span>Emergency / Call: <strong>{{ about_clinic.clean_helpline|default:'+91 9446046868' }}</strong></span>
         </div>
         <div class="top-info-item">
           <i class="fas fa-clock"></i>
-          <span>Mon - Sun: 10:00 AM - 8:00 PM | Tuesday Holiday</span>
+          <span>{% if about_clinic and about_clinic.operating_hours %}{{ about_clinic.operating_hours }}{% else %}Mon - Sun: 10:00 AM - 8:00 PM | Tuesday Holiday{% endif %}</span>
         </div>
-        <a href="https://www.google.com/maps/dir/?api=1&destination=Dr.Anoop%27s+Anupam+Dental+Clinic" target="_blank" rel="noopener noreferrer" class="top-info-item" style="color: inherit; text-decoration: none;">
+        <!-- <a href="https://www.google.com/maps/dir/?api=1&destination=Dr.Anoop%27s+Anupam+Dental+Clinic" target="_blank" rel="noopener noreferrer" class="top-info-item" style="color: inherit; text-decoration: none;">
           <i class="fas fa-map-marker-alt"></i>
-          <span>Dr.Anoop's Anupam Dental Clinic, West Gate Vaikom</span>
-        </a>
+          <span>{% if about_clinic and about_clinic.facility_location %}{{ about_clinic.facility_location }}{% else %}Dr.Anoop's Anupam Dental Clinic, West Gate Vaikom{% endif %}</span>
+        </a> -->
       </div>
       <!-- <div class="top-badge">
         <i class="fas fa-shield-virus"></i> 100% Sterilized & Painless Care
@@ -50,8 +50,8 @@
           <img src="{% static 'Dental/images/logo.png' %}" alt="Anupam Dental Clinic Logo" class="brand-logo-img">
         </div>
         <div class="brand-text-wrap">
-          <span class="brand-title"><i>Dr.Anoop's</i> ANUPAM </span>
-          <span class="brand-subtitle">DENTAL CLINIC</span>
+          <span class="brand-title"><i>Dr.Anoop's</i></span>
+          <span class="brand-subtitle">ANUPAM DENTAL CLINIC</span>
         </div>
       </a>
 
@@ -569,22 +569,22 @@
       <div class="partners-grid">
         <!-- DentCare Dental Lab -->
         <div class="partner-logo" title="DentCare Dental Lab">
-          <img src="{% static 'Dental/images/lab/images.jpeg' %}" alt="DentCare Dental Lab" class="partner-logo-img">
+          <img src="{% static 'Dental/images/partners/dentcare.png' %}" alt="DentCare Dental Lab" class="partner-logo-img">
         </div>
 
         <!-- e-way Dental Lab -->
         <div class="partner-logo" title="e-way Dental Lab">
-          <img src="{% static 'Dental/images/lab/e-way.png' %}" alt="e-way Dental Lab" class="partner-logo-img">
+          <img src="{% static 'Dental/images/partners/e-way.png' %}" alt="e-way Dental Lab" class="partner-logo-img">
         </div>
 
         <!-- MAX DENT CA DIGITAL -->
         <div class="partner-logo" title="MAX DENT CA Digital">
-          <img src="{% static 'Dental/images/lab/Maxdent.jpg' %}" alt="Maxdent CA Digital" class="partner-logo-img">
+          <img src="{% static 'Dental/images/partners/maxdent_2.png' %}" alt="MAX DENT CA Digital" class="partner-logo-img">
         </div>
 
         <!-- Ortho Creation Dental Lab -->
         <div class="partner-logo" title="Ortho Creation Dental Lab">
-          <img src="{% static 'Dental/images/lab/ortho creation.jpg' %}" alt="Ortho Creation Dental Lab" class="partner-logo-img" style="border-radius: 6px;">
+          <img src="{% static 'Dental/images/partners/ortho creation.png' %}" alt="Ortho Creation Dental Lab" class="partner-logo-img">
         </div>
       </div>
     </div>
@@ -596,6 +596,11 @@
       <span class="subtitle-pill">Patient Stories</span>
       <h2 class="section-title">What Our Patients Say</h2>
       <p class="section-desc">Read genuine reviews from patients who experienced gentle, painless dental care at Anupam Dental Clinic.</p>
+      <div style="margin-top: 14px;">
+        <a href="{% url 'dashboard_patient' %}" class="btn-outline-primary" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 7px 18px; border-radius: 9999px; text-decoration: none; font-weight: 600;">
+          <i class="fas fa-edit"></i> Share Your Dental Story &amp; Review
+        </a>
+      </div>
     </div>
 
     <!-- CAROUSEL WRAPPER WITH NEXT & PREVIOUS BUTTONS -->
@@ -655,8 +660,8 @@
             <img src="{% static 'Dental/images/Pi7_logo.png' %}" alt="Anupam Dental Clinic Logo" class="brand-logo-img">
           </div>
           <div>
-            <h4 style="color: white; font-size: 1.0rem;">Dr.Anoop's ANUPAM </h4>
-            <span style="color: var(--accent); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">DENTAL CLINIC</span>
+            <h4 style="color: white; font-size: 1.0rem;">Dr.Anoop's </h4>
+            <span style="color: var(--accent); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">ANUPAM DENTAL CLINIC</span>
           </div>
         </div>
         <p>
@@ -683,7 +688,7 @@
         </ul>
       </div>
 
-      <!-- ADDRESS & CONTACT INFO -->
+      <!-- ADDRESS & CONTACT INFO (CONNECTED TO DASHBOARD ABOUT CLINIC) -->
       <div>
         <h4 class="footer-heading">Clinic Address</h4>
         <ul class="contact-info-list">
@@ -692,8 +697,12 @@
             <div>
               <a href="https://www.google.com/maps/dir/?api=1&destination=Dr.Anoop%27s+Anupam+Dental+Clinic" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
                 <strong>Anupam Dental Clinic</strong><br>
-                West Gate Vaikom,<br>
-                Kottayam Dist, Kerala
+                {% if about_clinic and about_clinic.facility_location %}
+                  {{ about_clinic.facility_location|linebreaksbr }}
+                {% else %}
+                  West Gate Vaikom,<br>
+                  Kottayam Dist, Kerala
+                {% endif %}
               </a>
             </div>
           </li>
@@ -701,29 +710,39 @@
             <i class="fas fa-phone-alt"></i>
             <div>
               <strong>Helpline / Emergency:</strong><br>
-              <a href="tel:+919446046868" style="color: inherit; text-decoration: none;">+91 9446046868</a>
+              <a href="tel:{{ about_clinic.clean_whatsapp_digits|default:'919446046868' }}" style="color: inherit; text-decoration: none;">
+                {{ about_clinic.clean_helpline|default:"+91 9446046868" }}
+              </a>
             </div>
           </li>
-          <li class="contact-info-item">
+          <!-- <li class="contact-info-item">
             <i class="fab fa-whatsapp" style="color: #25D366; font-size: 1.2rem;"></i>
             <div>
               <strong>WhatsApp Direct:</strong><br>
-              <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">+91 9446046868</a>
+              <a href="https://wa.me/{{ about_clinic.clean_whatsapp_digits|default:'919446046868' }}?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                {{ about_clinic.clean_helpline|default:"+91 9446046868" }}
+              </a>
             </div>
-          </li>
+          </li> -->
           <li class="contact-info-item">
             <i class="fas fa-envelope"></i>
             <div>
               <strong>Email Us:</strong><br>
-              <a href="mailto:anoopkranupam@yahoo.com" style="color: inherit; text-decoration: none;">anoopkranupam@yahoo.com</a>
+              <a href="mailto:{{ about_clinic.clean_email|default:'anoopkranupam@yahoo.com' }}" style="color: inherit; text-decoration: none;">
+                {{ about_clinic.clean_email|default:"anoopkranupam@yahoo.com" }}
+              </a>
             </div>
           </li>
           <li class="contact-info-item">
             <i class="fas fa-clock"></i>
             <div>
               <strong>Working Hours:</strong><br>
-              Mon - Sun: 9:00 AM - 8:00 PM<br>
-              <span style="color: var(--accent-gold); font-weight: 600;">(Tuesday Holiday)</span>
+              {% if about_clinic and about_clinic.operating_hours %}
+                {{ about_clinic.operating_hours|linebreaksbr }}
+              {% else %}
+                Mon - Sun: 9:00 AM - 8:00 PM<br>
+                <span style="color: var(--accent-gold); font-weight: 600;">(Tuesday Holiday)</span>
+              {% endif %}
             </div>
           </li>
         </ul>
@@ -1013,7 +1032,7 @@
   </div>
 
   <!-- FLOATING WHATSAPP BUTTON -->
-  <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." 
+  <a href="https://wa.me/{{ about_clinic.clean_whatsapp_digits|default:'919446046868' }}?text=Hello%20Dr.%20Anoop,%20I%20would%20like%20to%20inquire%20about%20dental%20treatment." 
      target="_blank" 
      rel="noopener noreferrer" 
      class="floating-whatsapp" 
