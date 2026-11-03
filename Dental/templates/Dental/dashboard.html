@@ -513,9 +513,12 @@
     <div id="section-appointments" class="content-section" style="display: none;">
       <div class="dash-panel" style="padding: 24px;">
         <div class="panel-header" style="padding: 0 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-          <h2 class="panel-title" style="margin: 0;">Patient Appointments Schedule</h2>
-          <button class="btn-primary-submit" onclick="openModal('addPatientModal')">
-            <i class="fas fa-plus"></i> Book New Patient
+          <div>
+            <h2 class="panel-title" style="margin: 0;">Patient Appointments Schedule</h2>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0 0;">All saved appointments. Click "+ Add Teeth Chart" on any appointment to connect the patient to the Patient Tab.</p>
+          </div>
+          <button class="btn-primary-submit" onclick="openAddAppointmentModal()">
+            <i class="fas fa-calendar-plus"></i> Book New Appointment
           </button>
         </div>
 
@@ -552,6 +555,7 @@
                 <th>Appointment Date</th>
                 <th>Service / Treatment</th>
                 <th>Doctor</th>
+                <th>Teeth Chart</th>
                 <th>Status</th>
                 <th style="text-align: right;">Actions</th>
               </tr>
@@ -610,6 +614,27 @@
                   <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span></td>
                   <td>{{ a.doctor_name }}</td>
                   <td>
+                    {% if a.has_chart %}
+                      <span class="status-badge" style="background: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; font-weight: 700; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;" title="Connected to Patient Tab">
+                        <i class="fas fa-check-circle"></i> Connected ({{ a.chart_teeth_count }} Teeth)
+                      </span>
+                    {% else %}
+                      <button type="button" class="btn-quick-pill btn-pill-chart" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.74rem; font-weight: 700; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"
+                         data-id="{{ a.id }}"
+                         data-code="{{ a.formatted_id }}"
+                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                         data-phone="{{ a.phone|default:'' }}"
+                         data-age="{{ a.age|default:'' }}"
+                         data-gender="{{ a.gender|default:'' }}"
+                         data-service="{{ a.service_name|default:'General Consultation' }}"
+                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                         onclick="openClinicalHubFromBtn(this, 'chart')" title="Add Teeth Chart to connect patient to Patient Tab">
+                        <i class="fas fa-plus-circle"></i> + Add Teeth Chart
+                      </button>
+                      <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 2px;">Connects to Patient Tab</div>
+                    {% endif %}
+                  </td>
+                  <td>
                     <span class="badge {% if a.status == 'confirmed' %}badge-completed{% elif a.status == 'pending' %}badge-pending{% else %}badge-overdue{% endif %}">
                       {{ a.get_status_display }}
                     </span>
@@ -663,15 +688,31 @@
       </div>
     </div>
 
-    <!-- TAB 3: PATIENT RECORDS VIEW -->
+    <!-- TAB 3: PATIENT RECORDS VIEW (CONNECTED WITH TEETH CHART) -->
     <div id="section-patient" class="content-section" style="display: none;">
       <div class="dash-panel" style="padding: 24px;">
-        <div class="panel-header" style="padding: 0 0 16px 0;">
-          <h2 class="panel-title">Registered Patients Directory</h2>
-          <button class="btn-primary-submit" onclick="openModal('addPatientModal')">
-            <i class="fas fa-user-plus"></i> Register Patient
+        <div class="panel-header" style="padding: 0 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 class="panel-title" style="margin: 0;">Clinical Patients Directory</h2>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0 0;">Patients with connected Dental Teeth Charts &amp; clinical treatment records</p>
+          </div>
+          <button class="btn-primary-submit" onclick="openAddPatientWithChartModal()" style="background: #0284c7;">
+            <i class="fas fa-tooth"></i> Add Patient &amp; Teeth Chart
           </button>
         </div>
+
+        <!-- FILTER / STATUS BANNER -->
+        <div class="filter-pills" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <span class="filter-btn active" style="background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;">
+              <i class="fas fa-tooth" style="color: #2563eb; margin-right: 4px;"></i>Teeth Chart Connected ({{ patient_records|length }})
+            </span>
+            <button class="filter-btn" onclick="switchTab('appointments', event)">
+              <i class="fas fa-calendar-check" style="margin-right: 4px;"></i>View Appointments ({{ appointments.count }})
+            </button>
+          </div>
+        </div>
+
         <div class="table-responsive">
           <table class="cases-table">
             <thead>
@@ -679,101 +720,97 @@
                 <th>Patient Name</th>
                 <th>Phone</th>
                 <th>Age / Gender</th>
-                <th>Treatment History</th>
+                <th>Clinical Teeth Chart</th>
                 <th>Assigned Doctor</th>
-                <th>Registration Date</th>
+                <th>Latest Visit</th>
                 <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {% for a in appointments %}
+              {% for p in patient_records %}
                 <tr>
                   <td class="patient-interactive-cell">
                     <a href="javascript:void(0)" class="patient-link-btn" title="Click to open Teeth Chart &amp; Payment"
-                       data-id="{{ a.id }}"
-                       data-code="{{ a.formatted_id }}"
-                       data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
-                       data-phone="{{ a.phone|default:'' }}"
-                       data-age="{{ a.age|default:'' }}"
-                       data-gender="{{ a.gender|default:'' }}"
-                       data-service="{{ a.service_name|default:'General Consultation' }}"
-                       data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                       data-id="{{ p.appointment_id }}"
+                       data-code="{{ p.formatted_id }}"
+                       data-name="{{ p.name }}"
+                       data-phone="{{ p.phone|default:'' }}"
+                       data-age="{{ p.age|default:'' }}"
+                       data-gender="{{ p.gender|default:'' }}"
+                       data-service="{{ p.service_name|default:'General Consultation' }}"
+                       data-doctor="{{ p.doctor_name|default:'Dr. Anoop' }}"
                        onclick="openClinicalHubFromBtn(this, 'chart')">
-                      <i class="fas fa-tooth" style="color: #2563eb; font-size: 0.85rem;"></i>
-                      <span>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:"Patient" }}{% endif %}</span>
+                      <i class="fas fa-user-injured" style="color: #0284c7; font-size: 0.95rem;"></i>
+                      <strong>{{ p.name }}</strong>
                       <i class="fas fa-external-link-alt patient-link-icon"></i>
                     </a>
-                    <!-- <div class="patient-quick-pills">
-                      <button type="button" class="btn-quick-pill btn-pill-chart" title="Open Teeth Chart"
-                         data-id="{{ a.id }}"
-                         data-code="{{ a.formatted_id }}"
-                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
-                         data-phone="{{ a.phone|default:'' }}"
-                         data-age="{{ a.age|default:'' }}"
-                         data-gender="{{ a.gender|default:'' }}"
-                         data-service="{{ a.service_name|default:'General Consultation' }}"
-                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
-                         onclick="openClinicalHubFromBtn(this, 'chart')">
-                        <i class="fas fa-tooth"></i> Teeth Chart
-                      </button>
-                      <button type="button" class="btn-quick-pill btn-pill-pay" title="Open Billing &amp; Payment"
-                         data-id="{{ a.id }}"
-                         data-code="{{ a.formatted_id }}"
-                         data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
-                         data-phone="{{ a.phone|default:'' }}"
-                         data-age="{{ a.age|default:'' }}"
-                         data-gender="{{ a.gender|default:'' }}"
-                         data-service="{{ a.service_name|default:'General Consultation' }}"
-                         data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
-                         onclick="openClinicalHubFromBtn(this, 'payment')">
-                        <i class="fas fa-receipt"></i> Payment
-                      </button>
-                    </div> -->
                   </td>
-                  <td>{{ a.phone }}</td>
-                  <td>{{ a.age|default:"-" }} / {{ a.gender|default:"-" }}</td>
-                  <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span></td>
-                  <td>{{ a.doctor_name }}</td>
-                  <td>{{ a.created_at|date:"M d, Y" }}</td>
+                  <td>{{ p.phone|default:"-" }}</td>
+                  <td>{{ p.age|default:"-" }} / {{ p.gender|default:"-" }}</td>
+                  <td>
+                    <span class="status-badge" style="background: #ecfdf5; color: #16a34a; border: 1px solid #a7f3d0; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+                      <i class="fas fa-tooth"></i> Teeth Chart Connected ({{ p.teeth_count }} Teeth)
+                    </span>
+                    {% if p.chart_conditions %}
+                      <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap;">
+                        {% for c in p.chart_conditions %}
+                          <span style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px;">{{ c }}</span>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td><span style="font-size: 0.85rem; color: #334155;"><i class="fas fa-user-md" style="color: #0284c7; margin-right: 4px;"></i>{{ p.doctor_name }}</span></td>
+                  <td>
+                    <span style="font-weight: 600; color: #1e293b;">{{ p.preferred_date }}</span>
+                    <div style="font-size: 0.725rem; color: #64748b;">{{ p.service_name }}</div>
+                  </td>
                   <td>
                     <div class="table-actions" style="justify-content: flex-end; gap: 6px;">
                       <button type="button" class="btn-action-icon" title="Open Teeth Chart"
                         style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;"
-                        data-id="{{ a.id }}"
-                        data-code="{{ a.formatted_id }}"
-                        data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
-                        data-phone="{{ a.phone|default:'' }}"
-                        data-age="{{ a.age|default:'' }}"
-                        data-gender="{{ a.gender|default:'' }}"
-                        data-service="{{ a.service_name|default:'General Consultation' }}"
-                        data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                        data-id="{{ p.appointment_id }}"
+                        data-code="{{ p.formatted_id }}"
+                        data-name="{{ p.name }}"
+                        data-phone="{{ p.phone|default:'' }}"
+                        data-age="{{ p.age|default:'' }}"
+                        data-gender="{{ p.gender|default:'' }}"
+                        data-service="{{ p.service_name|default:'General Consultation' }}"
+                        data-doctor="{{ p.doctor_name|default:'Dr. Anoop' }}"
                         onclick="openClinicalHubFromBtn(this, 'chart')">
                         <i class="fas fa-tooth"></i>
                       </button>
                       <button type="button" class="btn-action-icon" title="Open Billing &amp; Payment"
                         style="color: #059669; background: #ecfdf5; border-color: #a7f3d0;"
-                        data-id="{{ a.id }}"
-                        data-code="{{ a.formatted_id }}"
-                        data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
-                        data-phone="{{ a.phone|default:'' }}"
-                        data-age="{{ a.age|default:'' }}"
-                        data-gender="{{ a.gender|default:'' }}"
-                        data-service="{{ a.service_name|default:'General Consultation' }}"
-                        data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                        data-id="{{ p.appointment_id }}"
+                        data-code="{{ p.formatted_id }}"
+                        data-name="{{ p.name }}"
+                        data-phone="{{ p.phone|default:'' }}"
+                        data-age="{{ p.age|default:'' }}"
+                        data-gender="{{ p.gender|default:'' }}"
+                        data-service="{{ p.service_name|default:'General Consultation' }}"
+                        data-doctor="{{ p.doctor_name|default:'Dr. Anoop' }}"
                         onclick="openClinicalHubFromBtn(this, 'payment')">
                         <i class="fas fa-credit-card"></i>
                       </button>
-                      <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (Single Card)">
+                      <a href="{% url 'print_slip_grid' %}?name={{ p.name|urlencode }}&pid={{ p.formatted_id }}&single_card=1&source=patient" target="_blank" class="btn-action-icon" title="Print Patient Dental Card" style="color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;">
                         <i class="fas fa-id-card"></i>
                       </a>
-                      <!-- <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=0&source=personal" target="_blank" class="btn-action-icon" title="Print Registration Slip (8-Card Grid A4)">
-                        <i class="fas fa-th-large"></i>
-                      </a> -->
                     </div>
                   </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="7" class="empty-row-td">No patient directory records yet.</td></tr>
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 40px 20px; background: #f8fafc;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 10px;">
+                      <i class="fas fa-tooth"></i>
+                    </div>
+                    <h4 style="font-size: 1rem; color: #0f172a; margin: 0 0 4px 0;">No Patients with Connected Teeth Charts Yet</h4>
+                    <p style="font-size: 0.825rem; color: #64748b; margin: 0 0 14px 0;">Saved appointments appear in the Appointments tab without cluttering this directory. Click <strong>"+ Add Teeth Chart"</strong> on any appointment to connect the patient here.</p>
+                    <button type="button" class="btn-primary-submit" onclick="switchTab('appointments', event)" style="font-size: 0.825rem; padding: 8px 16px;">
+                      <i class="fas fa-calendar-check"></i> Go to Appointments to Add Teeth Chart
+                    </button>
+                  </td>
+                </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -2102,16 +2139,19 @@
     </div>
   </div>
 
-  <!-- MODAL 2: ADD PATIENT -->
+  <!-- MODAL 2: ADD PATIENT / BOOK APPOINTMENT -->
   <div class="modal-backdrop" id="addPatientModal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3><i class="fas fa-user-plus" style="color: #10b981; margin-right: 8px;"></i>Register New Patient</h3>
+        <h3 id="addPatientModalHeader"><i class="fas fa-calendar-plus" style="color: #2563eb; margin-right: 8px;"></i>Book Appointment</h3>
         <button class="modal-close-btn" onclick="closeModal('addPatientModal')">&times;</button>
       </div>
       <form action="{% url 'add_patient' %}" method="POST">
         {% csrf_token %}
         <div class="modal-body">
+          <p id="addPatientModalDesc" style="font-size: 0.8rem; color: #64748b; margin: -4px 0 14px 0;">
+            Saves booking into <strong>Appointments Schedule</strong>. Check below to add Teeth Chart and connect patient to <strong>Patient Tab</strong>.
+          </p>
           <div class="form-group">
             <label for="new_patient_name">Patient Full Name *</label>
             <input type="text" id="new_patient_name" name="patient_name" class="form-control" placeholder="e.g. Sneha Nair" required>
@@ -2162,10 +2202,17 @@
             <label for="new_patient_notes">Symptoms / Notes</label>
             <textarea id="new_patient_notes" name="notes" rows="2" class="form-control" placeholder="Chief complaint..."></textarea>
           </div>
+
+          <div class="form-group" style="background: #f0fdf4; padding: 12px 14px; border-radius: 8px; border: 1px solid #bbf7d0; margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #166534; cursor: pointer; margin: 0;">
+              <input type="checkbox" name="open_teeth_chart" value="1" id="modalOpenChartCheck" style="width: 17px; height: 17px; accent-color: #16a34a;">
+              <span><i class="fas fa-tooth" style="color: #16a34a;"></i> Add Teeth Chart immediately (Connects to Patient Tab)</span>
+            </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeModal('addPatientModal')">Cancel</button>
-          <button type="submit" class="btn-primary-submit" style="background: #10b981;"><i class="fas fa-user-check"></i> Register Patient</button>
+          <button type="submit" class="btn-primary-submit" style="background: #2563eb;"><i class="fas fa-calendar-check"></i> Save Appointment</button>
         </div>
       </form>
     </div>
@@ -2924,7 +2971,46 @@
 
         <!-- TAB CONTENT 1: TEETH CHART (ODONTOGRAM) -->
         <div id="hubSectionChart" style="display: block;">
-          
+
+          <!-- CLINICAL DIAGNOSTICS & VITALS BOX (DATE, DISEASE, UNIT, READING) -->
+          <div class="clinical-vitals-card" style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
+              <span style="font-size: 0.8rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-notes-medical" style="color: #2563eb;"></i> Medical / Clinical Vitals &amp; Diagnosis
+              </span>
+              <span style="font-size: 0.72rem; color: #64748b;">Connected with Teeth Chart</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; align-items: flex-end;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="chartDiagDate" style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                  <i class="fas fa-calendar-alt" style="color: #2563eb;"></i>Date
+                </label>
+                <input type="date" id="chartDiagDate" class="form-control" style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" onchange="saveChartVitalsData()">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="chartDiagDisease" style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                  <i class="fas fa-heartbeat" style="color: #ef4444;"></i>Disease
+                </label>
+                <input type="text" id="chartDiagDisease" class="form-control" placeholder="e.g. Diabetes, Hypertension" style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" oninput="saveChartVitalsData()">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="chartDiagUnit" style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                  <i class="fas fa-ruler" style="color: #0284c7;"></i>Unit
+                </label>
+                <input type="text" id="chartDiagUnit" class="form-control" placeholder="e.g. mg/dL, mmHg, mm" style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" oninput="saveChartVitalsData()">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="chartDiagReading" style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                  <i class="fas fa-file-medical-alt" style="color: #10b981;"></i>Reading
+                </label>
+                <input type="text" id="chartDiagReading" class="form-control" placeholder="e.g. 120/80, 140, 4mm" style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" oninput="saveChartVitalsData()">
+              </div>
+            </div>
+          </div>
+
           <!-- ODONTOGRAM TOP BAR -->
           <div class="odontogram-header">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -2950,7 +3036,9 @@
           <div class="odontogram-arch-container">
             <!-- UPPER JAW (MAXILLARY ARCH) -->
             <div class="arch-label">
-              <span>Upper Jaw &bull; Maxillary Arch</span>
+              <span class="arch-num-range arch-num-left" id="archNumUpperRight" title="Upper Right teeth #1–#8">No. #1 &#8592; #8</span>
+              <span id="archLabelUpper">Upper Jaw &bull; Maxillary Arch (No. #1 &ndash; #16)</span>
+              <span class="arch-num-range arch-num-right" id="archNumUpperLeft" title="Upper Left teeth #9–#16">No. #9 &#8594; #16</span>
             </div>
             
             <div class="teeth-row" id="upperTeethRow">
@@ -2959,7 +3047,9 @@
 
             <!-- LOWER JAW (MANDIBULAR ARCH) -->
             <div class="arch-label" style="margin-top: 24px;">
-              <span>Lower Jaw &bull; Mandibular Arch</span>
+              <span class="arch-num-range arch-num-left" id="archNumLowerRight" title="Lower Right teeth #32–#25">No. #32 &#8592; #25</span>
+              <span id="archLabelLower">Lower Jaw &bull; Mandibular Arch (No. #17 &ndash; #32)</span>
+              <span class="arch-num-range arch-num-right" id="archNumLowerLeft" title="Lower Left teeth #24–#17">No. #24 &#8594; #17</span>
             </div>
 
             <div class="teeth-row" id="lowerTeethRow">
@@ -3024,8 +3114,8 @@
               <label class="surface-checkbox-label"><input type="checkbox" id="surf_l" onchange="toggleToothSurface('L')"> <strong>L</strong> (Lingual/Palatal)</label>
             </div>
 
-            <!-- DOCTOR & PURPOSE (CONNECTED TO TAB DOCTOR) -->
-            <div class="form-grid-2" style="margin-bottom: 14px;">
+            <!-- DOCTOR & TEETH (CONNECTED TO TAB DOCTOR) -->
+            <div class="form-grid-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
               <div class="form-group" style="margin-bottom: 0;">
                 <label for="selToothDoctor"><i class="fas fa-user-md" style="color: #2563eb; margin-right: 5px;"></i>Doctor</label>
                 <select id="selToothDoctor" class="form-control">
@@ -3041,9 +3131,14 @@
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="selToothPurpose"><i class="fas fa-bullseye" style="color: #059669; margin-right: 5px;"></i>Purpose</label>
+                <label for="selToothNumberInput" id="lblSelToothInput"><i class="fas fa-tooth" style="color: #0284c7; margin-right: 5px;"></i>Teeth (No. #)</label>
+                <input type="text" id="selToothNumberInput" name="teeth_number" class="form-control" placeholder="e.g. #12, #13, #14" value="#12" style="font-weight: 700; color: #1e293b; background: #ffffff;" title="Teeth chart multi-click ON: click any teeth on the arch to add/toggle selection, or type e.g. #12, #13, #14" oninput="handleToothNumberInput(this.value)">
+              </div>
+
+              <!-- <div class="form-group" style="margin-bottom: 0;">
+                <label for="selToothPurpose"><i class="fas fa-notes-medical" style="color: #8b5cf6; margin-right: 5px;"></i>Teeth Treatment</label>
                 <select id="selToothPurpose" class="form-control" onchange="handlePurposeSelect(this.value)">
-                  <option value="">-- Select Purpose --</option>
+                  <option value="">-- Select Teeth Treatment --</option>
                   <option value="Consultation & Diagnosis">Consultation &amp; Diagnosis</option>
                   <option value="Root Canal Therapy (Endodontics)">Root Canal Therapy (Endodontics)</option>
                   <option value="Crown & Bridge (Prosthodontics)">Crown &amp; Bridge (Prosthodontics)</option>
@@ -3057,13 +3152,13 @@
                   <option value="Pediatric / Kids Dentistry">Pediatric / Kids Dentistry</option>
                   <option value="Emergency Pain Relief">Emergency Pain Relief</option>
                 </select>
-              </div>
+              </div> -->
             </div>
 
             <!-- PROCEDURE RECOMMENDATION & BILLING QUICK CONNECT -->
             <div class="form-grid-2" style="margin-bottom: 14px;">
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="selToothProcedure">Recommended Dental Procedure</label>
+                <label for="selToothProcedure">Dental Treatment</label>
                 <select id="selToothProcedure" class="form-control" onchange="handleProcedureSelect(this.value)">
                   <option value="">-- Choose Dental Treatment / Procedure --</option>
                   <option value="Single-Visit Root Canal Treatment (RCT)" data-price="3500">Single-Visit Root Canal Treatment (RCT) - ₹3,500</option>
@@ -3085,19 +3180,22 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 16px;">
-              <label for="selToothNotes">Clinical Findings &amp; Diagnostics</label>
-              <input type="text" id="selToothNotes" class="form-control" placeholder="e.g. Deep cavity on occlusal surface, tender to percussion...">
+              <label for="selToothNotes"><i class="fas fa-clipboard-list" style="color: #64748b; margin-right: 5px;"></i>Clinical Findings &amp; Diagnostics</label>
+              <textarea id="selToothNotes" rows="10" class="form-control" placeholder="e.g. Deep cavity on occlusal surface, tender to percussion, pulp exposure..." style="min-height: 10em; resize: vertical; line-height: 1.5; font-family: inherit;"></textarea>
             </div>
 
             <!-- ACTION BUTTONS -->
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border-color);">
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <button type="button" class="btn-primary-submit" onclick="saveCurrentToothData()" style="background: #2563eb;">
                   <i class="fas fa-save"></i> Save Tooth Condition
                 </button>
+                <!-- <button type="button" class="btn-secondary" onclick="addTwoMoreTeethToChart()" style="font-size: 0.825rem; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700;" title="Quickly add 2 more diagnosed teeth to this patient's chart">
+                  <i class="fas fa-plus-circle" style="color: #059669;"></i> + Add 2 More Teeth
+                </button>
                 <button type="button" class="btn-secondary" onclick="resetCurrentTooth()" style="font-size: 0.825rem;">
                   <i class="fas fa-undo"></i> Reset to Sound
-                </button>
+                </button> -->
               </div>
 
               <button type="button" class="btn-primary-submit" onclick="addCurrentToothToBilling()" style="background: #059669;">
@@ -3127,35 +3225,35 @@
         <!-- TAB CONTENT 2: BILLING & PAYMENT LEDGER -->
         <div id="hubSectionPayment" style="display: none;">
           
-          <!-- FINANCIAL SUMMARY CARDS -->
+          <!-- FINANCIAL SUMMARY CARDS: DEBIT (YELLOW), CREDIT (GREEN), AND BALANCE COMPLETE / DUE -->
           <div class="payment-overview-row">
-            <div class="payment-stat-card">
+            <div class="payment-stat-card" style="border-left: 4px solid #d97706;">
               <div>
-                <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">TOTAL BILLED</span>
-                <div class="payment-stat-val" style="color: #0f172a;">₹<span id="hubTotalBilled">0.00</span></div>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #b45309;"><i class="fas fa-arrow-down"></i> TOTAL DEBIT (CHARGES)</span>
+                <div class="payment-stat-val" style="color: #d97706;">₹<span id="hubTotalBilled">0.00</span></div>
               </div>
-              <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                <i class="fas fa-receipt"></i>
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fas fa-file-invoice"></i>
               </div>
             </div>
 
-            <div class="payment-stat-card">
+            <div class="payment-stat-card" style="border-left: 4px solid #16a34a;">
               <div>
-                <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">TOTAL PAID / RECEIVED</span>
-                <div class="payment-stat-val" style="color: #059669;">₹<span id="hubTotalPaid">0.00</span></div>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #16a34a;"><i class="fas fa-arrow-up"></i> TOTAL CREDIT (PAID)</span>
+                <div class="payment-stat-val" style="color: #16a34a;">₹<span id="hubTotalPaid">0.00</span></div>
               </div>
-              <div style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                <i class="fas fa-check-circle"></i>
+              <div style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i class="fas fa-hand-holding-usd"></i>
               </div>
             </div>
 
-            <div class="payment-stat-card">
+            <div class="payment-stat-card" id="hubBalanceCard" style="border-left: 4px solid #16a34a;">
               <div>
-                <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">BALANCE DUE / PENDING</span>
-                <div class="payment-stat-val" id="hubBalanceDueWrap" style="color: #dc2626;">₹<span id="hubBalanceDue">0.00</span></div>
+                <span id="hubBalanceLabel" style="font-size: 0.8rem; font-weight: 700; color: #16a34a;">BALANCE COMPLETE</span>
+                <div class="payment-stat-val" id="hubBalanceDueWrap" style="color: #16a34a;">₹<span id="hubBalanceDue">0.00</span></div>
               </div>
-              <div style="width: 44px; height: 44px; border-radius: 10px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
-                <i class="fas fa-hourglass-half"></i>
+              <div id="hubBalanceIconWrap" style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                <i id="hubBalanceIcon" class="fas fa-check-circle"></i>
               </div>
             </div>
           </div>

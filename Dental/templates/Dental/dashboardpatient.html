@@ -237,6 +237,190 @@
       justify-content: center;
       font-size: 1.5rem;
     }
+    .stat-card.balance-pending {
+      border-left: 4px solid #dc2626;
+    }
+    .stat-card.balance-cleared {
+      border-left: 4px solid #16a34a;
+    }
+    .stat-icon.balance-pending {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .stat-icon.balance-cleared {
+      background: #ecfdf5;
+      color: #16a34a;
+    }
+    .balance-val-pending {
+      color: #dc2626;
+    }
+    .balance-val-cleared {
+      color: #16a34a;
+    }
+    .balance-pill-pending {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #dc2626;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(220, 38, 38, 0.12);
+    }
+    .balance-pill-cleared {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #16a34a;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(22, 163, 74, 0.12);
+    }
+    .balance-tag-pending {
+      color: #dc2626;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .balance-tag-cleared {
+      color: #059669;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .badge-debit {
+      color: #dc2626;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      font-weight: 700;
+      font-size: 0.76rem;
+      padding: 3px 9px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .badge-credit {
+      color: #16a34a;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      font-weight: 700;
+      font-size: 0.76rem;
+      padding: 3px 9px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .stat-card.debit-card {
+      border-left: 4px solid #d97706;
+    }
+    .stat-card.credit-card {
+      border-left: 4px solid #16a34a;
+    }
+    .stat-icon.debit-icon {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .stat-icon.credit-icon {
+      background: #ecfdf5;
+      color: #16a34a;
+    }
+    .btn-card-link {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-card-link:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+    .tooth-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      width: fit-content;
+      border: 1px solid transparent;
+    }
+    .tooth-pill-caries, .cond-badge-caries {
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+    .tooth-pill-rct, .cond-badge-rct {
+      background: #f5f3ff;
+      color: #7c3aed;
+      border-color: #d8b4fe;
+    }
+    .tooth-pill-crown, .cond-badge-crown {
+      background: #fffbeb;
+      color: #d97706;
+      border-color: #fde68a;
+    }
+    .tooth-pill-filled, .cond-badge-filled {
+      background: #eff6ff;
+      color: #2563eb;
+      border-color: #bfdbfe;
+    }
+    .tooth-pill-sound, .cond-badge-sound {
+      background: #ecfdf5;
+      color: #059669;
+      border-color: #a7f3d0;
+    }
+    .tooth-pill-missing, .cond-badge-missing {
+      background: #f8fafc;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    .tooth-pill-implant, .cond-badge-implant {
+      background: #ecfeff;
+      color: #0891b2;
+      border-color: #a5f3fc;
+    }
+    .tooth-pill-fractured, .cond-badge-fractured {
+      background: #fff7ed;
+      color: #ea580c;
+      border-color: #fed7aa;
+    }
     .table-container {
       background: white;
       border-radius: var(--radius-md);
@@ -552,7 +736,7 @@
 
     <!-- STATS CARDS -->
     <div class="stats-grid">
-      <div class="stat-card">
+      <!-- <div class="stat-card">
         <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
           <i class="fas fa-calendar-check"></i>
         </div>
@@ -560,7 +744,7 @@
           <div style="font-size: 1.6rem; font-weight: 800; color: var(--dark-navy);">{{ appointments.count|default:0 }}</div>
           <div style="font-size: 0.85rem; color: var(--slate-body);">Total Bookings</div>
         </div>
-      </div>
+      </div> -->
 
       <div class="stat-card">
         <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
@@ -571,6 +755,11 @@
             {% if latest_appointment %}{{ latest_appointment.preferred_date }}{% else %}No Upcoming{% endif %}
           </div>
           <div style="font-size: 0.85rem; color: var(--slate-body);">Latest Appointment Date</div>
+          {% if latest_appointment %}
+            <a href="{% url 'print_slip_grid' %}?name={% if latest_appointment.first_name %}{{ latest_appointment.first_name|urlencode }}+{{ latest_appointment.last_name|urlencode }}{% else %}{{ latest_appointment.patient_name|urlencode }}{% endif %}&pid={{ latest_appointment.formatted_id }}&date={{ latest_appointment.preferred_date|date:'d/m/Y'|default:latest_appointment.preferred_date }}&age={{ latest_appointment.age|default:'' }}&gender={{ latest_appointment.gender|default:'' }}&address={{ latest_appointment.address|default:''|urlencode }}&single_card=1&source=patient" target="_blank" style="font-size: 0.78rem; color: #0284c7; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;">
+              <i class="fas fa-id-card"></i> Card (PDF)
+            </a>
+          {% endif %}
         </div>
       </div>
 
@@ -585,18 +774,90 @@
           <div style="font-size: 0.85rem; color: var(--slate-body);">Assigned Doctor</div>
         </div>
       </div>
+
+      <!-- TOTAL DEBIT (CHARGES) CARD -->
+      <div class="stat-card debit-card">
+        <div class="stat-icon debit-icon">
+          <i class="fas fa-file-invoice"></i>
+        </div>
+        <div>
+          <div style="font-size: 1.45rem; font-weight: 800; color: #d97706;">
+            ₹{{ total_billed|floatformat:2 }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--slate-body); display: flex; align-items: center; gap: 6px;">
+            <span>Total Debit</span>
+            <span class="badge-debit"><i class="fas fa-arrow-down"></i> Charges</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOTAL CREDIT (PAID) CARD -->
+      <div class="stat-card credit-card">
+        <div class="stat-icon credit-icon">
+          <i class="fas fa-hand-holding-usd"></i>
+        </div>
+        <div>
+          <div style="font-size: 1.45rem; font-weight: 800; color: #16a34a;">
+            ₹{{ total_paid|floatformat:2 }}
+          </div>
+          <div style="font-size: 0.85rem; color: var(--slate-body); display: flex; align-items: center; gap: 6px;">
+            <span>Total Credit</span>
+            <span class="badge-credit"><i class="fas fa-arrow-up"></i> Received</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPLETE NET BALANCE CARD -->
+      <div class="stat-card {% if balance_due > 0 %}balance-pending{% else %}balance-cleared{% endif %}">
+        <div class="stat-icon {% if balance_due > 0 %}balance-pending{% else %}balance-cleared{% endif %}">
+          <i class="fas {% if balance_due > 0 %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+        </div>
+        <div>
+          <div class="{% if balance_due > 0 %}balance-val-pending{% else %}balance-val-cleared{% endif %}" style="font-size: 1.45rem; font-weight: 800;">
+            ₹{{ balance_due|floatformat:2 }}
+          </div>
+          <div style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+            {% if balance_due > 0 %}
+              <span style="font-weight: 700; color: #dc2626;">Balance Due</span>
+              <span class="balance-pill-pending" style="font-size: 0.68rem; padding: 2px 7px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 0.65rem;"></i> Pending
+              </span>
+            {% else %}
+              <span style="font-weight: 700; color: #16a34a;">Balance Complete</span>
+              <span class="balance-pill-cleared" style="font-size: 0.68rem; padding: 2px 7px;">
+                <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i> All Cleared
+              </span>
+            {% endif %}
+          </div>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span class="badge-debit" style="font-size: 0.7rem; padding: 2px 6px;"><i class="fas fa-arrow-down"></i> Debit: ₹{{ total_billed|floatformat:2 }}</span>
+            <span class="badge-credit" style="font-size: 0.7rem; padding: 2px 6px;"><i class="fas fa-arrow-up"></i> Credit: ₹{{ total_paid|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- APPOINTMENTS TABLE -->
     <div class="table-container">
       <div class="table-header">
         <div>
-          <h3 style="font-size: 1.2rem; color: var(--dark-navy);">Appointment History & Real-Time Status</h3>
-          <p style="font-size: 0.825rem; color: var(--slate-body);">Live appointment status updates from Anupam Dental Clinic</p>
+          <h3 style="font-size: 1.2rem; color: var(--dark-navy);">Appointment History &amp; Real-Time Status</h3>
+          <p style="font-size: 0.825rem; color: var(--slate-body);">Live appointment status and billing updates from Anupam Dental Clinic</p>
         </div>
-        <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20have%20a%20question%20regarding%20my%20appointment." target="_blank" class="btn-outline" style="font-size: 0.8rem; padding: 6px 12px; border-color: #25D366; color: #25D366;">
-          <i class="fab fa-whatsapp"></i> WhatsApp Helpline
-        </a>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          {% if balance_due > 0 %}
+            <span class="balance-pill-pending">
+              <i class="fas fa-exclamation-circle"></i> Balance Due: ₹{{ balance_due|floatformat:2 }}
+            </span>
+          {% else %}
+            <span class="balance-pill-cleared">
+              <i class="fas fa-check-circle"></i> Balance Complete: ₹0.00 (All Cleared)
+            </span>
+          {% endif %}
+          <a href="https://wa.me/919446046868?text=Hello%20Dr.%20Anoop,%20I%20have%20a%20question%20regarding%20my%20appointment." target="_blank" class="btn-outline" style="font-size: 0.8rem; padding: 6px 12px; border-color: #25D366; color: #25D366;">
+            <i class="fab fa-whatsapp"></i> WhatsApp Helpline
+          </a>
+        </div>
       </div>
 
       {% if appointments %}
@@ -610,6 +871,8 @@
               <th>Treatment / Service</th>
               <th>Doctor</th>
               <th>Status</th>
+              <th>Balance</th>
+              <th style="text-align: center;">Card (PDF)</th>
             </tr>
           </thead>
           <tbody>
@@ -622,7 +885,18 @@
                 </td>
                 <td>{{ a.phone }}</td>
                 <td style="font-weight: 600;">{{ a.preferred_date }}</td>
-                <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span></td>
+                <td>
+                  <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span>
+                  {% if a.chart_items %}
+                    <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;">
+                      {% for item in a.chart_items %}
+                        <span class="tooth-pill tooth-pill-{{ item.condition }}">
+                          <i class="fas fa-tooth"></i> #{{ item.tooth_id }} (FDI {{ item.fdi }}): <strong>{{ item.condition_label }}</strong> &bull; {{ item.procedure }} &bull; ₹{{ item.price|floatformat:0 }}
+                        </span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </td>
                 <td>{{ a.doctor_name }}</td>
                 <td>
                   {% if a.status == 'confirmed' %}
@@ -634,6 +908,22 @@
                   {% else %}
                     <span class="status-badge badge-pending"><i class="fas fa-clock"></i> Pending Confirmation</span>
                   {% endif %}
+                </td>
+                <td>
+                  {% if a.appt_balance and a.appt_balance > 0 %}
+                    <span class="balance-tag-pending">
+                      <i class="fas fa-exclamation-circle"></i> ₹{{ a.appt_balance|floatformat:2 }}
+                    </span>
+                  {% else %}
+                    <span class="balance-tag-cleared">
+                      <i class="fas fa-check-circle"></i> ₹0.00
+                    </span>
+                  {% endif %}
+                </td>
+                <td style="text-align: center;">
+                  <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&date={{ a.preferred_date|date:'d/m/Y'|default:a.preferred_date }}&age={{ a.age|default:'' }}&gender={{ a.gender|default:'' }}&address={{ a.address|default:''|urlencode }}&single_card=1&source=patient" target="_blank" class="btn-card-link" title="Open Patient Dental Registration Card (PDF)">
+                    <i class="fas fa-id-card"></i> <span>Card (PDF)</span>
+                  </a>
                 </td>
               </tr>
             {% endfor %}
@@ -654,6 +944,237 @@
         </div>
       {% endif %}
     </div>
+
+    {% if all_chart_items %}
+    <!-- DIAGNOSED TEETH CONDITIONS & CLINICAL CHART TABLE -->
+    <div class="table-container" style="margin-top: 24px;">
+      <div class="table-header">
+        <div>
+          <h3 style="font-size: 1.2rem; color: var(--dark-navy); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-tooth" style="color: #0284c7;"></i> Clinical Teeth Chart &amp; Diagnosed Conditions
+            <span style="font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 2px 9px; border-radius: 9999px; font-weight: 700;">{{ all_chart_items|length }} Conditions Recorded</span>
+          </h3>
+          <p style="font-size: 0.825rem; color: var(--slate-body);">
+            Official teeth conditions, odontogram diagnoses, and treatment plans saved by Dr. Anoop
+          </p>
+        </div>
+        <div>
+          {% if unbilled_chart_total > 0 %}
+            <div class="balance-pill-pending">
+              <i class="fas fa-exclamation-circle"></i> Teeth Treatments Balance: ₹{{ unbilled_chart_total|floatformat:2 }} (Pending)
+            </div>
+          {% else %}
+            <div class="balance-pill-cleared">
+              <i class="fas fa-check-circle"></i> Teeth Treatments: ₹0.00 Cleared
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Tooth</th>
+            <th>Anatomical Description</th>
+            <th>Condition / Diagnosis</th>
+            <th>Surfaces</th>
+            <th>Planned Treatment / Procedure</th>
+            <th>Doctor</th>
+            <th>Estimated Fee</th>
+            <th>Status / Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in all_chart_items %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 32px; height: 32px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(2,132,199,0.3);">#{{ item.tooth_id }}</span>
+                  <div style="font-size: 0.72rem; color: #64748b; line-height: 1.2;">
+                    <div>FDI</div>
+                    <strong style="color: #334155;">{{ item.fdi }}</strong>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong style="color: var(--dark-navy);">{{ item.name }}</strong>
+                {% if item.notes %}
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px; font-style: italic;">
+                    <i class="fas fa-notes-medical" style="font-size: 0.7rem; color: #94a3b8; margin-right: 3px;"></i>{{ item.notes }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="status-badge cond-badge-{{ item.condition }}" style="font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+                  <i class="fas fa-circle" style="font-size: 6px; margin-right: 4px;"></i> {{ item.condition_label }}
+                </span>
+              </td>
+              <td>
+                {% if item.surfaces %}
+                  <span style="background: #f1f5f9; color: #334155; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; font-weight: 700;">{{ item.surfaces_str }}</span>
+                {% else %}
+                  <span style="color: #94a3b8; font-size: 0.8rem;">Whole Tooth</span>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-weight: 600; color: #1e293b;">{{ item.procedure }}</span>
+                {% if item.purpose %}
+                  <div style="font-size: 0.73rem; color: #64748b;"><strong style="color: #475569;">Teeth:</strong> {{ item.purpose }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <span style="font-size: 0.825rem; color: #334155;"><i class="fas fa-user-md" style="color: #0284c7; margin-right: 4px;"></i>{{ item.doctor }}</span>
+              </td>
+              <td>
+                <strong style="font-size: 0.95rem; color: #0f172a;">₹{{ item.price|floatformat:2 }}</strong>
+              </td>
+              <td>
+                {% if item.is_invoiced %}
+                  {% if item.invoice.payment_status == 'Paid' %}
+                    <span class="balance-tag-cleared">
+                      <i class="fas fa-check-circle"></i> Paid &bull; ₹0.00
+                    </span>
+                  {% elif item.invoice.payment_status == 'Partial' %}
+                    <span class="status-badge" style="background: #fef3c7; color: #d97706; border: 1px solid #fde68a; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+                      <i class="fas fa-adjust"></i> Partial Paid
+                    </span>
+                  {% else %}
+                    <span class="balance-tag-pending">
+                      <i class="fas fa-exclamation-circle"></i> Invoiced Due: ₹{{ item.price|floatformat:2 }}
+                    </span>
+                  {% endif %}
+                {% else %}
+                  {% if item.price > 0 %}
+                    <span class="balance-tag-pending">
+                      <i class="fas fa-file-invoice-dollar"></i> Not Paid &bull; Due: ₹{{ item.price|floatformat:2 }}
+                    </span>
+                    <div style="font-size: 0.72rem; color: #dc2626; font-weight: 600; margin-top: 3px;">
+                      <i class="fas fa-link"></i> Connected to Invoices &bull; Paid: ₹0.00
+                    </div>
+                  {% else %}
+                    <span class="balance-tag-cleared">
+                      <i class="fas fa-check-circle"></i> ₹0.00 Cleared
+                    </span>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if ledger_entries %}
+    <!-- PATIENT INVOICES & BILLING HISTORY (CONNECTED WITH TEETH CHART & OFFICIAL INVOICES) -->
+    <div class="table-container" style="margin-top: 24px;">
+      <div class="table-header">
+        <div>
+          <h3 style="font-size: 1.2rem; color: var(--dark-navy);">
+            <i class="fas fa-receipt" style="color: #0284c7; margin-right: 8px;"></i>Invoices &amp; Payment History
+          </h3>
+          <p style="font-size: 0.825rem; color: var(--slate-body);">Official invoices and diagnosed teeth chart procedures with live debit, credit, and balance tracking</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span class="badge-debit"><i class="fas fa-arrow-down"></i> Total Debit: ₹{{ total_billed|floatformat:2 }}</span>
+          <span class="badge-credit"><i class="fas fa-arrow-up"></i> Total Credit (Paid): ₹{{ total_paid|floatformat:2 }}</span>
+          {% if balance_due > 0 %}
+            <div class="balance-pill-pending">
+              <i class="fas fa-exclamation-circle"></i> Balance Due: ₹{{ balance_due|floatformat:2 }} (Pending)
+            </div>
+          {% else %}
+            <div class="balance-pill-cleared">
+              <i class="fas fa-check-circle"></i> Balance Complete: ₹0.00 (All Cleared)
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Record / Invoice #</th>
+            <th>Treatment &amp; Procedure</th>
+            <th>Date</th>
+            <th>Payment Mode</th>
+            <th>Debit (Charges)</th>
+            <th>Credit (Paid)</th>
+            <th>Balance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in ledger_entries %}
+            <tr {% if entry.is_chart %}style="background: #fcfdfe;"{% endif %}>
+              <td>
+                {% if entry.is_chart %}
+                  <strong style="color: #0284c7; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-tooth" style="font-size: 0.75rem;"></i> {{ entry.id }}
+                  </strong>
+                  <div style="font-size: 0.7rem; color: #0284c7; font-weight: 600;">Teeth Chart</div>
+                {% else %}
+                  <strong style="color: var(--primary); font-weight: 700;">{{ entry.id }}</strong>
+                  <div style="font-size: 0.7rem; color: #64748b;">Invoice</div>
+                {% endif %}
+              </td>
+              <td>
+                <strong>{{ entry.title }}</strong>
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">{{ entry.subtitle|safe }}</div>
+              </td>
+              <td>
+                <span style="font-size: 0.825rem; color: #334155;">{{ entry.date|date:'M d, Y'|default:entry.date }}</span>
+              </td>
+              <td>
+                {% if entry.is_chart %}
+                  <span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 3px 8px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-clock"></i> Not Paid
+                  </span>
+                {% else %}
+                  <span style="background: #f1f5f9; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; color: #475569;">{{ entry.mode }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge-debit"><i class="fas fa-arrow-down"></i> ₹{{ entry.debit|floatformat:2 }}</span>
+              </td>
+              <td>
+                {% if entry.credit > 0 %}
+                  <span class="badge-credit"><i class="fas fa-arrow-up"></i> ₹{{ entry.credit|floatformat:2 }}</span>
+                {% else %}
+                  <span class="badge-credit" style="background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1;">
+                    <i class="fas fa-minus"></i> ₹0.00
+                  </span>
+                {% endif %}
+              </td>
+              <td>
+                {% if entry.balance > 0 %}
+                  <span class="balance-tag-pending">
+                    <i class="fas fa-exclamation-circle"></i> ₹{{ entry.balance|floatformat:2 }}
+                  </span>
+                {% else %}
+                  <span class="balance-tag-cleared">
+                    <i class="fas fa-check-circle"></i> ₹0.00
+                  </span>
+                {% endif %}
+              </td>
+              <td>
+                {% if entry.status == 'Paid' %}
+                  <span class="balance-tag-cleared">
+                    <i class="fas fa-check-circle"></i> Paid
+                  </span>
+                {% elif entry.status == 'Partial' %}
+                  <span class="status-badge" style="background: #fef3c7; color: #d97706; border: 1px solid #fde68a; font-weight: 700; padding: 4px 10px; border-radius: 6px;">
+                    <i class="fas fa-adjust"></i> Partial
+                  </span>
+                {% else %}
+                  <span class="balance-tag-pending">
+                    <i class="fas fa-exclamation-circle"></i> Not Paid &bull; Due
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
 
     <!-- PATIENT TESTIMONIALS & REVIEWS SECTION -->
     <div class="testimonial-dash-section">
@@ -721,6 +1242,12 @@
                 <button type="button" onclick="openTestimonialModal()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; font-size: 0.8rem; font-weight: 600; padding: 7px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                   <i class="fas fa-edit"></i> Write Another Review
                 </button>
+                <form action="{% url 'delete_testimonial' t.id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this review?');" style="display: inline; margin: 0;">
+                  {% csrf_token %}
+                  <button type="submit" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 0.8rem; font-weight: 600; padding: 7px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                    <i class="fas fa-trash-alt"></i> Delete
+                  </button>
+                </form>
               </div>
             </div>
           </div>

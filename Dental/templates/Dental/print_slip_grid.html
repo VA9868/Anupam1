@@ -1,10 +1,12 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anupam Dental Clinic - Patient Registration Slip {% if single_card %}(Single Card){% else %}(8-Card Grid A4){% endif %}</title>
+  <title>Anupam Dental Clinic - Patient Registration Slip {% if single_card %}(Single Card){% else %}(8-Card Grid A4){%
+    endif %}</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -31,7 +33,7 @@
       padding: 12px 18px;
       margin-bottom: 16px;
       border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
@@ -81,6 +83,7 @@
       background: #2563eb;
       color: #ffffff;
     }
+
     .btn-print:hover {
       background: #1d4ed8;
     }
@@ -90,6 +93,7 @@
       color: #334155;
       border: 1px solid #cbd5e1;
     }
+
     .btn-back:hover {
       background: #e2e8f0;
     }
@@ -99,6 +103,7 @@
       color: #2563eb;
       border: 1px solid #bfdbfe;
     }
+
     .btn-toggle:hover {
       background: #dbeafe;
     }
@@ -110,7 +115,7 @@
       height: 297mm;
       background: #ffffff;
       padding: 8mm 6mm;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(4, 1fr);
@@ -124,7 +129,7 @@
       width: 130mm;
       background: #ffffff;
       padding: 12px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
       margin: 0 auto;
     }
 
@@ -317,37 +322,47 @@
         print-color-adjust: exact;
       }
 
-      .clinic-title-box, .slip-footer-hours {
+      .clinic-title-box,
+      .slip-footer-hours {
         border-color: #000 !important;
       }
     }
   </style>
 </head>
+
 <body class="{% if single_card %}is-single-card{% endif %}">
 
   <!-- Screen Toolbar: Left Dashboard, Center View Mode & Toggle, Right Print -->
   <div class="screen-toolbar no-print">
     <div class="toolbar-left">
-      <a href="{% url 'dashboard' %}{% if source == 'personal' %}#personal{% elif source == 'appointment' %}#appointments{% endif %}" class="btn btn-back">
+      <a href="{% if source == 'patient' %}{% url 'dashboard_patient' %}{% else %}{% url 'dashboard' %}{% if source == 'personal' %}#personal{% elif source == 'appointment' %}#appointments{% endif %}{% endif %}"
+        class="btn btn-back">
         <i class="fas fa-arrow-left"></i> Dashboard
       </a>
     </div>
     <div class="toolbar-title">
-      {% if source == 'appointment' %}
-        <i class="fas fa-id-card" style="color: #2563eb;"></i>
-        <span>Single Card</span>
+      {% if source == 'patient' %}
+      <i class="fas fa-id-card" style="color: #2563eb;"></i>
+      <span>Patient Dental Registration Card</span>
+      {% elif source == 'appointment' %}
+      <i class="fas fa-id-card" style="color: #2563eb;"></i>
+      <span>Single Card</span>
       {% elif single_card %}
-        <i class="fas fa-id-card" style="color: #2563eb;"></i>
-        <span>Single Card</span>
-        <a href="?reg_no={{ reg_no|urlencode }}&pid={{ pid|urlencode }}&date={{ date|urlencode }}&name={{ name|urlencode }}&age={{ age|urlencode }}&gender={{ gender|urlencode }}&address={{ address|urlencode }}&single_card=0{% if source %}&source={{ source }}{% endif %}" class="btn btn-toggle" style="margin-left: 8px; font-weight: normal; font-size: 0.76rem;" title="Switch to 8-Card Grid Sheet">
-          <i class="fas fa-th"></i> 8-Card Grid
-        </a>
+      <i class="fas fa-id-card" style="color: #2563eb;"></i>
+      <span>Single Card</span>
+      <a href="?reg_no={{ reg_no|urlencode }}&pid={{ pid|urlencode }}&date={{ date|urlencode }}&name={{ name|urlencode }}&age={{ age|urlencode }}&gender={{ gender|urlencode }}&address={{ address|urlencode }}&single_card=0{% if source %}&source={{ source }}{% endif %}"
+        class="btn btn-toggle" style="margin-left: 8px; font-weight: normal; font-size: 0.76rem;"
+        title="Switch to 8-Card Grid Sheet">
+        <i class="fas fa-th"></i> 8-Card Grid
+      </a>
       {% else %}
-        <i class="fas fa-th-large" style="color: #2563eb;"></i>
-        <span>8-Card Grid</span>
-        <a href="?reg_no={{ reg_no|urlencode }}&pid={{ pid|urlencode }}&date={{ date|urlencode }}&name={{ name|urlencode }}&age={{ age|urlencode }}&gender={{ gender|urlencode }}&address={{ address|urlencode }}&single_card=1{% if source %}&source={{ source }}{% endif %}" class="btn btn-toggle" style="margin-left: 8px; font-weight: normal; font-size: 0.76rem;" title="Switch to Single Card">
-          <i class="fas fa-id-card"></i> Single Card
-        </a>
+      <i class="fas fa-th-large" style="color: #2563eb;"></i>
+      <span>8-Card Grid</span>
+      <a href="?reg_no={{ reg_no|urlencode }}&pid={{ pid|urlencode }}&date={{ date|urlencode }}&name={{ name|urlencode }}&age={{ age|urlencode }}&gender={{ gender|urlencode }}&address={{ address|urlencode }}&single_card=1{% if source %}&source={{ source }}{% endif %}"
+        class="btn btn-toggle" style="margin-left: 8px; font-weight: normal; font-size: 0.76rem;"
+        title="Switch to Single Card">
+        <i class="fas fa-id-card"></i> Single Card
+      </a>
       {% endif %}
     </div>
     <div class="toolbar-right">
@@ -357,7 +372,7 @@
     </div>
   </div>
 
-  {% if single_card %}
+  {% if single_card or source == 'patient' %}
   <!-- SINGLE CARD VIEW -->
   <div class="single-card-container">
     <div class="slip-card">
@@ -414,7 +429,7 @@
     </div>
   </div>
 
-  {% else %}
+  {% elif source != 'patient' %}
 
   <!-- 8-CARD A4 GRID SHEET (2 columns x 4 rows) -->
   <div class="a4-sheet" id="slipGridSheet">
@@ -441,7 +456,8 @@
             </div>
             <div class="field-row">
               <span class="field-label">Age :</span>
-              <span class="field-value" style="width: 20px; flex: none;">{% if forloop.first or prefill_all %}{{ age|default:"" }}{% endif %}</span>
+              <span class="field-value" style="width: 20px; flex: none;">{% if forloop.first or prefill_all %}{{
+                age|default:"" }}{% endif %}</span>
               <span class="field-label" style="width: auto; margin-left: 10px; margin-right: 6px;">Gender :</span>
               <span class="field-value">{% if forloop.first or prefill_all %}{{ gender|default:"" }}{% endif %}</span>
             </div>
@@ -476,5 +492,13 @@
 
   {% endif %}
 
+  <script>
+    if (new URLSearchParams(window.location.search).get('autoprint') === '1') {
+      window.addEventListener('load', function () {
+        setTimeout(function () { window.print(); }, 400);
+      });
+    }
+  </script>
 </body>
+
 </html>

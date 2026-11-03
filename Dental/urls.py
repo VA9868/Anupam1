@@ -20,6 +20,7 @@ urlpatterns = [
     path('dashboard/update-case-status/<int:case_id>/', views.update_case_status_view, name='update_case_status'),
     path('dashboard/delete-case/<int:case_id>/', views.delete_case_view, name='delete_case'),
     path('dashboard/patient/upload-testimonial/', views.upload_testimonial_view, name='upload_testimonial'),
+    path('dashboard/patient/delete-testimonial/<int:testimonial_id>/', views.delete_testimonial_view, name='delete_testimonial'),
     path('book-appointment/', views.book_appointment_view, name='book_appointment'),
     path('contact/', views.contact_view, name='contact'),
     path('login/', views.login_view, name='login'),

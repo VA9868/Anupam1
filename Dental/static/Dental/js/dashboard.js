@@ -969,7 +969,9 @@
 
     let hubDentitionMode = 'adult'; // 'adult' or 'pediatric'
     let currentPatientChart = {}; // Keyed by tooth number
-    let activeToothId = '14'; // Currently highlighted tooth
+    let activeToothId = '12'; // Currently active tooth
+    let selectedToothIds = ['12']; // Multiple selected teeth (e.g. #12, #13, #14)
+    let multiSelectMode = true; // Teeth chart multi-click ON by default: clicking teeth toggles/adds them to selection
 
     // DENTAL ANATOMY DICTIONARIES
     // 32 Adult Teeth (Universal Numbering 1-32 & FDI World Dental Federation)
@@ -1153,10 +1155,12 @@
         if (btnAdult) btnAdult.classList.remove('active');
         if (btnPed) btnPed.classList.add('active');
         activeToothId = 'A';
+        selectedToothIds = ['A'];
       } else {
         if (btnAdult) btnAdult.classList.add('active');
         if (btnPed) btnPed.classList.remove('active');
-        activeToothId = '14';
+        activeToothId = '12';
+        selectedToothIds = ['12'];
       }
       renderOdontogramArch();
       selectTooth(activeToothId);
@@ -1194,7 +1198,30 @@
       if (!currentPatientChart || typeof currentPatientChart !== 'object') {
         currentPatientChart = {};
       }
+
+      // Populate vitals box (Date, Disease, Unit, Reading)
+      const vitals = currentPatientChart._vitals || {};
+      const diagDateEl = document.getElementById('chartDiagDate');
+      if (diagDateEl) diagDateEl.value = vitals.date || window.djangoTodayStr || '';
+      const diagDisEl = document.getElementById('chartDiagDisease');
+      if (diagDisEl) diagDisEl.value = vitals.disease || '';
+      const diagUnitEl = document.getElementById('chartDiagUnit');
+      if (diagUnitEl) diagUnitEl.value = vitals.unit || '';
+      const diagReadingEl = document.getElementById('chartDiagReading');
+      if (diagReadingEl) diagReadingEl.value = vitals.reading || '';
     }
+
+    function saveChartVitalsData() {
+      if (!currentPatientChart) currentPatientChart = {};
+      currentPatientChart._vitals = {
+        date: document.getElementById('chartDiagDate')?.value || '',
+        disease: document.getElementById('chartDiagDisease')?.value || '',
+        unit: document.getElementById('chartDiagUnit')?.value || '',
+        reading: document.getElementById('chartDiagReading')?.value || ''
+      };
+      savePatientChartData();
+    }
+    window.saveChartVitalsData = saveChartVitalsData;
 
     function savePatientChartData() {
       // 1. Save to localStorage
@@ -1210,23 +1237,22 @@
       }
 
       // 2. Sync to Django Backend
-      if (activeHubPatient.id && !String(activeHubPatient.id).startsWith('P-')) {
-        fetch(`/dashboard/save-chart/${activeHubPatient.id}/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: `chart_data=${encodeURIComponent(JSON.stringify(currentPatientChart))}&csrfmiddlewaretoken=${encodeURIComponent(getCsrfToken())}`
-        })
-        .then(res => res.json())
-        .then(data => {
-          // Update in-memory appointment data
-          const appt = allClinicAppointments.find(a => String(a.id) === String(activeHubPatient.id));
-          if (appt) appt.chart_data_raw = JSON.stringify(currentPatientChart);
-        })
-        .catch(err => console.log('Chart server sync notice:', err));
-      }
+      const targetApptId = (!activeHubPatient.id || String(activeHubPatient.id).startsWith('P-')) ? 0 : activeHubPatient.id;
+      fetch(`/dashboard/save-chart/${targetApptId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `chart_data=${encodeURIComponent(JSON.stringify(currentPatientChart))}&patient_name=${encodeURIComponent(activeHubPatient.name || '')}&csrfmiddlewaretoken=${encodeURIComponent(getCsrfToken())}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Update in-memory appointment data
+        const appt = allClinicAppointments.find(a => String(a.id) === String(activeHubPatient.id) || (data.appointment_id && String(a.id) === String(data.appointment_id)));
+        if (appt) appt.chart_data_raw = JSON.stringify(currentPatientChart);
+      })
+      .catch(err => console.log('Chart server sync notice:', err));
     }
 
     function getToothSvg(t, isUpper) {
@@ -1344,15 +1370,39 @@
         `;
       }
 
+      // Update Arch Labels with tooth number range (#)
+      const archUpperEl = document.getElementById('archLabelUpper');
+      if (archUpperEl) {
+        archUpperEl.innerHTML = isPed 
+          ? `Upper Jaw &bull; Maxillary Arch (No. #A &ndash; #J)` 
+          : `Upper Jaw &bull; Maxillary Arch (No. #1 &ndash; #16)`;
+      }
+      const archLowerEl = document.getElementById('archLabelLower');
+      if (archLowerEl) {
+        archLowerEl.innerHTML = isPed 
+          ? `Lower Jaw &bull; Mandibular Arch (No. #K &ndash; #T)` 
+          : `Lower Jaw &bull; Mandibular Arch (No. #17 &ndash; #32)`;
+      }
+      const numUR = document.getElementById('archNumUpperRight');
+      if (numUR) numUR.innerHTML = isPed ? `No. #A &#8592; #E` : `No. #1 &#8592; #8`;
+      const numUL = document.getElementById('archNumUpperLeft');
+      if (numUL) numUL.innerHTML = isPed ? `No. #F &#8594; #J` : `No. #9 &#8594; #16`;
+      const numLR = document.getElementById('archNumLowerRight');
+      if (numLR) numLR.innerHTML = isPed ? `No. #T &#8592; #P` : `No. #32 &#8592; #25`;
+      const numLL = document.getElementById('archNumLowerLeft');
+      if (numLL) numLL.innerHTML = isPed ? `No. #O &#8594; #K` : `No. #24 &#8594; #17`;
+
       updateChartCounters();
-      selectTooth(activeToothId in dataset ? activeToothId : (isPed ? 'A' : '14'));
+      const fallbackId = isPed ? 'A' : '12';
+      const initialId = (selectedToothIds[0] && selectedToothIds[0] in dataset) ? selectedToothIds[0] : (activeToothId in dataset ? activeToothId : fallbackId);
+      selectTooth(initialId);
     }
 
     function buildToothCardHtml(toothId, toothObj, isUpper) {
       if (!toothObj) return '';
       const state = currentPatientChart[toothId] || { condition: 'sound', surfaces: [], notes: '', procedure: '', price: 0 };
       const cond = state.condition || 'sound';
-      const isSelected = (String(toothId) === String(activeToothId));
+      const isSelected = selectedToothIds.map(String).includes(String(toothId));
 
       const condLabels = {
         'sound': 'Sound',
@@ -1368,44 +1418,239 @@
       const condLabel = condLabels[cond] || 'Sound';
       const svgGraphic = getToothSvg(toothObj, isUpper);
 
-      return `
-        <div class="tooth-card ${isSelected ? 'selected' : ''}" 
-             id="tooth_card_${toothId}"
-             data-tooth-id="${toothId}"
-             data-condition="${cond}"
-             title="${toothObj.name} (FDI: ${toothObj.fdi}) - ${condLabel}"
-             onclick="selectTooth('${toothId}')">
-          <span class="tooth-fdi-tag">${toothObj.fdi}</span>
-          <span class="tooth-num-badge">#${toothId}</span>
-          <div class="tooth-svg-wrap">
-            ${svgGraphic}
+      // Upper (Maxillary): #-number on top connects to arch label above the teeth
+      // Lower (Mandibular): #-number on bottom connects to arch label below the teeth
+      if (isUpper) {
+        return `
+          <div class="tooth-card ${isSelected ? 'selected' : ''} tooth-upper"
+               id="tooth_card_${toothId}"
+               data-tooth-id="${toothId}"
+               data-condition="${cond}"
+               title="Maxillary Arch: ${toothObj.name} (Tooth No. #${toothId} | FDI: ${toothObj.fdi}) - ${condLabel}"
+               onclick="selectTooth('${toothId}')">
+            <span class="tooth-num-badge tooth-num-top" title="Maxillary Arch Tooth No. #${toothId}">#${toothId}</span>
+            <div class="tooth-svg-wrap">
+              ${svgGraphic}
+            </div>
+            <span class="tooth-fdi-tag">${toothObj.fdi}</span>
+            <span class="tooth-cond-chip">${condLabel}</span>
           </div>
-          <span class="tooth-cond-chip">${condLabel}</span>
-        </div>
-      `;
+        `;
+      } else {
+        return `
+          <div class="tooth-card ${isSelected ? 'selected' : ''} tooth-lower"
+               id="tooth_card_${toothId}"
+               data-tooth-id="${toothId}"
+               data-condition="${cond}"
+               title="Mandibular Arch: ${toothObj.name} (Tooth No. #${toothId} | FDI: ${toothObj.fdi}) - ${condLabel}"
+               onclick="selectTooth('${toothId}')">
+            <span class="tooth-fdi-tag">${toothObj.fdi}</span>
+            <span class="tooth-cond-chip">${condLabel}</span>
+            <div class="tooth-svg-wrap">
+              ${svgGraphic}
+            </div>
+            <span class="tooth-num-badge tooth-num-bottom" title="Mandibular Arch Tooth No. #${toothId}">#${toothId}</span>
+          </div>
+        `;
+      }
     }
 
-    function selectTooth(toothId) {
-      activeToothId = toothId;
+    function getNextSequentialTeeth(baseId, count = 1) {
+      const isPed = (hubDentitionMode === 'pediatric');
+      const allKeys = isPed 
+        ? ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]
+        : ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32"];
+      
+      const currentIdx = allKeys.indexOf(String(baseId).toUpperCase());
+      const nextTeeth = [];
+      let startIdx = currentIdx >= 0 ? currentIdx + 1 : 0;
+      
+      while (nextTeeth.length < count && startIdx < allKeys.length) {
+        const candidate = allKeys[startIdx];
+        if (!selectedToothIds.includes(candidate)) {
+          nextTeeth.push(candidate);
+        }
+        startIdx++;
+      }
+      return nextTeeth;
+    }
+
+    function addNextSequentialTooth() {
+      const baseId = selectedToothIds[selectedToothIds.length - 1] || activeToothId || '12';
+      const next = getNextSequentialTeeth(baseId, 1);
+      if (next.length > 0) {
+        selectedToothIds.push(next[0]);
+        activeToothId = next[0];
+        updateSelectedTeethUi(true);
+      } else {
+        alert("All sequential teeth in this arch are already selected.");
+      }
+    }
+    window.addNextSequentialTooth = addNextSequentialTooth;
+
+    function addTwoMoreSequentialTeeth() {
+      const baseId = selectedToothIds[selectedToothIds.length - 1] || activeToothId || '12';
+      const next = getNextSequentialTeeth(baseId, 2);
+      if (next.length > 0) {
+        next.forEach(id => {
+          if (!selectedToothIds.includes(id)) selectedToothIds.push(id);
+        });
+        activeToothId = next[next.length - 1];
+        updateSelectedTeethUi(true);
+      } else {
+        alert("No more sequential teeth available to add.");
+      }
+    }
+    window.addTwoMoreSequentialTeeth = addTwoMoreSequentialTeeth;
+
+    function toggleMultiSelectMode() {
+      multiSelectMode = !multiSelectMode;
+      const statusEl = document.getElementById('multiSelectStatus');
+      const btnEl = document.getElementById('btnToggleMultiSelect');
+      if (statusEl) {
+        statusEl.textContent = multiSelectMode ? 'ON (Click teeth to add)' : 'OFF';
+        statusEl.style.fontWeight = '800';
+        statusEl.style.color = multiSelectMode ? '#059669' : '#2563eb';
+      }
+      if (btnEl) {
+        btnEl.style.color = multiSelectMode ? '#059669' : '#2563eb';
+      }
+    }
+    window.toggleMultiSelectMode = toggleMultiSelectMode;
+
+    function parseTeethInput(val) {
+      if (!val) return [];
       const isPed = (hubDentitionMode === 'pediatric');
       const dataset = isPed ? PEDIATRIC_TEETH : ADULT_TEETH;
-      const t = dataset[toothId] || ADULT_TEETH[toothId] || { name: 'Tooth #' + toothId, fdi: toothId, short: '' };
+      const results = [];
 
-      // Highlight active card
+      // Check for range e.g. 12-14 or #12-#14
+      const rangeMatch = val.match(/#?([0-9]{1,2}|[A-Za-z])\s*[-–—to]+\s*#?([0-9]{1,2}|[A-Za-z])/i);
+      if (rangeMatch && !val.includes(',')) {
+        const start = rangeMatch[1].toUpperCase();
+        const end = rangeMatch[2].toUpperCase();
+        const allKeys = isPed 
+          ? ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]
+          : Array.from({ length: 32 }, (_, i) => String(i + 1));
+        const idx1 = allKeys.indexOf(start);
+        const idx2 = allKeys.indexOf(end);
+        if (idx1 >= 0 && idx2 >= 0) {
+          const minIdx = Math.min(idx1, idx2);
+          const maxIdx = Math.max(idx1, idx2);
+          for (let i = minIdx; i <= maxIdx; i++) {
+            results.push(allKeys[i]);
+          }
+          return results;
+        }
+      }
+
+      // Split by commas, slashes, plus, spaces
+      const tokens = val.split(/[,;+/ ]+/);
+      tokens.forEach(tok => {
+        const cleaned = tok.replace(/[^0-9a-zA-Z]/g, '').toUpperCase();
+        if (cleaned && cleaned in dataset && !results.includes(cleaned)) {
+          results.push(cleaned);
+        }
+      });
+      return results;
+    }
+
+    function handleToothNumberInput(val) {
+      if (!val) return;
+      const parsed = parseTeethInput(val);
+      if (parsed.length > 0) {
+        selectedToothIds = parsed;
+        activeToothId = parsed[0];
+        updateSelectedTeethUi(false); // false = don't overwrite user's in-progress typing
+      }
+    }
+    window.handleToothNumberInput = handleToothNumberInput;
+
+    function selectTooth(toothId, forceMulti = false) {
+      toothId = String(toothId).toUpperCase();
+      const isPed = (hubDentitionMode === 'pediatric');
+      const dataset = isPed ? PEDIATRIC_TEETH : ADULT_TEETH;
+      if (!(toothId in dataset)) return;
+
+      // Teeth chart multi-click is ON: clicking teeth adds/toggles them into selection
+      const shouldMulti = (multiSelectMode !== false) || forceMulti;
+
+      if (shouldMulti) {
+        if (selectedToothIds.includes(toothId)) {
+          if (selectedToothIds.length > 1) {
+            selectedToothIds = selectedToothIds.filter(id => id !== toothId);
+          }
+        } else {
+          selectedToothIds.push(toothId);
+        }
+      } else {
+        selectedToothIds = [toothId];
+      }
+
+      // Sort selected teeth in natural anatomical arch order
+      const allKeys = isPed 
+        ? ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]
+        : Array.from({ length: 32 }, (_, i) => String(i + 1));
+      selectedToothIds.sort((a, b) => allKeys.indexOf(a) - allKeys.indexOf(b));
+
+      activeToothId = selectedToothIds[0] || toothId;
+      updateSelectedTeethUi(true);
+    }
+
+    function updateSelectedTeethUi(syncInput = true) {
+      const isPed = (hubDentitionMode === 'pediatric');
+      const dataset = isPed ? PEDIATRIC_TEETH : ADULT_TEETH;
+
+      // 1. Highlight all selected tooth cards in Odontogram
       document.querySelectorAll('.tooth-card').forEach(el => el.classList.remove('selected'));
-      const activeCard = document.getElementById(`tooth_card_${toothId}`);
-      if (activeCard) activeCard.classList.add('selected');
+      selectedToothIds.forEach(id => {
+        const card = document.getElementById(`tooth_card_${id}`);
+        if (card) card.classList.add('selected');
+      });
 
-      // Update Detail Panel
+      // 2. Sync Input with formatted teeth "#12, #13, #14"
+      const toothNumInput = document.getElementById('selToothNumberInput') || document.getElementById('selToothInput');
+      if (toothNumInput && syncInput) {
+        toothNumInput.value = selectedToothIds.map(id => '#' + id).join(', ');
+      }
+
+      // 3. Update Count Badge
+      const countTag = document.getElementById('selTeethCountTag');
+      if (countTag) {
+        const c = selectedToothIds.length;
+        countTag.textContent = c === 1 ? '1 Tooth' : `${c} Teeth Selected`;
+        countTag.style.background = c > 1 ? '#dbeafe' : '#eff6ff';
+        countTag.style.color = c > 1 ? '#1e40af' : '#1d4ed8';
+      }
+
+      // 4. Update Panel Header Title & FDI
       const titleEl = document.getElementById('selToothTitle');
-      if (titleEl) titleEl.textContent = `Tooth #${toothId} • ${t.name}`;
+      if (titleEl) {
+        if (selectedToothIds.length === 1) {
+          const t = dataset[activeToothId] || { name: 'Tooth #' + activeToothId };
+          titleEl.textContent = `Tooth #${activeToothId} • ${t.name}`;
+        } else {
+          const allUpper = selectedToothIds.every(id => isPed ? id <= 'J' : parseInt(id) <= 16);
+          const allLower = selectedToothIds.every(id => isPed ? id > 'J' : parseInt(id) > 16);
+          const archName = allUpper ? 'Maxillary Arch' : (allLower ? 'Mandibular Arch' : 'Both Arches');
+          titleEl.textContent = `Teeth ${selectedToothIds.map(id => '#' + id).join(', ')} • ${archName} (${selectedToothIds.length} Teeth)`;
+        }
+      }
 
       const fdiEl = document.getElementById('selToothFdiNotation');
-      if (fdiEl) fdiEl.textContent = `FDI: ${t.fdi} • ${hubDentitionMode === 'pediatric' ? 'Primary Pediatric Dentition' : 'Permanent Adult Dentition'}`;
+      if (fdiEl) {
+        if (selectedToothIds.length === 1) {
+          const t = dataset[activeToothId] || { fdi: activeToothId };
+          fdiEl.textContent = `FDI: ${t.fdi} • ${isPed ? 'Primary Pediatric Dentition' : 'Permanent Adult Dentition'}`;
+        } else {
+          const fdis = selectedToothIds.map(id => (dataset[id] ? dataset[id].fdi : id)).join(', ');
+          fdiEl.textContent = `FDI: ${fdis} • Multiple Teeth Selected`;
+        }
+      }
 
-      const state = currentPatientChart[toothId] || { condition: 'sound', surfaces: [], notes: '', procedure: '', price: '' };
+      // 5. Populate condition, doctor, procedure from active tooth
+      const state = currentPatientChart[activeToothId] || { condition: 'sound', surfaces: [], notes: '', procedure: '', price: '' };
 
-      // Update Condition Buttons Active State
       document.querySelectorAll('.btn-cond-choice').forEach(btn => {
         const btnCond = btn.getAttribute('data-condition');
         if (btnCond === (state.condition || 'sound')) {
@@ -1415,17 +1660,14 @@
         }
       });
 
-      // Update Status Badge
       updateSelToothStatusBadge(state.condition || 'sound');
 
-      // Update Surface Checkboxes
       const surfaces = state.surfaces || [];
       ['o', 'm', 'd', 'b', 'l'].forEach(s => {
         const chk = document.getElementById('surf_' + s);
         if (chk) chk.checked = surfaces.includes(s.toUpperCase());
       });
 
-      // Update Doctor & Purpose
       const docEl = document.getElementById('selToothDoctor');
       if (docEl) {
         if (state.doctor) {
@@ -1438,18 +1680,14 @@
       }
 
       const purposeEl = document.getElementById('selToothPurpose');
-      if (purposeEl) {
-        purposeEl.value = state.purpose || '';
-      }
+      if (purposeEl) purposeEl.value = state.purpose || '';
 
-      // Update Procedure & Price
       const procEl = document.getElementById('selToothProcedure');
       if (procEl) procEl.value = state.procedure || '';
 
       const priceEl = document.getElementById('selToothPrice');
       if (priceEl) priceEl.value = state.price || '';
 
-      // Update Notes
       const notesEl = document.getElementById('selToothNotes');
       if (notesEl) notesEl.value = state.notes || '';
     }
@@ -1483,10 +1721,12 @@
         }
       });
 
-      if (!currentPatientChart[activeToothId]) {
-        currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], notes: '', procedure: '', price: '' };
-      }
-      currentPatientChart[activeToothId].condition = cond;
+      selectedToothIds.forEach(tId => {
+        if (!currentPatientChart[tId]) {
+          currentPatientChart[tId] = { condition: 'sound', surfaces: [], notes: '', procedure: '', price: '' };
+        }
+        currentPatientChart[tId].condition = cond;
+      });
       updateSelToothStatusBadge(cond);
 
       // Auto suggest procedure if empty
@@ -1572,9 +1812,8 @@
     }
 
     function saveCurrentToothData() {
-      if (!activeToothId) return;
-      if (!currentPatientChart[activeToothId]) {
-        currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], doctor: '', purpose: '', notes: '', procedure: '', price: '' };
+      if (!selectedToothIds || selectedToothIds.length === 0) {
+        selectedToothIds = [activeToothId || '12'];
       }
 
       const activeBtn = document.querySelector('.btn-cond-choice.active');
@@ -1587,24 +1826,28 @@
       });
 
       const doc = document.getElementById('selToothDoctor')?.value || '';
+      const toothNumVal = document.getElementById('selToothNumberInput')?.value || selectedToothIds.map(t => '#' + t).join(', ');
       const purpose = document.getElementById('selToothPurpose')?.value || '';
       const proc = document.getElementById('selToothProcedure')?.value || '';
       const price = parseFloat(document.getElementById('selToothPrice')?.value) || 0;
       const notes = document.getElementById('selToothNotes')?.value || '';
 
-      currentPatientChart[activeToothId] = {
-        condition: cond,
-        surfaces: surfaces,
-        doctor: doc,
-        purpose: purpose,
-        procedure: proc,
-        price: price,
-        notes: notes
-      };
+      selectedToothIds.forEach(tId => {
+        currentPatientChart[tId] = {
+          condition: cond,
+          surfaces: [...surfaces],
+          doctor: doc,
+          tooth_number: '#' + tId,
+          purpose: purpose,
+          procedure: proc,
+          price: price,
+          notes: notes
+        };
+      });
 
       savePatientChartData();
       renderOdontogramArch();
-      selectTooth(activeToothId);
+      updateSelectedTeethUi(true);
 
       // Connect saved tooth condition directly to Payment (Total Billed & Balance Due)
       renderPatientBillingLedger();
@@ -1622,12 +1865,82 @@
       }
     }
 
-    function resetCurrentTooth() {
-      if (!activeToothId) return;
-      currentPatientChart[activeToothId] = { condition: 'sound', surfaces: [], doctor: '', purpose: '', notes: '', procedure: '', price: '' };
+    function addTwoMoreTeethToChart() {
+      if (!activeHubPatient || !activeHubPatient.id) {
+        alert("Please open a patient's Teeth Chart first.");
+        return;
+      }
+
+      const isPed = (hubDentitionMode === 'pediatric');
+      const dataset = isPed ? PEDIATRIC_TEETH : ADULT_TEETH;
+      const doc = document.getElementById('selToothDoctor')?.value || activeHubPatient.doctor || 'Dr. Anoop';
+
+      // Continue sequentially from current active tooth (e.g. from #12 adds #13, #14)
+      const baseId = selectedToothIds[selectedToothIds.length - 1] || activeToothId || (isPed ? 'A' : '12');
+      let nextKeys = getNextSequentialTeeth(baseId, 2);
+      if (nextKeys.length < 2) {
+        const allKeys = Object.keys(dataset);
+        const candidates = allKeys.filter(k => !selectedToothIds.includes(k) && !nextKeys.includes(k));
+        while (nextKeys.length < 2 && candidates.length > 0) {
+          nextKeys.push(candidates.shift());
+        }
+      }
+
+      const presets = [
+        {
+          condition: 'crown',
+          surfaces: ['O', 'B'],
+          doctor: doc,
+          purpose: 'Crown & Bridge (Prosthodontics)',
+          procedure: 'Multi-layer Zirconia Crown',
+          price: 5500,
+          notes: 'Zirconia Crown planned'
+        },
+        {
+          condition: 'rct',
+          surfaces: ['O', 'D'],
+          doctor: doc,
+          purpose: 'Root Canal Therapy (Endodontics)',
+          procedure: 'Single-Visit Root Canal Treatment (RCT)',
+          price: 3500,
+          notes: 'Root canal treatment required'
+        }
+      ];
+
+      nextKeys.forEach((toothKey, idx) => {
+        currentPatientChart[toothKey] = {
+          ...presets[idx % presets.length],
+          doctor: doc,
+          tooth_number: '#' + toothKey
+        };
+        if (!selectedToothIds.includes(toothKey)) {
+          selectedToothIds.push(toothKey);
+        }
+      });
+
+      activeToothId = nextKeys[nextKeys.length - 1] || activeToothId;
       savePatientChartData();
       renderOdontogramArch();
-      selectTooth(activeToothId);
+      updateSelectedTeethUi(true);
+      renderPatientBillingLedger();
+
+      // Update in-memory appointment data
+      const appt = allClinicAppointments.find(a => String(a.id) === String(activeHubPatient.id));
+      if (appt) {
+        appt.chart_data_raw = JSON.stringify(currentPatientChart);
+      }
+
+      alert(`Successfully added 2 more teeth (${addedTeeth.join(' & ')}) to ${activeHubPatient.name}'s chart!`);
+    }
+
+    function resetCurrentTooth() {
+      if (!selectedToothIds || selectedToothIds.length === 0) return;
+      selectedToothIds.forEach(id => {
+        currentPatientChart[id] = { condition: 'sound', surfaces: [], doctor: '', purpose: '', notes: '', procedure: '', price: '', tooth_number: '#' + id };
+      });
+      savePatientChartData();
+      renderOdontogramArch();
+      updateSelectedTeethUi(true);
       renderPatientBillingLedger();
     }
 
@@ -1645,15 +1958,17 @@
       saveCurrentToothData();
 
       const toothState = currentPatientChart[activeToothId] || {};
-      const isPed = (hubDentitionMode === 'pediatric');
-      const dataset = isPed ? PEDIATRIC_TEETH : ADULT_TEETH;
-      const t = dataset[activeToothId] || { name: 'Tooth #' + activeToothId };
+      const count = selectedToothIds.length;
+      const teethStr = selectedToothIds.map(t => '#' + t).join(', ');
 
-      let procDescription = toothState.procedure || `${t.name} Treatment`;
-      if (!procDescription.includes(activeToothId)) {
+      let procDescription = toothState.procedure || 'Dental Treatment';
+      if (count > 1) {
+        procDescription = `Teeth ${teethStr} (${procDescription} - ${count} Teeth)`;
+      } else {
         procDescription = `Tooth #${activeToothId} (${procDescription})`;
       }
-      const fee = toothState.price || 1500;
+      const unitFee = parseFloat(toothState.price) || 1500;
+      const fee = count > 1 ? (unitFee * count) : unitFee;
 
       // Switch to Billing Tab
       switchHubTab('payment');
@@ -1843,8 +2158,35 @@
       if (dueEl) dueEl.textContent = balanceDue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       const dueWrap = document.getElementById('hubBalanceDueWrap');
-      if (dueWrap) {
-        dueWrap.style.color = balanceDue > 0 ? '#dc2626' : '#059669';
+      const balanceCard = document.getElementById('hubBalanceCard');
+      const balanceLabel = document.getElementById('hubBalanceLabel');
+      const balanceIconWrap = document.getElementById('hubBalanceIconWrap');
+      const balanceIcon = document.getElementById('hubBalanceIcon');
+
+      if (balanceDue > 0) {
+        if (dueWrap) dueWrap.style.color = '#dc2626';
+        if (balanceCard) balanceCard.style.borderLeft = '4px solid #dc2626';
+        if (balanceLabel) {
+          balanceLabel.textContent = 'BALANCE DUE / PENDING';
+          balanceLabel.style.color = '#dc2626';
+        }
+        if (balanceIconWrap) {
+          balanceIconWrap.style.background = '#fee2e2';
+          balanceIconWrap.style.color = '#dc2626';
+        }
+        if (balanceIcon) balanceIcon.className = 'fas fa-exclamation-circle';
+      } else {
+        if (dueWrap) dueWrap.style.color = '#16a34a';
+        if (balanceCard) balanceCard.style.borderLeft = '4px solid #16a34a';
+        if (balanceLabel) {
+          balanceLabel.textContent = 'BALANCE COMPLETE / CLEARED';
+          balanceLabel.style.color = '#16a34a';
+        }
+        if (balanceIconWrap) {
+          balanceIconWrap.style.background = '#ecfdf5';
+          balanceIconWrap.style.color = '#16a34a';
+        }
+        if (balanceIcon) balanceIcon.className = 'fas fa-check-circle';
       }
 
       const totalItemsCount = invoices.length + unbilledChartItems.length;
@@ -1881,7 +2223,7 @@
             <td><span style="font-size: 0.75rem; color: #059669; font-weight: 600;"><i class="fas fa-check-circle"></i> Chart Saved</span></td>
             <td>
               <strong>${escapeHtml(ci.procedure)}</strong>
-              <div style="font-size: 0.725rem; color: #64748b;">${escapeHtml(ci.doctor)} &bull; ${escapeHtml(ci.purpose)}</div>
+              <div style="font-size: 0.725rem; color: #64748b;">${escapeHtml(ci.doctor)} &bull; <strong style="color: #475569;">Teeth:</strong> ${escapeHtml(ci.purpose || ('Tooth #' + ci.toothId))}</div>
             </td>
             <td style="font-weight: 800; color: #0f172a;">₹${amtFormatted}</td>
             <td><span style="font-size: 0.775rem; color: #94a3b8;">Pending Bill</span></td>
@@ -2495,5 +2837,60 @@
         afterEl.style.filter = `brightness(${factor.toFixed(2)}) contrast(1.06)`;
       }
     }
+
+    // Modal openers for Appointment vs Patient with Teeth Chart
+    function openAddAppointmentModal() {
+      const chk = document.getElementById('chkOpenTeethChart');
+      if (chk) chk.checked = false;
+      const header = document.getElementById('addPatientModalHeader');
+      if (header) header.innerHTML = '<i class="fas fa-calendar-plus" style="color: #2563eb; margin-right: 8px;"></i>Book Appointment';
+      const desc = document.getElementById('addPatientModalDesc');
+      if (desc) desc.innerHTML = 'Saves an appointment only. Patient is added to the <strong>Patient Tab</strong> once a Teeth Chart is attached.';
+      openModal('addPatientModal');
+    }
+
+    function openAddPatientWithChartModal() {
+      const chk = document.getElementById('chkOpenTeethChart');
+      if (chk) chk.checked = true;
+      const header = document.getElementById('addPatientModalHeader');
+      if (header) header.innerHTML = '<i class="fas fa-tooth" style="color: #0284c7; margin-right: 8px;"></i>Add Patient & Teeth Chart';
+      const desc = document.getElementById('addPatientModalDesc');
+      if (desc) desc.innerHTML = 'Creates appointment and immediately opens the <strong>Clinical Teeth Chart</strong> to register patient in the Patient Tab.';
+      openModal('addPatientModal');
+    }
+
+    // Export helpers globally
+    window.switchTab = switchTab;
+    window.openAddAppointmentModal = openAddAppointmentModal;
+    window.openAddPatientWithChartModal = openAddPatientWithChartModal;
+    window.openPatientClinicalHub = openPatientClinicalHub;
+    window.openClinicalHubByName = openClinicalHubByName;
+    window.addTwoMoreTeethToChart = addTwoMoreTeethToChart;
+
+    // Handle hash navigation and auto-open of chart on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      // 1. Check URL hash
+      if (window.location.hash) {
+        const hashSec = window.location.hash.replace('#', '').trim();
+        if (hashSec && document.getElementById('section-' + hashSec)) {
+          switchTab(hashSec);
+        }
+      }
+
+      // 2. Check query params for auto-opening clinical hub
+      const urlParams = new URLSearchParams(window.location.search);
+      const openChartId = urlParams.get('open_chart_id');
+      const openChartName = urlParams.get('open_chart_name');
+      if (openChartId) {
+        // Try finding matching appointment from allClinicAppointments
+        const match = (allClinicAppointments || []).find(a => String(a.id) === String(openChartId));
+        if (match) {
+          openPatientClinicalHub(match.id, match.code, match.patient, match.phone, match.age || '', match.gender || '', match.service || '', match.doctor || '', 'chart');
+        } else {
+          openPatientClinicalHub(openChartId, '#APT-' + openChartId, openChartName || 'Patient', '', '', '', 'Dental Consultation', 'Dr. Anoop', 'chart');
+        }
+      }
+    });
+
 
 

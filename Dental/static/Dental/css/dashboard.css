@@ -1317,6 +1317,40 @@
     .tooth-card.selected .tooth-num-badge {
       color: #2563eb;
     }
+    /* Upper arch: #-number label at top connects to Maxillary arch label above */
+    .tooth-num-top {
+      font-size: 0.82rem;
+      font-weight: 900;
+      color: #1e40af;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      text-align: center;
+      background: #eff6ff;
+      border-radius: 4px;
+      padding: 0px 4px;
+      min-width: 26px;
+    }
+    .tooth-card.selected .tooth-num-top {
+      color: #fff;
+      background: #2563eb;
+    }
+    /* Lower arch: #-number label at bottom connects to Mandibular arch label below */
+    .tooth-num-bottom {
+      font-size: 0.82rem;
+      font-weight: 900;
+      color: #334155;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      text-align: center;
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 0px 4px;
+      min-width: 26px;
+    }
+    .tooth-card.selected .tooth-num-bottom {
+      color: #fff;
+      background: #2563eb;
+    }
     .tooth-svg-wrap {
       width: 32px;
       height: 42px;
