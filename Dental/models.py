@@ -263,3 +263,80 @@ class GalleryPhoto(models.Model):
     def __str__(self):
         return f"{self.title} ({self.get_category_display()})"
 
+
+
+import datetime
+
+class DentalLab(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+    city = models.CharField(max_length=100, blank=True, default='')
+    logo = models.ImageField(upload_to='lab_logos/', blank=True, null=True, help_text="Dental laboratory logo")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.city})" if self.city else self.name
+
+
+class LabPayment(models.Model):
+    lab = models.ForeignKey(DentalLab, on_delete=models.CASCADE, related_name='payments')
+    issue_date = models.DateField(default=datetime.date.today)
+    patient_id = models.CharField(max_length=50, blank=True, default='')
+    patient_name = models.CharField(max_length=150)
+    particular = models.CharField(max_length=200)
+    dr_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    cr_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+
+    def __str__(self):
+        return f"{self.lab.name} - {self.patient_name} - Dr: {self.dr_amount} / Cr: {self.cr_amount}"
+
+
+class MedicineInventory(models.Model):
+    category = models.CharField(max_length=100, blank=True, default='')
+    item_type = models.CharField(max_length=100, blank=True, default='')
+    product_name = models.CharField(max_length=150)
+    brand_name = models.CharField(max_length=150, blank=True, default='')
+    strength = models.CharField(max_length=100, blank=True, default='')
+    dosage = models.CharField(max_length=100, blank=True, default='')
+    rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    frequency = models.CharField(max_length=100, blank=True, default='Daily')
+    duration = models.CharField(max_length=100, blank=True, default='5 Days')
+    ingredients = models.CharField(max_length=255, blank=True, default='')
+    contra_indications = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-id']
+
+    def __str__(self):
+        return f"{self.product_name} ({self.brand_name})" if self.brand_name else self.product_name
+
+
+class PatientMedicine(models.Model):
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='prescribed_medicines', null=True, blank=True)
+    patient_name = models.CharField(max_length=150)
+    medicine_inventory = models.ForeignKey(MedicineInventory, on_delete=models.SET_NULL, null=True, blank=True, related_name='patient_prescriptions')
+    category = models.CharField(max_length=100, blank=True, default='')
+    item_type = models.CharField(max_length=100, blank=True, default='')
+    product_name = models.CharField(max_length=150)
+    brand_name = models.CharField(max_length=150, blank=True, default='')
+    strength = models.CharField(max_length=100, blank=True, default='')
+    dosage = models.CharField(max_length=100, blank=True, default='')
+    frequency = models.CharField(max_length=100, blank=True, default='1-0-1')
+    duration = models.CharField(max_length=100, blank=True, default='5 Days')
+    ingredients = models.CharField(max_length=255, blank=True, default='')
+    instructions = models.CharField(max_length=255, blank=True, default='After Food')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.patient_name} - {self.product_name}'

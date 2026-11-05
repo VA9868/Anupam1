@@ -1155,7 +1155,7 @@ textarea {
 
 /* FOOTER WITH ADDRESS, NAVBAR LINKS AND MAP */
 .footer-section {
-  background: var(--royal-blue);
+  background: var(--primary);
   color: #cbd5e1;
   padding-top: 80px;
 }

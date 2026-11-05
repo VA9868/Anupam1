@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anupam Dental Clinic - Doctor Prescription & Letterhead</title>
+  <title>Anupam Dental Clinic - Doctor Prescription &amp; Letterhead</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -85,18 +85,23 @@
       background: #e2e8f0;
     }
 
-    /* A4 Prescription Sheet */
+    /* A4 Prescription Sheet (Fixed Single Page 297mm) */
     .a4-sheet {
       width: 210mm;
-      min-height: 297mm;
       height: 297mm;
+      max-height: 297mm;
       background: #ffffff;
-      padding: 12mm 14mm 10mm 14mm;
+      padding: 10mm 14mm 8mm 14mm;
       box-shadow: 0 6px 24px rgba(0,0,0,0.35);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
+      box-sizing: border-box;
+      overflow: hidden;
+      page-break-after: avoid;
+      page-break-inside: avoid;
+      page-break-before: avoid;
     }
 
     /* Top Header */
@@ -104,13 +109,15 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      padding-bottom: 12px;
-      margin-bottom: 10px;
+      padding-bottom: 8px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #000;
+      flex-shrink: 0;
     }
 
     .rx-logo-wrap {
-      width: 76px;
-      height: 76px;
+      width: 72px;
+      height: 72px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -118,8 +125,8 @@
     }
 
     .rx-logo-wrap img {
-      width: 76px;
-      height: 76px;
+      width: 72px;
+      height: 72px;
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
@@ -129,92 +136,111 @@
     .rx-clinic-title {
       text-align: center;
       flex: 1;
-      padding-top: 4px;
+      padding-top: 2px;
     }
 
     .rx-clinic-title h1 {
-      font-size: 24px;
+      font-size: 23px;
       font-weight: 800;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      color: #000;
     }
 
     .rx-clinic-title p {
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      color: #222;
     }
 
     .rx-contacts {
       width: 140px;
       text-align: right;
-      font-size: 12.5px;
-      line-height: 1.5;
-      padding-top: 4px;
+      font-size: 12px;
+      line-height: 1.45;
+      padding-top: 2px;
+      font-weight: 600;
     }
 
     /* Main Prescription Box with 2 columns */
     .rx-main-box {
-      border-top: 1px solid #000;
-      border-bottom: 1px solid #000;
-      border-left: none;
-      border-right: none;
-      flex: 1;
+      border-bottom: 1.5px solid #000;
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
-      min-height: 220mm;
-      margin-bottom: 8px;
-    }
-
-    .rx-left-col {
-      width: 32%;
-      border-right: 1.5px solid #000;
-      padding: 12px 14px;
-      font-size: 11.5px;
-      line-height: 1.35;
-    }
-
-    .rx-left-col h3 {
-      font-size: 13px;
-      font-weight: bold;
-      text-decoration: underline;
       margin-bottom: 6px;
+      overflow: hidden;
     }
 
-    .doc-entry {
-      margin-bottom: 10px;
-    }
-
-    .doc-name {
-      font-weight: bold;
-      font-size: 11.5px;
-    }
-
-    .doc-sub {
-      font-size: 10.5px;
-    }
-
-    .doc-reg {
-      font-size: 10.5px;
-    }
-
-    .rx-right-col {
-      width: 68%;
-      padding: 12px 16px;
+    /* Left Column: Doctors List */
+    .rx-left-col {
+      width: 31%;
+      border-right: 1.5px solid #000;
+      padding: 10px 12px;
+      font-size: 11px;
+      line-height: 1.3;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
 
-    .rx-date-line {
-      text-align: right;
+    .rx-left-col h3 {
       font-size: 12.5px;
       font-weight: bold;
-      margin-bottom: 14px;
+      text-decoration: underline;
+      margin-bottom: 4px;
+      color: #000;
+    }
+
+    .doc-entry {
+      margin-bottom: 6px;
+    }
+
+    .doc-name {
+      font-weight: bold;
+      font-size: 11px;
+      color: #000;
+    }
+
+    .doc-sub {
+      font-size: 10px;
+      color: #333;
+    }
+
+    .doc-reg {
+      font-size: 10px;
+      color: #444;
+    }
+
+    /* Right Column: Date, Patient Info, Rx Symbol, Medicines Table, Doctor's Note Box */
+    .rx-right-col {
+      width: 69%;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .rx-date-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
     }
 
     .rx-body-blank {
-      flex: 1;
-      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .rx-symbol {
@@ -222,38 +248,118 @@
       font-size: 24px;
       font-weight: bold;
       font-style: italic;
-      color: #333;
-      margin-bottom: 16px;
+      color: #000;
+      margin-bottom: 4px;
+      flex-shrink: 0;
     }
 
-    .doctors-notes-box {
-      border: 1px solid #000;
-      text-align: center;
+    /* Prescribed Medicines Table */
+    .rx-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .rx-table th {
+      background: #f8fafc;
+      border-bottom: 1.5px solid #000;
+      border-top: 1px solid #000;
+      padding: 4px 6px;
+      font-size: 10.5px;
       font-weight: bold;
-      font-size: 12px;
-      padding: 4px 10px;
-      margin-bottom: 40mm;
+      text-align: left;
+      color: #000;
     }
 
-    /* Footer Hours */
+    .rx-table td {
+      padding: 4px 6px;
+      border-bottom: 1px dotted #cbd5e1;
+      font-size: 11px;
+      vertical-align: middle;
+    }
+
+    /* DOCTOR'S NOTES RECTANGLE BOX */
+    .doctors-notes-box {
+      border: 1.5px solid #000000;
+      border-radius: 4px;
+      background: #ffffff;
+      padding: 6px 10px;
+      margin-top: 8px;
+      margin-bottom: 0 !important;
+      height: 92px;
+      min-height: 92px;
+      max-height: 92px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .notes-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 2px;
+      color: #000;
+    }
+
+    .notes-box-lines {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      padding: 3px 0;
+    }
+
+    .notes-line {
+      border-bottom: 1px dotted #cbd5e1;
+      height: 1px;
+      width: 100%;
+    }
+
+    .notes-box-signature {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    /* Bottom Footer */
     .rx-footer {
       text-align: center;
       font-size: 11.5px;
       font-weight: bold;
-      padding-top: 4px;
+      padding-top: 2px;
+      color: #000;
+      flex-shrink: 0;
     }
 
-    /* Print Styles */
+    /* Print Styles: STRICTLY 1 SINGLE PAGE ONLY WITHOUT CONTINUATION PAGE */
     @media print {
       @page {
         size: A4 portrait;
-        margin: 8mm 10mm;
+        margin: 5mm 8mm;
       }
 
-      body {
-        background: #ffffff;
-        padding: 0;
-        margin: 0;
+      html, body {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       .no-print {
@@ -261,19 +367,51 @@
       }
 
       .a4-sheet {
-        box-shadow: none;
-        margin: 0 auto;
-        padding: 4mm 6mm;
-        width: 100%;
-        height: 100%;
-        page-break-after: avoid;
-        page-break-inside: avoid;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 2mm 4mm !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        min-height: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        page-break-before: avoid !important;
+        break-after: avoid !important;
+        break-inside: avoid !important;
+        break-before: avoid !important;
+        overflow: hidden !important;
       }
 
-      .rx-main-box, .doctors-notes-box {
-        border-color: #000 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+      .rx-main-box {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: calc(100% - 90px) !important;
+        overflow: hidden !important;
+        border-bottom: 1.5px solid #000 !important;
+      }
+
+      .doctors-notes-box {
+        border: 1.5px solid #000 !important;
+        height: 90px !important;
+        min-height: 90px !important;
+        max-height: 90px !important;
+        margin-bottom: 0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .rx-table th {
+        background: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
     }
   </style>
@@ -284,14 +422,14 @@
   <div class="screen-toolbar no-print">
     <div class="toolbar-title">
       <i class="fas fa-file-prescription" style="color: #0f766e;"></i>
-      <span>Doctor Prescription Letterhead</span>
+      <span>Doctor Prescription Letterhead (1-Page Print)</span>
     </div>
     <div class="toolbar-actions">
       <a href="{% url 'dashboard' %}" class="btn btn-back">
         <i class="fas fa-arrow-left"></i> Back to Dashboard
       </a>
       <button type="button" class="btn btn-print" onclick="window.print()">
-        <i class="fas fa-print"></i> Print / Save as PDF
+        <i class="fas fa-print"></i> Print (Single Page 1 Only)
       </button>
     </div>
   </div>
@@ -320,70 +458,124 @@
     <div class="rx-main-box">
       <!-- Left Column: Doctors List -->
       <div class="rx-left-col">
-        <h3 style="margin-bottom: 8px; text-decoration: none;">Consultants :</h3>
+        <h3 style="margin-bottom: 4px; text-decoration: none;">Consultants :</h3>
         <div class="doc-entry">
           <div class="doc-name">Dr. Anoop Kumar. BDS</div>
-          <div class="doc-sub">Cheif Surgan</div>
+          <div class="doc-sub">Chief Dental Surgeon</div>
           <div class="doc-reg">Reg.No. 1234</div>
         </div>
 
-        <h3 style="margin-top: 14px; margin-bottom: 8px; text-decoration: none;">Visiting :</h3>
+        <h3 style="margin-top: 8px; margin-bottom: 4px; text-decoration: none;">Visiting :</h3>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.JUSTIN MATHEW. MDS</div>
-          <div class="doc-sub">Oral & Maxillo Facial Surgeon</div>
+          <div class="doc-name">Dr. JUSTIN MATHEW. MDS</div>
+          <div class="doc-sub">Oral &amp; Maxillo Facial Surgeon</div>
           <div class="doc-reg">Reg.No. 5492</div>
         </div>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.KRISHNA KUMAR. MDS</div>
+          <div class="doc-name">Dr. KRISHNA KUMAR. MDS</div>
           <div class="doc-sub">Paedodontist</div>
           <div class="doc-reg">Reg.No. 7729</div>
         </div>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.JOSEPH J PULIKKOTTIL. MDS</div>
-          <div class="doc-sub">Periodontist & Implantologist</div>
+          <div class="doc-name">Dr. JOSEPH J PULIKKOTTIL. MDS</div>
+          <div class="doc-sub">Periodontist &amp; Implantologist</div>
           <div class="doc-reg">Reg.No. 2418</div>
         </div>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.TERRY THOMAS. MDS</div>
+          <div class="doc-name">Dr. TERRY THOMAS. MDS</div>
           <div class="doc-sub">Orthodontist</div>
           <div class="doc-reg">Reg.No. 4807</div>
         </div>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.SHIBHU SREEDHAR. MDS</div>
+          <div class="doc-name">Dr. SHIBHU SREEDHAR. MDS</div>
           <div class="doc-sub">Endodontist</div>
           <div class="doc-reg">Reg.No. 15619-A</div>
         </div>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.RENJITH RAJ. MDS</div>
+          <div class="doc-name">Dr. RENJITH RAJ. MDS</div>
           <div class="doc-sub">Endodontist</div>
           <div class="doc-reg">Reg.No. 8171</div>
         </div>
 
         <div class="doc-entry">
-          <div class="doc-name">Dr.SIJO P MATHEW. MDS</div>
+          <div class="doc-name">Dr. SIJO P MATHEW. MDS</div>
           <div class="doc-sub">Endodontist</div>
           <div class="doc-reg">Reg.No. 8982</div>
         </div>
       </div>
 
-      <!-- Right Column: Date, Blank Prescriptions Area, Doctor's Notes -->
+      <!-- Right Column: Date, Patient Info, Blank Prescriptions Area, Doctor's Notes -->
       <div class="rx-right-col">
         <div class="rx-date-line">
-          Date : {{ date|default:"________________" }}
+          <div>
+            {% if name %}
+            <span style="font-size: 13px; font-weight: 700; color: #0f172a;">Patient: {{ name }}</span>
+            {% if age or gender %}
+            <span style="font-size: 11.5px; color: #475569; margin-left: 6px;">({{ age|default:"" }}{% if age and gender %} / {% endif %}{{ gender|default:"" }})</span>
+            {% endif %}
+            {% if pid %}
+            <span style="font-size: 11px; color: #64748b; margin-left: 6px;">PID: {{ pid }}</span>
+            {% endif %}
+            {% endif %}
+          </div>
+          <div style="font-size: 12px; font-weight: bold;">
+            Date : {{ date|default:"________________" }}
+          </div>
         </div>
 
         <div class="rx-body-blank">
           <div class="rx-symbol">&#8478;</div>
+          {% if medicines %}
+          <table class="rx-table">
+            <thead>
+              <tr>
+                <th style="width: 26px;">#</th>
+                <th>Medicine &amp; Brand</th>
+                <th>Strength / Dosage</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>Instructions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in medicines %}
+              <tr>
+                <td style="font-weight: 700;">{{ forloop.counter }}</td>
+                <td>
+                  <strong style="color: #0f172a; font-size: 11.5px;">{{ m.product_name }}</strong>
+                  {% if m.brand_name %}<span style="color: #475569; font-size: 10.5px;">({{ m.brand_name }})</span>{% endif %}
+                  {% if m.category or m.item_type %}<div style="font-size: 9.5px; color: #64748b;">{{ m.category }} - {{ m.item_type }}</div>{% endif %}
+                </td>
+                <td>{{ m.strength|default:m.dosage|default:"-" }}</td>
+                <td style="font-weight: 700;">{{ m.frequency|default:"1-0-1" }}</td>
+                <td>{{ m.duration|default:"5 Days" }}</td>
+                <td style="color: #334155;">{{ m.instructions|default:"After Food" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
         </div>
 
+        <!-- Doctor's Notes Rectangle Box (Fixed Size, Fits on Page 1) -->
         <div class="doctors-notes-box">
-          Doctor's Notes
+          <div class="notes-box-header">
+            <span>Doctor's Notes &amp; Clinical Advice</span>
+            <span style="font-size: 9px; font-weight: normal; color: #64748b;">Follow-up as advised</span>
+          </div>
+          <div class="notes-box-lines">
+            <div class="notes-line"></div>
+            <div class="notes-line"></div>
+          </div>
+          <div class="notes-box-signature">
+            <span>Doctor's Signature: _______________________</span>
+          </div>
         </div>
       </div>
     </div>

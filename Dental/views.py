@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import Sum, Q
-from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice, AboutClinic, GalleryPhoto
+from .models import Doctor, Service, Appointment, Testimonial, ContactMessage, DentalCase, Invoice, AboutClinic, GalleryPhoto, DentalLab, LabPayment, MedicineInventory, PatientMedicine
 import datetime
 import json
 
@@ -902,6 +902,36 @@ def dashboard_view(request):
             experience_years="28+"
         )
 
+    # Ensure default labs exist
+    if DentalLab.objects.count() == 0:
+        default_labs = [
+            ('Apex Dental Ceramics', 'Mumbai'),
+            ('DentCraft Dental Lab', 'Delhi'),
+            ('Prime 3D CAD/CAM Lab', 'Bengaluru'),
+            ('Dental Art Studio', 'Pune'),
+            ('Precision Denture Works', 'Hyderabad'),
+            ('DentCare Global Lab', 'Kochi'),
+        ]
+        for l_name, l_city in default_labs:
+            DentalLab.objects.create(name=l_name, city=l_city)
+
+    dental_labs = DentalLab.objects.prefetch_related('payments').all().order_by('name')
+    db_lab_ledgers = {}
+    for lab in dental_labs:
+        db_lab_ledgers[lab.name] = [
+            {
+                'id': p.id,
+                'date': p.issue_date.strftime('%d-%m-%Y'),
+                'pid': p.patient_id,
+                'patient': p.patient_name,
+                'particular': p.particular,
+                'dr': float(p.dr_amount),
+                'cr': float(p.cr_amount),
+            }
+            for p in lab.payments.all().order_by('id')
+        ]
+    db_lab_ledgers_json = json.dumps(db_lab_ledgers)
+
     context = {
         'total_jobs': total_jobs,
         'in_progress_count': in_progress_count,
@@ -916,6 +946,26 @@ def dashboard_view(request):
         'invoices': invoices,
         'about_clinic': about_clinic,
         'gallery_photos': GalleryPhoto.objects.all(),
+        'dental_labs': dental_labs,
+        'medicines': MedicineInventory.objects.all().order_by('-id'),
+        'db_medicines_json': json.dumps([
+            {
+                'id': m.id,
+                'category': m.category,
+                'item_type': m.item_type,
+                'product_name': m.product_name,
+                'brand_name': m.brand_name,
+                'strength': m.strength,
+                'dosage': m.dosage,
+                'rate': float(m.rate),
+                'frequency': m.frequency,
+                'duration': m.duration,
+                'ingredients': m.ingredients,
+                'contra_indications': m.contra_indications,
+            }
+            for m in MedicineInventory.objects.all().order_by('-id')
+        ]),
+        'db_lab_ledgers_json': db_lab_ledgers_json,
         'user': request.user,
         'today': datetime.date.today().strftime('%Y-%m-%d'),
         'patient_name': request.user.first_name or request.user.username or "Admin",
@@ -1639,7 +1689,437 @@ def print_clinical_notes_view(request):
 
 
 def print_prescription_view(request):
-    return print_clinical_notes_view(request)
+    appointment_id = request.GET.get('appointment_id', '').strip()
+    patient_name = request.GET.get('name', '').strip()
+    date_val = request.GET.get('date', datetime.date.today().strftime('%d/%m/%Y')).strip()
+    doctor = request.GET.get('doctor', 'Dr. Anoop').strip()
+    age = request.GET.get('age', '').strip()
+    gender = request.GET.get('gender', '').strip()
+    pid = request.GET.get('pid', '').strip()
+
+    medicines = []
+    if appointment_id and appointment_id.isdigit():
+        try:
+            appt = Appointment.objects.get(id=int(appointment_id))
+            if not patient_name:
+                patient_name = (appt.first_name and f"{appt.first_name} {appt.last_name or ''}".strip()) or appt.patient_name or 'Patient'
+            if not age and appt.age:
+                age = str(appt.age)
+            if not gender and appt.gender:
+                gender = appt.gender
+            if not doctor and appt.doctor_name:
+                doctor = appt.doctor_name
+            if not pid:
+                pid = appt.formatted_id
+            medicines = list(appt.prescribed_medicines.all().order_by('id'))
+        except Appointment.DoesNotExist:
+            pass
+
+    if not medicines and patient_name:
+        medicines = list(PatientMedicine.objects.filter(patient_name__iexact=patient_name).order_by('id'))
+
+    about_clinic = AboutClinic.objects.first()
+    context = {
+        'appointment_id': appointment_id,
+        'name': patient_name,
+        'patient_name': patient_name,
+        'age': age,
+        'gender': gender,
+        'doctor': doctor,
+        'pid': pid,
+        'date': date_val,
+        'medicines': medicines,
+        'about_clinic': about_clinic,
+    }
+    return render(request, 'Dental/print_prescription.html', context)
 
 
 
+
+
+
+# ==========================================
+# DENTAL LAB & LAB PAYMENTS DATABASE VIEWS
+# ==========================================
+def save_dental_lab_view(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+    
+    name = request.POST.get('name', '').strip()
+    city = request.POST.get('city', '').strip()
+    logo_file = request.FILES.get('logo')
+
+    if not name:
+        return JsonResponse({'status': 'error', 'message': 'Please provide a valid Lab Name.'}, status=400)
+
+    try:
+        lab, created = DentalLab.objects.get_or_create(name=name)
+        if city:
+            lab.city = city
+        if logo_file:
+            lab.logo = logo_file
+        lab.save()
+
+        logo_url = lab.logo.url if lab.logo else ''
+        return JsonResponse({
+            'status': 'success',
+            'created': created,
+            'message': f'Lab "{lab.name}" successfully saved in database!',
+            'lab': {
+                'id': lab.id,
+                'name': lab.name,
+                'city': lab.city,
+                'logo_url': logo_url
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def save_lab_payment_view(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    lab_name = request.POST.get('lab_name', '').strip()
+    date_str = request.POST.get('date', '').strip()
+    patient_id = request.POST.get('patient_id', '').strip()
+    patient_name = request.POST.get('patient_name', '').strip() or 'Walk-in Patient'
+    particular = request.POST.get('particular', '').strip() or 'Dental Lab Order'
+    dr_amount = request.POST.get('dr_amount', 0)
+    cr_amount = request.POST.get('cr_amount', 0)
+
+    try:
+        dr = float(dr_amount) if dr_amount else 0.0
+    except ValueError:
+        dr = 0.0
+
+    try:
+        cr = float(cr_amount) if cr_amount else 0.0
+    except ValueError:
+        cr = 0.0
+
+    if not lab_name:
+        return JsonResponse({'status': 'error', 'message': 'Please specify a Lab Name.'}, status=400)
+
+    # Parse date
+    parsed_date = datetime.date.today()
+    if date_str:
+        for fmt in ('%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d'):
+            try:
+                parsed_date = datetime.datetime.strptime(date_str, fmt).date()
+                break
+            except ValueError:
+                pass
+
+    try:
+        lab, _ = DentalLab.objects.get_or_create(name=lab_name)
+        payment = LabPayment.objects.create(
+            lab=lab,
+            issue_date=parsed_date,
+            patient_id=patient_id,
+            patient_name=patient_name,
+            particular=particular,
+            dr_amount=dr,
+            cr_amount=cr
+        )
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Payment transaction #{payment.id} saved to database!',
+            'payment': {
+                'id': payment.id,
+                'date': payment.issue_date.strftime('%d-%m-%Y'),
+                'pid': payment.patient_id,
+                'patient': payment.patient_name,
+                'particular': payment.particular,
+                'dr': float(payment.dr_amount),
+                'cr': float(payment.cr_amount),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def delete_lab_payment_view(request, payment_id):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        payment = get_object_or_404(LabPayment, id=payment_id)
+        payment.delete()
+        return JsonResponse({'status': 'success', 'message': f'Payment record #{payment_id} deleted from database.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def get_lab_payments_view(request, lab_name):
+    try:
+        lab = DentalLab.objects.filter(name=lab_name).first()
+        if not lab:
+            return JsonResponse({'status': 'success', 'payments': [], 'lab': {'name': lab_name, 'city': '', 'logo_url': ''}})
+        
+        payments = [
+            {
+                'id': p.id,
+                'date': p.issue_date.strftime('%d-%m-%Y'),
+                'pid': p.patient_id,
+                'patient': p.patient_name,
+                'particular': p.particular,
+                'dr': float(p.dr_amount),
+                'cr': float(p.cr_amount),
+            }
+            for p in lab.payments.all().order_by('id')
+        ]
+        return JsonResponse({
+            'status': 'success',
+            'lab': {
+                'id': lab.id,
+                'name': lab.name,
+                'city': lab.city,
+                'logo_url': lab.logo.url if lab.logo else ''
+            },
+            'payments': payments
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def save_medicine_inventory_view(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        med_id = request.POST.get('med_id')
+        category = request.POST.get('category', '').strip()
+        item_type = request.POST.get('item_type', '').strip()
+        product_name = request.POST.get('product_name', '').strip()
+        brand_name = request.POST.get('brand_name', '').strip()
+        strength = request.POST.get('strength', '').strip()
+        dosage = request.POST.get('dosage', '').strip()
+        rate_raw = request.POST.get('rate', '0.0').strip()
+        frequency = request.POST.get('frequency', '').strip()
+        duration = request.POST.get('duration', '').strip()
+        ingredients = request.POST.get('ingredients', '').strip()
+        contra_indications = request.POST.get('contra_indications', '').strip()
+
+        try:
+            rate = float(rate_raw) if rate_raw else 0.0
+        except ValueError:
+            rate = 0.0
+
+        if not product_name:
+            product_name = 'Product'
+
+        if med_id and str(med_id).isdigit():
+            med = get_object_or_404(MedicineInventory, id=int(med_id))
+            med.category = category
+            med.item_type = item_type
+            med.product_name = product_name
+            med.brand_name = brand_name
+            med.strength = strength
+            med.dosage = dosage
+            med.rate = rate
+            med.frequency = frequency
+            med.duration = duration
+            med.ingredients = ingredients
+            med.contra_indications = contra_indications
+            med.save()
+            action = 'updated'
+        else:
+            med = MedicineInventory.objects.create(
+                category=category,
+                item_type=item_type,
+                product_name=product_name,
+                brand_name=brand_name,
+                strength=strength,
+                dosage=dosage,
+                rate=rate,
+                frequency=frequency,
+                duration=duration,
+                ingredients=ingredients,
+                contra_indications=contra_indications,
+            )
+            action = 'created'
+
+        return JsonResponse({
+            'status': 'success',
+            'action': action,
+            'message': f'Medicine "{med.product_name}" saved to database.',
+            'medicine': {
+                'id': med.id,
+                'category': med.category,
+                'item_type': med.item_type,
+                'product_name': med.product_name,
+                'brand_name': med.brand_name,
+                'strength': med.strength,
+                'dosage': med.dosage,
+                'rate': float(med.rate),
+                'frequency': med.frequency,
+                'duration': med.duration,
+                'ingredients': med.ingredients,
+                'contra_indications': med.contra_indications,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def delete_medicine_inventory_view(request, item_id):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        med = get_object_or_404(MedicineInventory, id=item_id)
+        prod_name = med.product_name
+        med.delete()
+        return JsonResponse({'status': 'success', 'message': f'Medicine "{prod_name}" deleted from database.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def get_medicine_inventory_view(request):
+    try:
+        items = [
+            {
+                'id': m.id,
+                'category': m.category,
+                'item_type': m.item_type,
+                'product_name': m.product_name,
+                'brand_name': m.brand_name,
+                'strength': m.strength,
+                'dosage': m.dosage,
+                'rate': float(m.rate),
+                'frequency': m.frequency,
+                'duration': m.duration,
+                'ingredients': m.ingredients,
+                'contra_indications': m.contra_indications,
+            }
+            for m in MedicineInventory.objects.all().order_by('-id')
+        ]
+        return JsonResponse({'status': 'success', 'medicines': items})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# ==========================================
+# PATIENT MEDICINES (CONNECTED WITH MATERIAL BOX 1)
+# ==========================================
+def save_patient_medicine_view(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        appointment_id = request.POST.get('appointment_id', '').strip()
+        patient_name = request.POST.get('patient_name', '').strip()
+        med_inv_id = request.POST.get('medicine_inventory_id', '').strip()
+        category = request.POST.get('category', '').strip()
+        item_type = request.POST.get('item_type', '').strip()
+        product_name = request.POST.get('product_name', '').strip()
+        brand_name = request.POST.get('brand_name', '').strip()
+        strength = request.POST.get('strength', '').strip()
+        dosage = request.POST.get('dosage', '').strip()
+        frequency = request.POST.get('frequency', '').strip() or '1-0-1'
+        duration = request.POST.get('duration', '').strip() or '5 Days'
+        ingredients = request.POST.get('ingredients', '').strip()
+        instructions = request.POST.get('instructions', '').strip() or 'After Food'
+
+        if not product_name:
+            return JsonResponse({'status': 'error', 'message': 'Medicine name is required.'}, status=400)
+
+        appt = None
+        if appointment_id and appointment_id.isdigit():
+            appt = Appointment.objects.filter(id=int(appointment_id)).first()
+            if appt and not patient_name:
+                patient_name = (appt.first_name and f"{appt.first_name} {appt.last_name or ''}".strip()) or appt.patient_name or 'Patient'
+
+        med_inv = None
+        if med_inv_id and med_inv_id.isdigit():
+            med_inv = MedicineInventory.objects.filter(id=int(med_inv_id)).first()
+
+        pm = PatientMedicine.objects.create(
+            appointment=appt,
+            patient_name=patient_name or 'Patient',
+            medicine_inventory=med_inv,
+            category=category,
+            item_type=item_type,
+            product_name=product_name,
+            brand_name=brand_name,
+            strength=strength,
+            dosage=dosage,
+            frequency=frequency,
+            duration=duration,
+            ingredients=ingredients,
+            instructions=instructions
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Prescribed "{pm.product_name}" for {pm.patient_name}.',
+            'medicine': {
+                'id': pm.id,
+                'appointment_id': pm.appointment_id or 0,
+                'patient_name': pm.patient_name,
+                'medicine_inventory_id': pm.medicine_inventory_id or 0,
+                'category': pm.category,
+                'item_type': pm.item_type,
+                'product_name': pm.product_name,
+                'brand_name': pm.brand_name,
+                'strength': pm.strength,
+                'dosage': pm.dosage,
+                'frequency': pm.frequency,
+                'duration': pm.duration,
+                'ingredients': pm.ingredients,
+                'instructions': pm.instructions,
+                'created_at': pm.created_at.strftime('%d-%m-%Y %H:%M'),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def get_patient_medicines_view(request, appointment_id):
+    try:
+        patient_name = request.GET.get('patient_name', '').strip()
+        qs = PatientMedicine.objects.all()
+        if appointment_id and int(appointment_id) > 0:
+            qs = qs.filter(appointment_id=int(appointment_id))
+        elif patient_name:
+            qs = qs.filter(patient_name__iexact=patient_name)
+        else:
+            qs = qs.none()
+
+        items = [
+            {
+                'id': m.id,
+                'appointment_id': m.appointment_id or 0,
+                'patient_name': m.patient_name,
+                'medicine_inventory_id': m.medicine_inventory_id or 0,
+                'category': m.category,
+                'item_type': m.item_type,
+                'product_name': m.product_name,
+                'brand_name': m.brand_name,
+                'strength': m.strength,
+                'dosage': m.dosage,
+                'frequency': m.frequency,
+                'duration': m.duration,
+                'ingredients': m.ingredients,
+                'instructions': m.instructions,
+                'created_at': m.created_at.strftime('%d-%m-%Y %H:%M'),
+            }
+            for m in qs.order_by('id')
+        ]
+        return JsonResponse({'status': 'success', 'medicines': items})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def delete_patient_medicine_view(request, item_id):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        pm = get_object_or_404(PatientMedicine, id=item_id)
+        prod = pm.product_name
+        pm.delete()
+        return JsonResponse({'status': 'success', 'message': f'Medicine "{prod}" removed from patient record.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
