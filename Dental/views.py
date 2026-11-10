@@ -287,11 +287,12 @@ def book_appointment_view(request):
         state = request.POST.get('state', '').strip()
         pincode = request.POST.get('pincode', '').strip()
         
-        service_name = request.POST.get('service_name', 'General Consultation')
-        doctor_name = request.POST.get('doctor_name', 'Dr. Anoop')
+        service_name = request.POST.get('service_name', 'General Consultation').strip() or 'General Consultation'
+        doctor_name = request.POST.get('doctor_name', 'Dr. Anoop').strip() or 'Dr. Anoop'
         preferred_date = request.POST.get('preferred_date')
         preferred_time = request.POST.get('preferred_time', 'Morning (09:30 AM - 12:00 PM)')
         notes = request.POST.get('notes', '').strip() or request.POST.get('commit', '').strip()
+        open_teeth_chart = request.POST.get('open_teeth_chart', '1') in ['1', 'on', 'true', True]
 
         if not (first_name or patient_name) or not phone or not preferred_date:
             err = 'Please fill in all required fields (Name, Phone number, and Appointment Date).'
@@ -301,6 +302,19 @@ def book_appointment_view(request):
             return redirect('home')
 
         try:
+            # Baseline teeth chart if connected
+            initial_chart = {}
+            if open_teeth_chart:
+                initial_chart = {
+                    "1": {
+                        "tooth": "1",
+                        "condition": "sound",
+                        "condition_label": "Sound / Healthy",
+                        "date": preferred_date or datetime.date.today().strftime('%Y-%m-%d'),
+                        "notes": "Connected to Patient Tab & Teeth Chart via Appointment Booking"
+                    }
+                }
+
             appointment = Appointment.objects.create(
                 first_name=first_name,
                 last_name=last_name,
@@ -318,11 +332,12 @@ def book_appointment_view(request):
                 doctor_name=doctor_name,
                 preferred_date=preferred_date,
                 preferred_time=preferred_time,
-                notes=notes
+                notes=notes,
+                chart_data=json.dumps(initial_chart)
             )
             display_name = f"{first_name} {last_name}".strip() or patient_name
             slot_info = f" ({preferred_time})" if preferred_time else ""
-            success_msg = f"Thank you {display_name}! Your appointment on {preferred_date}{slot_info} has been saved and connected successfully. Our clinic team will call you at {phone} to confirm."
+            success_msg = f"Thank you {display_name}! Your appointment on {preferred_date}{slot_info} has been saved and connected to Patient Tab & Teeth Chart. Our clinic team will call you at {phone} to confirm."
             
             # Connect patient session
             request.session['patient_phone'] = phone
@@ -349,19 +364,25 @@ def book_appointment_view(request):
                 except Exception:
                     user = None
 
-            if user:
+            if user and not request.user.is_authenticated:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+            from urllib.parse import quote
+            if request.user.is_authenticated and request.user.is_staff:
+                redirect_target = f"/dashboard/?open_chart_id={appointment.id}&open_chart_name={quote(display_name)}#patient"
+            else:
+                redirect_target = '/dashboardpatient/'
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
                     'status': 'success',
                     'message': success_msg,
                     'id': appointment.id,
-                    'redirect_url': '/dashboardpatient/'
+                    'redirect_url': redirect_target
                 })
             
             messages.success(request, success_msg)
-            return redirect('dashboard_patient')
+            return redirect(redirect_target)
 
         except Exception as e:
             err_msg = f"Submission error: {str(e)}"
@@ -857,15 +878,26 @@ def dashboard_view(request):
         p_key = f"{p_name.lower()}_{a.phone.strip() if a.phone else ''}"
 
         if a.has_chart:
+            first_n = a.first_name or (p_name.split(' ')[0] if p_name else '')
+            last_n = a.last_name or (' '.join(p_name.split(' ')[1:]) if len(p_name.split(' ')) > 1 else '')
             if p_key not in patient_records_map:
                 patient_records_map[p_key] = {
                     'name': p_name,
-                    'phone': a.phone,
-                    'age': a.age,
-                    'gender': a.gender,
+                    'first_name': first_n,
+                    'last_name': last_n,
+                    'phone': a.phone or '',
+                    'phone2': a.phone2 or '',
+                    'email': a.email or '',
+                    'address': a.address or '',
+                    'city': a.city or '',
+                    'state': a.state or '',
+                    'pincode': a.pincode or '',
+                    'age': a.age or '',
+                    'gender': a.gender or '',
                     'doctor_name': a.doctor_name,
                     'service_name': a.service_name,
                     'preferred_date': a.preferred_date,
+                    'notes': a.notes or '',
                     'created_at': a.created_at,
                     'latest_appointment': a,
                     'appointment_id': a.id,
@@ -879,6 +911,22 @@ def dashboard_view(request):
             else:
                 p_rec = patient_records_map[p_key]
                 p_rec['total_appointments'] += 1
+                if not p_rec.get('first_name') and first_n:
+                    p_rec['first_name'] = first_n
+                if not p_rec.get('last_name') and last_n:
+                    p_rec['last_name'] = last_n
+                if not p_rec.get('phone2') and a.phone2:
+                    p_rec['phone2'] = a.phone2
+                if not p_rec.get('email') and a.email:
+                    p_rec['email'] = a.email
+                if not p_rec.get('address') and a.address:
+                    p_rec['address'] = a.address
+                if not p_rec.get('city') and a.city:
+                    p_rec['city'] = a.city
+                if not p_rec.get('state') and a.state:
+                    p_rec['state'] = a.state
+                if not p_rec.get('pincode') and a.pincode:
+                    p_rec['pincode'] = a.pincode
                 if a.chart_teeth_count > p_rec['teeth_count']:
                     p_rec['teeth_count'] = a.chart_teeth_count
                     p_rec['chart_conditions'] = a.chart_conditions_list[:3]
@@ -1247,32 +1295,149 @@ def add_case_view(request):
 
 def add_patient_view(request):
     if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
         patient_name = request.POST.get('patient_name', '').strip()
+        if not patient_name and (first_name or last_name):
+            patient_name = f"{first_name} {last_name}".strip()
+        elif patient_name and not (first_name or last_name):
+            parts = patient_name.split(' ', 1)
+            first_name = parts[0]
+            last_name = parts[1] if len(parts) > 1 else ''
+
         phone = request.POST.get('phone', '').strip()
+        phone2 = request.POST.get('phone2', '').strip()
         age = request.POST.get('age', '').strip()
         gender = request.POST.get('gender', 'Male').strip()
+        email = request.POST.get('email', '').strip()
+        address = request.POST.get('address', '').strip()
+        city = request.POST.get('city', '').strip()
+        state = request.POST.get('state', '').strip()
+        pincode = request.POST.get('pincode', '').strip()
+
         service_name = request.POST.get('service_name', 'General Consultation').strip()
         doctor_name = request.POST.get('doctor_name', 'Dr. Anoop').strip()
         preferred_date = request.POST.get('preferred_date') or datetime.date.today().strftime('%Y-%m-%d')
         notes = request.POST.get('notes', '').strip()
         open_teeth_chart = request.POST.get('open_teeth_chart', '0') == '1'
+        appointment_id = request.POST.get('appointment_id', '').strip()
+        return_tab = request.POST.get('return_tab', 'appointments').strip() or 'appointments'
+        reopen_hub = request.POST.get('reopen_hub', '0') == '1'
 
         try:
+            if appointment_id and appointment_id.isdigit():
+                appt = Appointment.objects.filter(id=int(appointment_id)).first()
+                if appt:
+                    appt.first_name = first_name
+                    appt.last_name = last_name
+                    appt.patient_name = patient_name or f"{first_name} {last_name}".strip() or appt.patient_name
+                    appt.phone = phone or appt.phone
+                    appt.phone2 = phone2
+                    appt.age = int(age) if (age and age.isdigit()) else appt.age
+                    appt.gender = gender
+                    appt.email = email
+                    appt.address = address
+                    appt.city = city
+                    appt.state = state
+                    appt.pincode = pincode
+                    if service_name:
+                        appt.service_name = service_name
+                    if doctor_name:
+                        appt.doctor_name = doctor_name
+                    if request.POST.get('preferred_date'):
+                        appt.preferred_date = preferred_date
+                    if notes:
+                        appt.notes = notes
+                    appt.save()
+                    messages.success(request, f"Patient {patient_name} details updated successfully!")
+
+                    if request.POST.get('print_slip') == '1':
+                        from urllib.parse import urlencode
+                        addr_parts = [p for p in [appt.address, appt.city, appt.state, appt.pincode] if p]
+                        reg_val = request.POST.get('reg_no', '').strip() or appt.formatted_id
+                        pid_val = request.POST.get('PID', request.POST.get('pid', '')).strip() or appt.formatted_id
+                        d_val = str(appt.preferred_date or '')
+                        if hasattr(appt.preferred_date, 'strftime'):
+                            d_val = appt.preferred_date.strftime('%d/%m/%Y')
+                        elif '-' in d_val:
+                            p_parts = d_val.split('-')
+                            if len(p_parts) == 3:
+                                d_val = f"{p_parts[2]}/{p_parts[1]}/{p_parts[0]}"
+                        params = {
+                            'id': appt.id,
+                            'pid': pid_val,
+                            'reg_no': reg_val,
+                            'name': appt.patient_name or f"{appt.first_name or ''} {appt.last_name or ''}".strip(),
+                            'age': str(appt.age or ''),
+                            'gender': appt.gender or '',
+                            'date': d_val,
+                            'address': ', '.join(addr_parts),
+                            'single_card': '1',
+                            'source': 'registration',
+                        }
+                        return redirect(f"/dashboard/print-slip-grid/?{urlencode(params)}")
+
+                    from urllib.parse import quote
+                    if reopen_hub or open_teeth_chart:
+                        return redirect(f"/dashboard/?open_chart_id={appt.id}&open_chart_name={quote(patient_name or 'Patient')}#{return_tab}")
+                    return redirect(f"/dashboard/#{return_tab}")
+
+            # New Patient Registration
+            initial_chart = json.dumps({
+                "1": {
+                    "tooth": "1",
+                    "condition": "sound",
+                    "condition_label": "Sound / Healthy",
+                    "date": preferred_date,
+                    "notes": "Registered via Dental Clinic Dashboard"
+                }
+            })
+
             appt = Appointment.objects.create(
-                patient_name=patient_name or 'New Patient',
+                first_name=first_name,
+                last_name=last_name,
+                patient_name=patient_name or f"{first_name} {last_name}".strip() or 'New Patient',
                 phone=phone or '9999999999',
-                age=int(age) if age.isdigit() else None,
+                phone2=phone2,
+                email=email,
+                address=address,
+                city=city,
+                state=state,
+                pincode=pincode,
+                age=int(age) if (age and age.isdigit()) else None,
                 gender=gender,
-                service_name=service_name,
-                doctor_name=doctor_name,
+                service_name=service_name or 'General Consultation',
+                doctor_name=doctor_name or 'Dr. Anoop',
                 preferred_date=preferred_date,
                 notes=notes,
+                chart_data=initial_chart,
                 status='confirmed'
             )
-            messages.success(request, f"Appointment for {patient_name} saved successfully!")
-            if open_teeth_chart:
-                from urllib.parse import quote
-                return redirect(f"/dashboard/?open_chart_id={appt.id}&open_chart_name={quote(patient_name or 'Patient')}#appointments")
+            messages.success(request, f"Registration complete for {patient_name}!")
+            from urllib.parse import urlencode
+            addr_parts = [p for p in [address, city, state, pincode] if p]
+            reg_val = request.POST.get('reg_no', '').strip() or appt.formatted_id
+            pid_val = request.POST.get('PID', request.POST.get('pid', '')).strip() or appt.formatted_id
+            d_val = str(appt.preferred_date or '')
+            if hasattr(appt.preferred_date, 'strftime'):
+                d_val = appt.preferred_date.strftime('%d/%m/%Y')
+            elif '-' in d_val:
+                p_parts = d_val.split('-')
+                if len(p_parts) == 3:
+                    d_val = f"{p_parts[2]}/{p_parts[1]}/{p_parts[0]}"
+            params = {
+                'id': appt.id,
+                'pid': pid_val,
+                'reg_no': reg_val,
+                'name': patient_name or f"{first_name} {last_name}".strip() or 'Patient',
+                'age': str(appt.age or ''),
+                'gender': appt.gender or '',
+                'date': d_val,
+                'address': ', '.join(addr_parts),
+                'single_card': '1',
+                'source': 'registration',
+            }
+            return redirect(f"/dashboard/print-slip-grid/?{urlencode(params)}")
         except Exception as e:
             messages.error(request, f"Error saving appointment: {str(e)}")
 
@@ -1648,6 +1813,7 @@ def delete_case_view(request, case_id):
 
 
 def print_slip_grid_view(request):
+    appointment_id = request.GET.get('id', request.GET.get('appointment_id', '')).strip()
     reg_no = request.GET.get('reg_no', '').strip()
     pid = request.GET.get('pid', '').strip()
     date_val = request.GET.get('date', '').strip()
@@ -1658,12 +1824,32 @@ def print_slip_grid_view(request):
     prefill_all = request.GET.get('prefill_all', '0') == '1'
     source = request.GET.get('source', request.GET.get('from', '')).strip().lower()
     single_card = request.GET.get('single_card', '1') == '1'
-    if source in ['appointment', 'patient']:
+    if source in ['appointment', 'patient', 'registration']:
         single_card = True
 
+    if appointment_id and appointment_id.isdigit():
+        appt = Appointment.objects.filter(id=int(appointment_id)).first()
+        if appt:
+            if not pid:
+                pid = appt.formatted_id
+            if not reg_no:
+                reg_no = appt.formatted_id
+            if not name:
+                name = (appt.first_name and f"{appt.first_name} {appt.last_name or ''}".strip()) or appt.patient_name or 'Patient'
+            if not age and appt.age:
+                age = str(appt.age)
+            if not gender and appt.gender:
+                gender = appt.gender
+            if not date_val:
+                date_val = appt.preferred_date.strftime('%d/%m/%Y') if appt.preferred_date else ''
+            if not address:
+                addr_parts = [p for p in [appt.address, appt.city, appt.state, appt.pincode] if p]
+                address = ', '.join(addr_parts)
+            single_card = True
+
     context = {
-        'reg_no': reg_no,
-        'pid': pid,
+        'reg_no': reg_no or pid,
+        'pid': pid or reg_no,
         'date': date_val,
         'name': name,
         'age': age,

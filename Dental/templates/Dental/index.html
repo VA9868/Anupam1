@@ -18,6 +18,50 @@
 </head>
 <body>
 
+  <!-- PAGE RELOAD PRELOADER (LOGO & 2 MOVING YELLOW ACCENTS) -->
+  <div id="pageReloadPreloader" class="page-reload-preloader">
+    <div class="preloader-content">
+      <div class="preloader-logo-wrapper">
+        <div class="preloader-yellow-glow"></div>
+        <div class="preloader-yellow-ring-1"></div>
+        <div class="preloader-yellow-ring-2"></div>
+        <div class="preloader-logo-circle">
+          <img src="{% static 'Dental/images/logo.png' %}" alt="Anupam Dental Clinic Logo">
+        </div>
+      </div>
+      <div class="preloader-text-wrap">
+        <h3 class="preloader-clinic-title"><i>Dr.Anoop's</i> ANUPAM</h3>
+        <p class="preloader-clinic-subtitle">DENTAL CLINIC</p>
+        <!-- <div class="preloader-progress-track">
+          <div class="preloader-progress-bar"></div>
+        </div> -->
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      const loader = document.getElementById('pageReloadPreloader');
+      if (!loader) return;
+      function hideLoader() {
+        if (!loader.classList.contains('fade-out')) {
+          loader.classList.add('fade-out');
+          setTimeout(function() {
+            loader.style.display = 'none';
+          }, 550);
+        }
+      }
+      if (document.readyState === 'complete') {
+        setTimeout(hideLoader, 600);
+      } else {
+        window.addEventListener('load', function() {
+          setTimeout(hideLoader, 650);
+        });
+      }
+      // Safety fallback: maximum 2.4s
+      setTimeout(hideLoader, 2400);
+    })();
+  </script>
+
   <!-- TOP ANNOUNCEMENT BAR -->
   <div class="top-bar">
     <div class="top-bar-container">

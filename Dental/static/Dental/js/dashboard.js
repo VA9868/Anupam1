@@ -235,6 +235,12 @@ function switchTab(sectionKey, event) {
 
   const sidebarEl = document.getElementById('sidebar');
   if (sidebarEl) sidebarEl.classList.remove('open');
+
+  try {
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', '#' + sectionKey);
+    }
+  } catch (err) {}
 }
 
 function toggleSidebar() {
@@ -262,6 +268,18 @@ function toggleNotifications() {
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
+    if (modalId === 'addPatientModal') {
+      modal.style.zIndex = '2100';
+    } else {
+      let highestZ = 1000;
+      document.querySelectorAll('.modal-backdrop.active').forEach(m => {
+        if (m !== modal) {
+          const z = parseInt(window.getComputedStyle(m).zIndex, 10) || 1000;
+          if (z >= highestZ) highestZ = z;
+        }
+      });
+      modal.style.zIndex = String(highestZ + 10);
+    }
     modal.classList.add('active');
     modal.style.display = 'flex';
   }
@@ -273,6 +291,9 @@ function closeModal(modalId) {
   if (modal) {
     modal.classList.remove('active');
     modal.style.display = 'none';
+  }
+  if (modalId === 'addPatientModal' && typeof resetAddPatientModal === 'function') {
+    resetAddPatientModal();
   }
 }
 window.closeModal = closeModal;
@@ -1078,16 +1099,41 @@ function openClinicalHubByName(patientName, defaultTab) {
 }
 
 function openPatientClinicalHub(apptId, apptCode, patientName, phone, age, gender, service, doctor, defaultTab) {
+  let matchedAppt = null;
+  if (Array.isArray(allClinicAppointments) && allClinicAppointments.length > 0) {
+    matchedAppt = allClinicAppointments.find(a =>
+      (apptId && String(a.id) === String(apptId)) ||
+      (apptCode && a.code === apptCode) ||
+      (patientName && (a.patient || '').toLowerCase() === (patientName || '').toLowerCase())
+    );
+  }
+
   activeHubPatient = {
-    id: apptId,
-    code: apptCode || ('#APT-' + (apptId || '001')),
-    name: patientName || 'Patient',
-    phone: phone || '+91 94460 46868',
-    age: age || '',
-    gender: gender || 'Patient',
-    service: service || 'General Consultation',
-    doctor: doctor || 'Dr. Anoop'
+    id: apptId || (matchedAppt ? matchedAppt.id : ''),
+    code: apptCode || (matchedAppt ? matchedAppt.code : ('#APT-' + (apptId || '001'))),
+    name: patientName || (matchedAppt ? matchedAppt.patient : 'Patient'),
+    firstName: (matchedAppt && matchedAppt.first_name) || '',
+    lastName: (matchedAppt && matchedAppt.last_name) || '',
+    phone: phone || (matchedAppt ? matchedAppt.phone : '+91 94460 46868'),
+    phone2: (matchedAppt && matchedAppt.phone2) || '',
+    email: (matchedAppt && matchedAppt.email) || '',
+    address: (matchedAppt && matchedAppt.address) || '',
+    city: (matchedAppt && matchedAppt.city) || '',
+    state: (matchedAppt && matchedAppt.state) || '',
+    pincode: (matchedAppt && matchedAppt.pincode) || '',
+    age: age || (matchedAppt ? matchedAppt.age : ''),
+    gender: gender || (matchedAppt ? matchedAppt.gender : 'Patient'),
+    service: service || (matchedAppt ? matchedAppt.service : 'General Consultation'),
+    doctor: doctor || (matchedAppt ? matchedAppt.doctor : 'Dr. Anoop'),
+    date: (matchedAppt && matchedAppt.date) || '',
+    notes: (matchedAppt && matchedAppt.notes) || ''
   };
+
+  if (!activeHubPatient.firstName && activeHubPatient.name) {
+    const parts = activeHubPatient.name.trim().split(/\s+/);
+    activeHubPatient.firstName = parts[0] || '';
+    activeHubPatient.lastName = parts.slice(1).join(' ') || '';
+  }
 
   // Header Meta
   const nameEl = document.getElementById('hubPatientName');
@@ -2917,6 +2963,13 @@ window.openClinicalHubByName = openClinicalHubByName;
 window.addTwoMoreTeethToChart = addTwoMoreTeethToChart;
 
 // Handle hash navigation and auto-open of chart on page load
+window.addEventListener('hashchange', function () {
+  const hashSec = window.location.hash.replace('#', '').trim();
+  if (hashSec && document.getElementById('section-' + hashSec)) {
+    switchTab(hashSec);
+  }
+});
+
 window.addEventListener('DOMContentLoaded', function () {
   // Initial filter for appointments (default today)
   if (typeof applyAppointmentsFilter === 'function') { applyAppointmentsFilter(); }
@@ -4631,3 +4684,302 @@ function printPatientPrescription() {
   const url = `/dashboard/print-prescription/?appointment_id=${apptId}&name=${pName}&doctor=${doctor}&pid=${pid}&age=${age}&gender=${gender}`;
   window.open(url, '_blank');
 }
+
+
+// ==========================================
+// EDIT PATIENT & BOOK APPOINTMENT MODAL HANDLERS
+// ==========================================
+function syncPatientFullName() {
+  const fn = (document.getElementById('new_patient_first_name')?.value || '').trim();
+  const ln = (document.getElementById('new_patient_last_name')?.value || '').trim();
+  const fullName = `${fn} ${ln}`.trim();
+  const pNameInput = document.getElementById('new_patient_name');
+  if (pNameInput) pNameInput.value = fullName;
+}
+window.syncPatientFullName = syncPatientFullName;
+
+function syncRegNo() {
+  const regNoInp = document.getElementById('new_patient_reg_no');
+  const pidInp = document.getElementById('new_patient_PID');
+  if (regNoInp && pidInp && !pidInp.value) {
+    pidInp.placeholder = regNoInp.value || 'Auto-generated upon save';
+  }
+}
+window.syncRegNo = syncRegNo;
+
+function openEditPatientFromHub() {
+  if (!activeHubPatient) return;
+  const reopenInp = document.getElementById('edit_patient_reopen_hub');
+  if (reopenInp) reopenInp.value = '1';
+
+  openEditPatientModal({
+    id: activeHubPatient.id,
+    code: activeHubPatient.code,
+    name: activeHubPatient.name,
+    firstName: activeHubPatient.firstName,
+    lastName: activeHubPatient.lastName,
+    phone: activeHubPatient.phone,
+    phone2: activeHubPatient.phone2,
+    email: activeHubPatient.email,
+    address: activeHubPatient.address,
+    city: activeHubPatient.city,
+    state: activeHubPatient.state,
+    pincode: activeHubPatient.pincode,
+    age: activeHubPatient.age,
+    gender: activeHubPatient.gender,
+    doctor: activeHubPatient.doctor,
+    service: activeHubPatient.service,
+    date: activeHubPatient.date,
+    notes: activeHubPatient.notes
+  });
+}
+window.openEditPatientFromHub = openEditPatientFromHub;
+
+function openEditPatientModalFromBtn(btn) {
+  if (!btn) return;
+  const id = btn.getAttribute('data-id') || '';
+  const code = btn.getAttribute('data-code') || '';
+  const name = btn.getAttribute('data-name') || '';
+  const firstName = btn.getAttribute('data-first-name') || '';
+  const lastName = btn.getAttribute('data-last-name') || '';
+  const phone = btn.getAttribute('data-phone') || '';
+  const phone2 = btn.getAttribute('data-phone2') || '';
+  const email = btn.getAttribute('data-email') || '';
+  const address = btn.getAttribute('data-address') || '';
+  const city = btn.getAttribute('data-city') || '';
+  const state = btn.getAttribute('data-state') || '';
+  const pincode = btn.getAttribute('data-pincode') || '';
+  const age = btn.getAttribute('data-age') || '';
+  const gender = btn.getAttribute('data-gender') || '';
+  const doctor = btn.getAttribute('data-doctor') || '';
+  const service = btn.getAttribute('data-service') || '';
+  const date = btn.getAttribute('data-date') || '';
+  const notes = btn.getAttribute('data-notes') || '';
+
+  openEditPatientModal({
+    id, code, name, firstName, lastName,
+    phone, phone2, email, address, city, state, pincode,
+    age, gender, doctor, service, date, notes
+  });
+}
+window.openEditPatientModalFromBtn = openEditPatientModalFromBtn;
+
+function openEditPatientModal(patientDataOrId, patientName, phone, age, gender, doctor, service) {
+  let data = {};
+  if (typeof patientDataOrId === 'object' && patientDataOrId !== null) {
+    data = Object.assign({}, patientDataOrId);
+  } else {
+    data = {
+      id: patientDataOrId || '',
+      name: patientName || '',
+      phone: phone || '',
+      age: age || '',
+      gender: gender || 'Male',
+      doctor: doctor || '',
+      service: service || ''
+    };
+  }
+
+  // Lookup existing record from allClinicAppointments if available to complete details
+  if (Array.isArray(allClinicAppointments) && allClinicAppointments.length > 0) {
+    const match = allClinicAppointments.find(a =>
+      (data.id && String(a.id) === String(data.id)) ||
+      (data.code && a.code === data.code) ||
+      (data.name && (a.patient || '').toLowerCase() === data.name.toLowerCase())
+    );
+    if (match) {
+      if (!data.id) data.id = match.id;
+      if (!data.code) data.code = match.code;
+      if (!data.firstName) data.firstName = match.first_name;
+      if (!data.lastName) data.lastName = match.last_name;
+      if (!data.phone) data.phone = match.phone;
+      if (!data.phone2) data.phone2 = match.phone2;
+      if (!data.email) data.email = match.email;
+      if (!data.address) data.address = match.address;
+      if (!data.city) data.city = match.city;
+      if (!data.state) data.state = match.state;
+      if (!data.pincode) data.pincode = match.pincode;
+      if (!data.age) data.age = match.age;
+      if (!data.gender) data.gender = match.gender;
+      if (!data.doctor) data.doctor = match.doctor;
+      if (!data.service) data.service = match.service;
+      if (!data.date) data.date = match.date;
+      if (!data.notes) data.notes = match.notes;
+    }
+  }
+
+  // Auto-split name into first and last if needed
+  if (!data.firstName && data.name) {
+    const parts = data.name.trim().split(/\s+/);
+    data.firstName = parts[0] || '';
+    data.lastName = parts.slice(1).join(' ') || '';
+  }
+
+  const idInput = document.getElementById('edit_patient_appointment_id');
+  if (idInput) idInput.value = data.id || '';
+
+  const pidInput = document.getElementById('new_patient_PID');
+  if (pidInput) {
+    pidInput.value = data.code || (data.id ? ('#' + data.id) : '');
+  }
+
+  const regNoInput = document.getElementById('new_patient_reg_no');
+  if (regNoInput) {
+    regNoInput.value = data.regNo || data.code || (data.id ? ('#' + data.id) : '');
+  }
+
+  const fnInput = document.getElementById('new_patient_first_name');
+  if (fnInput) fnInput.value = data.firstName || '';
+
+  const lnInput = document.getElementById('new_patient_last_name');
+  if (lnInput) lnInput.value = data.lastName || '';
+
+  const nameInput = document.getElementById('new_patient_name');
+  if (nameInput) nameInput.value = data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim();
+
+  const phoneInput = document.getElementById('new_patient_phone');
+  if (phoneInput) phoneInput.value = data.phone || '';
+
+  const phone2Input = document.getElementById('new_patient_phone2');
+  if (phone2Input) phone2Input.value = data.phone2 || '';
+
+  const emailInput = document.getElementById('new_patient_email');
+  if (emailInput) emailInput.value = data.email || '';
+
+  const addressInput = document.getElementById('new_patient_address');
+  if (addressInput) addressInput.value = data.address || '';
+
+  const cityInput = document.getElementById('new_patient_city');
+  if (cityInput) cityInput.value = data.city || '';
+
+  const stateInput = document.getElementById('new_patient_state');
+  if (stateInput) stateInput.value = data.state || '';
+
+  const pincodeInput = document.getElementById('new_patient_pincode');
+  if (pincodeInput) pincodeInput.value = data.pincode || '';
+
+  const ageInput = document.getElementById('new_patient_age');
+  if (ageInput) ageInput.value = data.age || '';
+
+  const genderSelect = document.getElementById('new_patient_gender');
+  if (genderSelect && data.gender) genderSelect.value = data.gender;
+
+  const dateInput = document.getElementById('new_patient_date');
+  if (dateInput && data.date) dateInput.value = data.date;
+
+  const doctorSelect = document.getElementById('new_patient_doctor');
+  if (doctorSelect && data.doctor) {
+    let found = false;
+    for (let i = 0; i < doctorSelect.options.length; i++) {
+      if (doctorSelect.options[i].value.toLowerCase() === data.doctor.toLowerCase()) {
+        doctorSelect.selectedIndex = i;
+        found = true;
+        break;
+      }
+    }
+    if (!found) doctorSelect.value = data.doctor;
+  }
+
+  const serviceInput = document.getElementById('new_patient_service');
+  if (serviceInput && data.service) serviceInput.value = data.service;
+
+  const notesInput = document.getElementById('new_patient_notes');
+  if (notesInput && data.notes) notesInput.value = data.notes;
+
+  const returnTabInput = document.getElementById('edit_patient_return_tab');
+  if (returnTabInput) returnTabInput.value = 'patient';
+
+  const modalHeader = document.getElementById('addPatientModalHeader');
+  if (modalHeader) {
+    modalHeader.innerHTML = `<i class="fas fa-user-edit" style="color: #2563eb; margin-right: 8px;"></i>Edit Patient / Book Appointment`;
+  }
+
+  const modalDesc = document.getElementById('addPatientModalDesc');
+  if (modalDesc) {
+    const displayName = data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Patient';
+    modalDesc.innerHTML = `Editing details &amp; booking appointment for <strong>${escapeHtml(displayName)}</strong>${data.code ? ` (PID: <strong>${escapeHtml(data.code)}</strong>)` : ''}. Update information below and save.`;
+  }
+
+  const submitBtn = document.getElementById('btnSubmitAddPatient');
+  if (submitBtn) {
+    submitBtn.innerHTML = `<i class="fas fa-save"></i> Save / Update Patient`;
+  }
+
+  openModal('addPatientModal');
+}
+window.openEditPatientModal = openEditPatientModal;
+
+function resetAddPatientModal() {
+  const reopenInp = document.getElementById('edit_patient_reopen_hub');
+  if (reopenInp) reopenInp.value = '0';
+
+  const idInput = document.getElementById('edit_patient_appointment_id');
+  if (idInput) idInput.value = '';
+
+  const pidInput = document.getElementById('new_patient_PID');
+  if (pidInput) pidInput.value = '';
+
+  const regNoInput = document.getElementById('new_patient_reg_no');
+  if (regNoInput) regNoInput.value = '';
+
+  const fnInput = document.getElementById('new_patient_first_name');
+  if (fnInput) fnInput.value = '';
+
+  const lnInput = document.getElementById('new_patient_last_name');
+  if (lnInput) lnInput.value = '';
+
+  const nameInput = document.getElementById('new_patient_name');
+  if (nameInput) nameInput.value = '';
+
+  const phoneInput = document.getElementById('new_patient_phone');
+  if (phoneInput) phoneInput.value = '';
+
+  const phone2Input = document.getElementById('new_patient_phone2');
+  if (phone2Input) phone2Input.value = '';
+
+  const emailInput = document.getElementById('new_patient_email');
+  if (emailInput) emailInput.value = '';
+
+  const addressInput = document.getElementById('new_patient_address');
+  if (addressInput) addressInput.value = '';
+
+  const cityInput = document.getElementById('new_patient_city');
+  if (cityInput) cityInput.value = '';
+
+  const stateInput = document.getElementById('new_patient_state');
+  if (stateInput) stateInput.value = '';
+
+  const pincodeInput = document.getElementById('new_patient_pincode');
+  if (pincodeInput) pincodeInput.value = '';
+
+  const ageInput = document.getElementById('new_patient_age');
+  if (ageInput) ageInput.value = '';
+
+  const genderSelect = document.getElementById('new_patient_gender');
+  if (genderSelect) genderSelect.value = 'Male';
+
+  const serviceInput = document.getElementById('new_patient_service');
+  if (serviceInput) serviceInput.value = '';
+
+  const notesInput = document.getElementById('new_patient_notes');
+  if (notesInput) notesInput.value = '';
+
+  const returnTabInput = document.getElementById('edit_patient_return_tab');
+  if (returnTabInput) returnTabInput.value = 'appointments';
+
+  const modalHeader = document.getElementById('addPatientModalHeader');
+  if (modalHeader) {
+    modalHeader.innerHTML = `<i class="fas fa-calendar-plus" style="color: #2563eb; margin-right: 8px;"></i>Book Appointment`;
+  }
+
+  const modalDesc = document.getElementById('addPatientModalDesc');
+  if (modalDesc) {
+    modalDesc.innerHTML = `Save patient profile details and manage appointment schedule.`;
+  }
+
+  const submitBtn = document.getElementById('btnSubmitAddPatient');
+  if (submitBtn) {
+    submitBtn.innerHTML = `<i class="fas fa-id-card"></i> Complete Registration &amp; Print Slip`;
+  }
+}
+window.resetAddPatientModal = resetAddPatientModal;

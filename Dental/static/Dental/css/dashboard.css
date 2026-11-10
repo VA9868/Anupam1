@@ -718,6 +718,20 @@
 
     .modal-backdrop.active { display: flex; }
 
+#addPatientModal {
+  z-index: 2100 !important;
+}
+
+#addPatientModal .modal-card {
+  position: relative;
+  z-index: 2101 !important;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.45);
+}
+
+#patientReceiptModal {
+  z-index: 2200 !important;
+}
+
     .modal-card {
       background: #ffffff;
       width: 100%;

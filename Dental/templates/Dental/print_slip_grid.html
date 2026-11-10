@@ -5,8 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anupam Dental Clinic - Patient Registration Slip {% if single_card %}(Single Card){% else %}(8-Card Grid A4){%
-    endif %}</title>
+  <title>Anupam Dental Clinic - Patient Registration Slip {% if single_card %}(Single Card){% else %}(8-Card Grid A4){% endif %}</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -335,15 +334,15 @@
   <!-- Screen Toolbar: Left Dashboard, Center View Mode & Toggle, Right Print -->
   <div class="screen-toolbar no-print">
     <div class="toolbar-left">
-      <a href="{% if source == 'patient' %}{% url 'dashboard_patient' %}{% else %}{% url 'dashboard' %}{% if source == 'personal' %}#personal{% elif source == 'appointment' %}#appointments{% endif %}{% endif %}"
+      <a href="{% url 'dashboard' %}{% if source == 'patient' or source == 'registration' %}#patient{% elif source == 'personal' %}#personal{% elif source == 'appointment' %}#appointments{% else %}#patient{% endif %}"
         class="btn btn-back">
         <i class="fas fa-arrow-left"></i> Dashboard
       </a>
     </div>
     <div class="toolbar-title">
-      {% if source == 'patient' %}
+      {% if source == 'patient' or source == 'registration' %}
       <i class="fas fa-id-card" style="color: #2563eb;"></i>
-      <span>Patient Dental Registration Card</span>
+      <span>Patient Dental Registration Slip Card</span>
       {% elif source == 'appointment' %}
       <i class="fas fa-id-card" style="color: #2563eb;"></i>
       <span>Single Card</span>
@@ -402,7 +401,7 @@
               <span class="field-value">{{ gender|default:"" }}</span>
             </div>
             <div class="field-row">
-              <span class="field-label">Name :</span>
+              <span class="field-label" style="font-size: 1rem; min-width: 55px;">Name :</span>
               <span class="field-value">{{ name|default:"" }}</span>
             </div>
             <div class="field-row">

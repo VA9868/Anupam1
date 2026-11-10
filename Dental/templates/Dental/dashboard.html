@@ -696,6 +696,22 @@
                       onclick="openClinicalHubFromBtn(this, 'payment')">
                       <i class="fas fa-credit-card"></i>
                     </button>
+                    <button type="button" class="btn-action-icon" title="Edit Patient Details / Book Appointment"
+                      style="color: #d97706; background: #fef3c7; border-color: #fde68a;"
+                      data-id="{{ a.id }}" data-code="{{ a.formatted_id }}"
+                      data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
+                      data-first-name="{{ a.first_name|default:'' }}" data-last-name="{{ a.last_name|default:'' }}"
+                      data-phone="{{ a.phone|default:'' }}" data-phone2="{{ a.phone2|default:'' }}"
+                      data-email="{{ a.email|default:'' }}" data-address="{{ a.address|default:'' }}"
+                      data-city="{{ a.city|default:'' }}" data-state="{{ a.state|default:'' }}" data-pincode="{{ a.pincode|default:'' }}"
+                      data-age="{{ a.age|default:'' }}" data-gender="{{ a.gender|default:'' }}"
+                      data-service="{{ a.service_name|default:'General Consultation' }}"
+                      data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
+                      data-date="{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}"
+                      data-notes="{{ a.notes|default:'' }}"
+                      onclick="openEditPatientModalFromBtn(this)">
+                      <i class="fas fa-user-edit"></i>
+                    </button>
                     <!-- <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=appointment" target="_blank" class="btn-action-icon" title="Print Registration Slip">
                         <i class="fas fa-id-card"></i>
                       </a> -->
@@ -832,6 +848,21 @@
                       data-doctor="{{ p.doctor_name|default:'Dr. Anoop' }}"
                       onclick="openClinicalHubFromBtn(this, 'medicine')">
                       <i class="fas fa-pills"></i>
+                    </button>
+                    <button type="button" class="btn-action-icon" title="Edit Patient Details / Book Appointment"
+                      style="color: #d97706; background: #fef3c7; border-color: #fde68a;"
+                      data-id="{{ p.appointment_id }}" data-code="{{ p.formatted_id }}" data-name="{{ p.name }}"
+                      data-first-name="{{ p.first_name|default:'' }}" data-last-name="{{ p.last_name|default:'' }}"
+                      data-phone="{{ p.phone|default:'' }}" data-phone2="{{ p.phone2|default:'' }}"
+                      data-email="{{ p.email|default:'' }}" data-address="{{ p.address|default:'' }}"
+                      data-city="{{ p.city|default:'' }}" data-state="{{ p.state|default:'' }}" data-pincode="{{ p.pincode|default:'' }}"
+                      data-age="{{ p.age|default:'' }}" data-gender="{{ p.gender|default:'' }}"
+                      data-service="{{ p.service_name|default:'General Consultation' }}"
+                      data-doctor="{{ p.doctor_name|default:'Dr. Anoop' }}"
+                      data-date="{{ p.preferred_date|date:'Y-m-d'|default:'' }}"
+                      data-notes="{{ p.notes|default:'' }}"
+                      onclick="openEditPatientModalFromBtn(this)">
+                      <i class="fas fa-user-edit"></i>
                     </button>
                     <a href="{% url 'print_slip_grid' %}?name={{ p.name|urlencode }}&pid={{ p.formatted_id }}&single_card=1&source=patient"
                       target="_blank" class="btn-action-icon" title="Print Patient Dental Card"
@@ -3056,91 +3087,132 @@
   </div>
 
   <!-- MODAL 2: ADD PATIENT / BOOK APPOINTMENT -->
-  <div class="modal-backdrop" id="addPatientModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 id="addPatientModalHeader"><i class="fas fa-calendar-plus"
-            style="color: #2563eb; margin-right: 8px;"></i>Book Appointment</h3>
+  <div class="modal-backdrop" id="addPatientModal" style="z-index: 2100;">
+    <div class="modal-card" style="max-width: 660px; max-height: 92vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+        <h3 id="addPatientModalHeader" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center;">
+          <i class="fas fa-calendar-plus" style="color: #2563eb; margin-right: 8px;"></i>Book Appointment
+        </h3>
         <button class="modal-close-btn" onclick="closeModal('addPatientModal')">&times;</button>
       </div>
-      <form action="{% url 'add_patient' %}" method="POST">
+      <form action="{% url 'add_patient' %}" method="POST" id="formAddEditPatient" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
         {% csrf_token %}
-        <div class="modal-body">
-          <p id="addPatientModalDesc" style="font-size: 0.8rem; color: #64748b; margin: -4px 0 14px 0;">
-            Saves booking into <strong>Appointments Schedule</strong>. Check below to add Teeth Chart and connect
-            patient to <strong>Patient Tab</strong>.
+        <input type="hidden" id="edit_patient_appointment_id" name="appointment_id" value="">
+        <input type="hidden" id="edit_patient_return_tab" name="return_tab" value="appointments">
+        <input type="hidden" id="edit_patient_reopen_hub" name="reopen_hub" value="0">
+        <input type="hidden" id="new_patient_name" name="patient_name" value="">
+        <div class="modal-body" style="overflow-y: auto; padding: 18px 22px; max-height: calc(92vh - 130px);">
+          <p id="addPatientModalDesc" style="font-size: 0.82rem; color: #64748b; margin: -4px 0 16px 0; line-height: 1.4;">
+            Save patient profile details and manage appointment schedule.
           </p>
-          <div class="form-group">
-            <label for="new_patient_name">Patient Full Name *</label>
-            <input type="text" id="new_patient_name" name="patient_name" class="form-control"
-              placeholder="e.g. Sneha Nair" required>
+
+          <!-- SECTION 1: IDENTITY & REGISTRATION -->
+          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #2563eb; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-id-card"></i> Registration
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="new_patient_phone">Phone Number *</label>
-              <input type="tel" id="new_patient_phone" name="phone" class="form-control" placeholder="10-digit mobile"
+          <div class="form-grid-2" style="margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_PID" style="font-size: 0.82rem; font-weight: 600;">
+                <i class="fas fa-id-badge" style="color: #2563eb; margin-right: 4px;"></i>PID
+              </label>
+              <input type="text" id="new_patient_PID" name="PID" class="form-control"
+                placeholder="Auto-generated upon save" readonly
+                style="background: #f8fafc; font-weight: 600; color: #1e293b; border-color: #cbd5e1; cursor: default;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_reg_no" style="font-size: 0.82rem; font-weight: 600;">
+                <i class="fas fa-id-card" style="color: #2563eb; margin-right: 4px;"></i>Reg No
+              </label>
+              <input type="text" id="new_patient_reg_no" name="reg_no" class="form-control" oninput="syncRegNo()">
+            </div>
+          </div>
+
+          <div class="form-grid-2" style="margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_date" style="font-size: 0.82rem; font-weight: 600;">Appointment Date *</label>
+              <input type="date" id="new_patient_date" name="preferred_date" class="form-control" value="{{ today }}"
                 required>
             </div>
-            <div class="form-group">
-              <label for="new_patient_age">Age</label>
-              <input type="number" id="new_patient_age" name="age" class="form-control" placeholder="e.g. 32">
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="new_patient_gender">Gender</label>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_gender" style="font-size: 0.82rem; font-weight: 600;">Gender</label>
               <select id="new_patient_gender" name="gender" class="form-control">
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="new_patient_date">Appointment Date *</label>
-              <input type="date" id="new_patient_date" name="preferred_date" class="form-control" value="{{ today }}"
-                required>
+          </div>
+
+          <div class="form-grid-2" style="margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_first_name" style="font-size: 0.82rem; font-weight: 600;">First Name *</label>
+              <input type="text" id="new_patient_first_name" name="first_name" class="form-control" required oninput="syncPatientFullName()">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_last_name" style="font-size: 0.82rem; font-weight: 600;">Last Name *</label>
+              <input type="text" id="new_patient_last_name" name="last_name" class="form-control" required oninput="syncPatientFullName()">
             </div>
           </div>
 
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="new_patient_service">Treatment Needed</label>
-              <input type="text" id="new_patient_service" name="service_name" class="form-control"
-                placeholder="e.g. Consultation / RCT">
+          <div class="form-grid-2" style="margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_age" style="font-size: 0.82rem; font-weight: 600;">Age</label>
+              <input type="number" id="new_patient_age" name="age" class="form-control" min="1" max="120">
             </div>
-            <div class="form-group">
-              <label for="new_patient_doctor">Doctor Preference</label>
-              <select id="new_patient_doctor" name="doctor_name" class="form-control">
-                <option value="Dr. Anoop">Dr. Anoop</option>
-                <option value="Dr. Priya Sharma">Dr. Priya Sharma</option>
-                <option value="Dr. Rahul Mehta">Dr. Rahul Mehta</option>
-              </select>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_email" style="font-size: 0.82rem; font-weight: 600;">Email</label>
+              <input type="email" id="new_patient_email" name="email" class="form-control" >
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="new_patient_notes">Symptoms / Notes</label>
-            <textarea id="new_patient_notes" name="notes" rows="2" class="form-control"
-              placeholder="Chief complaint..."></textarea>
+          <!-- SECTION 2: CONTACT INFORMATION -->
+          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #059669; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-phone-alt"></i> Contact &amp; Numbers
           </div>
 
-          <div class="form-group"
-            style="background: #f0fdf4; padding: 12px 14px; border-radius: 8px; border: 1px solid #bbf7d0; margin-top: 10px;">
-            <label
-              style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #166534; cursor: pointer; margin: 0;">
-              <input type="checkbox" name="open_teeth_chart" value="1" id="modalOpenChartCheck"
-                style="width: 17px; height: 17px; accent-color: #16a34a;">
-              <span><i class="fas fa-tooth" style="color: #16a34a;"></i> Add Teeth Chart immediately (Connects to
-                Patient Tab)</span>
-            </label>
+          <div class="form-grid-2" style="margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_phone" style="font-size: 0.82rem; font-weight: 600;">Phone Number *</label>
+              <input type="tel" id="new_patient_phone" name="phone" class="form-control" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_phone2" style="font-size: 0.82rem; font-weight: 600;">Work Number</label>
+              <input type="tel" id="new_patient_phone2" name="phone2" class="form-control">
+            </div>
           </div>
+
+          <!-- SECTION 3: ADDRESS DETAILS -->
+          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7c3aed; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-map-marker-alt"></i> Address
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="new_patient_address" style="font-size: 0.82rem; font-weight: 600;">Address</label>
+            <input type="text" id="new_patient_address" name="address" class="form-control">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_city" style="font-size: 0.82rem; font-weight: 600;">City</label>
+              <input type="text" id="new_patient_city" name="city" class="form-control">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_state" style="font-size: 0.82rem; font-weight: 600;">State</label>
+              <input type="text" id="new_patient_state" name="state" class="form-control">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="new_patient_pincode" style="font-size: 0.82rem; font-weight: 600;">Pincode</label>
+              <input type="text" id="new_patient_pincode" name="pincode" class="form-control">
+            </div>
+          </div>
+
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" style="padding: 14px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
           <button type="button" class="btn-secondary" onclick="closeModal('addPatientModal')">Cancel</button>
-          <button type="submit" class="btn-primary-submit" style="background: #2563eb;"><i
-              class="fas fa-calendar-check"></i> Save Appointment</button>
+          <button type="submit" id="btnSubmitAddPatient" class="btn-primary-submit" style="background: #2563eb;">
+            <i class="fas fa-id-card"></i> Complete Registration &amp; Print Slip
+          </button>
         </div>
       </form>
     </div>
@@ -3954,7 +4026,13 @@
         <div class="hub-patient-meta">
           <div class="hub-avatar" id="hubPatientAvatar">P</div>
           <div class="hub-title-block">
-            <h3 id="hubPatientName">Patient Name</h3>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <h3 id="hubPatientName" style="margin: 0;">Patient Name</h3>
+              <button type="button" class="btn-hub-edit" id="btnHubEditPatient" onclick="openEditPatientFromHub()" title="Edit Patient Details / Book Appointment"
+                style="background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe; font-size: 0.76rem; font-weight: 700; padding: 4px 11px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <i class="fas fa-edit" style="color: #2563eb;"></i> Edit / Book Appointment
+              </button>
+            </div>
             <div class="hub-meta-tags">
               <span><i class="fas fa-id-badge" style="color: #2563eb;"></i> PID: <strong
                   id="hubPatientCode">#2026-0001</strong></span>
@@ -5208,14 +5286,23 @@
       {
         "id": "{{ a.id }}",
         "code": "{{ a.formatted_id }}",
+        "first_name": "{{ a.first_name|default:''|escapejs }}",
+        "last_name": "{{ a.last_name|default:''|escapejs }}",
         "patient": "{% if a.first_name %}{{ a.first_name|escapejs }} {{ a.last_name|escapejs }}{% else %}{{ a.patient_name|escapejs }}{% endif %}",
         "phone": "{{ a.phone|default:''|escapejs }}",
+        "phone2": "{{ a.phone2|default:''|escapejs }}",
+        "email": "{{ a.email|default:''|escapejs }}",
+        "address": "{{ a.address|default:''|escapejs }}",
+        "city": "{{ a.city|default:''|escapejs }}",
+        "state": "{{ a.state|default:''|escapejs }}",
+        "pincode": "{{ a.pincode|default:''|escapejs }}",
         "age": "{{ a.age|default:'' }}",
         "gender": "{{ a.gender|default:''|escapejs }}",
         "date": "{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}",
         "time": "{{ a.preferred_time|default:'Morning'|escapejs }}",
         "doctor": "{{ a.doctor_name|default:'Dr. Anoop'|escapejs }}",
         "service": "{{ a.service_name|default:'Consultation'|escapejs }}",
+        "notes": "{{ a.notes|default:''|escapejs }}",
         "status": "{{ a.status|default:'pending'|escapejs }}",
         "chart_data_raw": "{{ a.chart_data|default:'{}'|escapejs }}"
       }{% if not forloop.last %},{% endif %}
