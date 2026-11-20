@@ -9,11 +9,11 @@
   <meta name="description"
     content="Clinical management, patient cases, appointments, and staff portal for Dr. Anoop's Dental Clinic.">
 
-  <!-- Google Fonts: Inter & Outfit -->
+  <!-- Google Fonts: Inter, Outfit & Playfair Display -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap"
     rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -141,10 +141,169 @@
     window.previewGalleryPhotoInput = previewGalleryPhotoInput;
     window.updateAboutDescPreview = updateAboutDescPreview;
     window.insertAboutHeading = insertAboutHeading;
+
+    function previewDoctorPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('doctorPhotoPreview');
+          const icon = document.getElementById('doctorPhotoPlaceholderIcon');
+          if (img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+          }
+          if (icon) icon.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    window.previewDoctorPhoto = previewDoctorPhoto;
+
+    function previewEditDoctorPhoto(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('editDoctorPhotoPreview');
+          const icon = document.getElementById('editDoctorPhotoPlaceholderIcon');
+          if (img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+          }
+          if (icon) icon.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    window.previewEditDoctorPhoto = previewEditDoctorPhoto;
+
+    function openEditDoctorModalFromBtn(btn) {
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const name = btn.getAttribute('data-name') || '';
+      const regno = btn.getAttribute('data-regno') || '';
+      const designation = btn.getAttribute('data-designation') || '';
+      const qual = btn.getAttribute('data-qual') || '';
+      const days = btn.getAttribute('data-days') || '';
+      const bio = btn.getAttribute('data-bio') || '';
+      const photo = btn.getAttribute('data-photo') || '';
+
+      const form = document.getElementById('editDoctorForm');
+      if (form) form.action = '/dashboard/edit-doctor/' + id + '/';
+
+      const nameInp = document.getElementById('edit_doc_name');
+      if (nameInp) nameInp.value = name;
+      const regInp = document.getElementById('edit_doc_reg_no');
+      if (regInp) regInp.value = regno;
+      const desInp = document.getElementById('edit_doc_designation');
+      if (desInp) desInp.value = designation;
+      const qualInp = document.getElementById('edit_doc_qual');
+      if (qualInp) qualInp.value = qual;
+      const daysInp = document.getElementById('edit_doc_days');
+      if (daysInp) daysInp.value = days;
+      const bioInp = document.getElementById('edit_doc_bio');
+      if (bioInp) bioInp.value = bio;
+
+      const preview = document.getElementById('editDoctorPhotoPreview');
+      const icon = document.getElementById('editDoctorPhotoPlaceholderIcon');
+      if (preview && photo) {
+        preview.src = photo;
+        preview.style.display = 'block';
+        if (icon) icon.style.display = 'none';
+      } else if (preview) {
+        preview.style.display = 'none';
+        if (icon) icon.style.display = 'block';
+      }
+
+      openModal('editDoctorModal');
+    }
+    window.openEditDoctorModalFromBtn = openEditDoctorModalFromBtn;
+
+    function filterDoctorsDirectory(query) {
+      const q = (query || '').toLowerCase().trim();
+      const cards = document.querySelectorAll('#section-doctors .doctor-card-item');
+      let matched = 0;
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const show = (!q || text.includes(q));
+        card.style.display = show ? 'flex' : 'none';
+        if (show) matched++;
+      });
+      const emptyBanner = document.getElementById('doctorSearchEmptyBanner');
+      if (emptyBanner) {
+        emptyBanner.style.display = (matched === 0 && q) ? 'block' : 'none';
+      }
+    }
+    window.filterDoctorsDirectory = filterDoctorsDirectory;
+
+    function openAddPatientWithChartModal() {
+      if (typeof resetAddPatientModal === 'function') resetAddPatientModal();
+      const returnTabInput = document.getElementById('edit_patient_return_tab');
+      if (returnTabInput) returnTabInput.value = 'patient';
+      openModal('addPatientModal');
+    }
+    window.openAddPatientWithChartModal = openAddPatientWithChartModal;
+
+    function filterPatientDirectoryTable(query) {
+      const q = (query || '').toLowerCase().trim();
+      const rows = document.querySelectorAll('#section-patient .cases-table tbody tr');
+      let matched = 0;
+      rows.forEach(row => {
+        if (row.id === 'patientDirectoryNoResultsRow' || row.querySelector('.empty-row-td') || row.cells.length < 5) return;
+        const text = row.textContent.toLowerCase();
+        const show = (!q || text.includes(q));
+        row.style.display = show ? '' : 'none';
+        if (show) matched++;
+      });
+      const emptyRow = document.getElementById('patientDirectoryNoResultsRow');
+      if (emptyRow) {
+        emptyRow.style.display = (matched === 0 && q) ? '' : 'none';
+      }
+    }
+    window.filterPatientDirectoryTable = filterPatientDirectoryTable;
   </script>
 </head>
 
 <body>
+
+  <!-- PAGE RELOAD PRELOADER (LOGO & 2 MOVING YELLOW ACCENTS) -->
+  <div id="pageReloadPreloader" class="page-reload-preloader">
+    <div class="preloader-content">
+      <div class="preloader-logo-wrapper">
+        <div class="preloader-yellow-glow"></div>
+        <div class="preloader-yellow-ring-1"></div>
+        <div class="preloader-yellow-ring-2"></div>
+        <div class="preloader-logo-circle">
+          <img src="{% static 'Dental/images/logo.png' %}" alt="Anupam Dental Clinic Logo">
+        </div>
+      </div>
+      <div class="preloader-text-wrap">
+        <h3 class="preloader-clinic-title"><i>Dr.Anoop's</i> ANUPAM</h3>
+        <p class="preloader-clinic-subtitle">DENTAL CLINIC</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const loader = document.getElementById('pageReloadPreloader');
+      if (!loader) return;
+      function hideLoader() {
+        if (!loader.classList.contains('fade-out')) {
+          loader.classList.add('fade-out');
+          setTimeout(function () {
+            loader.style.display = 'none';
+          }, 550);
+        }
+      }
+      if (document.readyState === 'complete') {
+        setTimeout(hideLoader, 500);
+      } else {
+        window.addEventListener('load', function () {
+          setTimeout(hideLoader, 550);
+        });
+      }
+      setTimeout(hideLoader, 2200);
+    })();
+  </script>
 
   <!-- LEFT SIDEBAR -->
   <aside class="sidebar" id="sidebar">
@@ -278,7 +437,8 @@
           <div class="profile-dropdown" id="profileDropdown">
             <div
               style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 0.775rem; color: var(--text-light);">
-              SIGNED IN AS<br><strong style="color: var(--text-main); font-size: 0.85rem;">{{ user.username|default:"Admin" }}</strong>
+              SIGNED IN AS<br><strong style="color: var(--text-main); font-size: 0.85rem;">{{
+                user.username|default:"Admin" }}</strong>
             </div>
             <a href="{% url 'home' %}" class="dropdown-item">
               <i class="fas fa-globe"></i> Visit Website
@@ -410,7 +570,7 @@
                   <th>Type</th>
                   <th>Status</th>
                   <th>Due Date</th>
-                  <th style="text-align: right;">Actions</th>
+                  <th style="text-align: right; width: 110px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="casesTableBody">
@@ -577,11 +737,11 @@
                 <th>Patient</th>
                 <th>Phone</th>
                 <th>Appointment Date</th>
-                <th>Service / Treatment</th>
+                <th>Service</th>
                 <th>Doctor</th>
                 <th>Teeth Chart</th>
                 <th>Status</th>
-                <th style="text-align: right;">Actions</th>
+                <th style="text-align: right; width: 110px;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -599,10 +759,12 @@
                     data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
                     onclick="openClinicalHubFromBtn(this, 'chart')">
                     <i class="fas fa-tooth" style="color: #2563eb; font-size: 0.85rem;"></i>
-                    <span>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}</span>
+                    <span>{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{
+                      a.patient_name|default:'Patient' }}{% endif %}</span>
                     <i class="fas fa-external-link-alt patient-link-icon"></i>
                   </a>
-                  {% if a.age %}<span style="font-size: 0.75rem; color: #94a3b8;">Age: {{ a.age }} | {{ a.gender|default:"-" }}</span>{% endif %}
+                  {% if a.age %}<span style="font-size: 0.75rem; color: #94a3b8;">Age: {{ a.age }} | {{
+                    a.gender|default:"-" }}</span>{% endif %}
                   <div class="patient-quick-pills">
                     <button type="button" class="btn-quick-pill btn-pill-chart" title="Open Teeth Chart"
                       data-id="{{ a.id }}" data-code="{{ a.formatted_id }}"
@@ -641,7 +803,8 @@
                 <td style="font-weight: 600; color: #1e293b; white-space: nowrap;">
                   <i class="far fa-calendar-alt" style="color: #2563eb; margin-right: 6px;"></i>{{ a.preferred_date }}
                 </td>
-                <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{ a.service_name }}</span></td>
+                <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 500;">{{
+                    a.service_name }}</span></td>
                 <td>{{ a.doctor_name }}</td>
                 <td>
                   {% if a.has_chart %}
@@ -697,24 +860,31 @@
                       <i class="fas fa-credit-card"></i>
                     </button>
                     <button type="button" class="btn-action-icon" title="Edit Patient Details / Book Appointment"
-                      style="color: #d97706; background: #fef3c7; border-color: #fde68a;"
-                      data-id="{{ a.id }}" data-code="{{ a.formatted_id }}"
+                      style="color: #d97706; background: #fef3c7; border-color: #fde68a;" data-id="{{ a.id }}"
+                      data-code="{{ a.formatted_id }}"
                       data-name="{% if a.first_name %}{{ a.first_name }} {{ a.last_name }}{% else %}{{ a.patient_name|default:'Patient' }}{% endif %}"
                       data-first-name="{{ a.first_name|default:'' }}" data-last-name="{{ a.last_name|default:'' }}"
                       data-phone="{{ a.phone|default:'' }}" data-phone2="{{ a.phone2|default:'' }}"
                       data-email="{{ a.email|default:'' }}" data-address="{{ a.address|default:'' }}"
-                      data-city="{{ a.city|default:'' }}" data-state="{{ a.state|default:'' }}" data-pincode="{{ a.pincode|default:'' }}"
-                      data-age="{{ a.age|default:'' }}" data-gender="{{ a.gender|default:'' }}"
+                      data-city="{{ a.city|default:'' }}" data-state="{{ a.state|default:'' }}"
+                      data-pincode="{{ a.pincode|default:'' }}" data-age="{{ a.age|default:'' }}"
+                      data-gender="{{ a.gender|default:'' }}"
                       data-service="{{ a.service_name|default:'General Consultation' }}"
                       data-doctor="{{ a.doctor_name|default:'Dr. Anoop' }}"
                       data-date="{{ a.preferred_date|date:'Y-m-d'|default:a.preferred_date }}"
-                      data-notes="{{ a.notes|default:'' }}"
-                      onclick="openEditPatientModalFromBtn(this)">
+                      data-notes="{{ a.notes|default:'' }}" onclick="openEditPatientModalFromBtn(this)">
                       <i class="fas fa-user-edit"></i>
                     </button>
-                    <!-- <a href="{% url 'print_slip_grid' %}?name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&pid={{ a.formatted_id }}&single_card=1&source=appointment" target="_blank" class="btn-action-icon" title="Print Registration Slip">
-                        <i class="fas fa-id-card"></i>
-                      </a> -->
+                    <a href="{% url 'print_slip_grid' %}?id={{ a.id }}&reg_no={{ a.reg_no|default:a.formatted_id|urlencode }}&pid={{ a.formatted_id }}&name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&age={{ a.age|default:'' }}&gender={{ a.gender|default:'' }}&address={{ a.address|default:'West Gate, Vaikom'|urlencode }}&single_card=1&source=appointment"
+                      class="btn-action-icon" title="Print Patient Registration Slip"
+                      style="color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;">
+                      <i class="fas fa-id-card"></i>
+                    </a>
+                    <a href="{% url 'print_clinical_notes' %}?id={{ a.id }}&pid={{ a.formatted_id }}&name={% if a.first_name %}{{ a.first_name|urlencode }}+{{ a.last_name|urlencode }}{% else %}{{ a.patient_name|urlencode }}{% endif %}&age={{ a.age|default:'' }}&gender={{ a.gender|default:'' }}&doctor={{ a.doctor_name|default:'Dr. Anoop'|urlencode }}&date={{ a.preferred_date|date:'d/m/Y'|default:'' }}"
+                      class="btn-action-icon" title="Print Clinical Notes Pad (A5)"
+                      style="color: #0f766e; background: #ecfdf5; border-color: #a7f3d0;">
+                      <i class="fas fa-notes-medical"></i>
+                    </a>
                   </div>
                 </td>
               </tr>
@@ -748,9 +918,22 @@
             <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0 0;">Patients with connected Dental Teeth Charts
               &amp; clinical treatment records</p>
           </div>
-          <button class="btn-primary-submit" onclick="openAddPatientWithChartModal()" style="background: #0284c7;">
-            <i class="fas fa-tooth"></i> Add Patient &amp; Teeth Chart
-          </button>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div style="position: relative; min-width: 250px;">
+              <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.82rem;"></i>
+              <input type="text" id="patientSearchInput" onkeyup="filterPatientDirectoryTable(this.value)"
+                placeholder="Search patient, phone, doctor, PID..."
+                style="width: 100%; padding: 7px 12px 7px 32px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; background: #ffffff; color: #0f172a; outline: none; transition: border-color 0.15s ease;">
+            </div>
+            <a href="{% url 'print_clinical_notes' %}" class="btn-secondary" target="_blank"
+              title="Open Clinical Notes Pad (A5)"
+              style="font-size: 0.8rem; padding: 7px 13px; display: inline-flex; align-items: center; gap: 6px; border-color: #a7f3d0; background: #ecfdf5; color: #065f46; text-decoration: none; border-radius: 6px; font-weight: 600;">
+              <i class="fas fa-notes-medical" style="color: #059669;"></i> Clinical Notes (A5)
+            </a>
+            <button class="btn-primary-submit" onclick="openAddPatientWithChartModal()" style="background: #0284c7; padding: 7px 14px; font-size: 0.82rem;">
+              <i class="fas fa-tooth"></i> Add Patient &amp; Teeth Chart
+            </button>
+          </div>
         </div>
 
         <!-- FILTER / STATUS BANNER -->
@@ -761,13 +944,13 @@
               <i class="fas fa-tooth" style="color: #2563eb; margin-right: 4px;"></i>Teeth Chart Connected ({{ patient_records|length }})
             </span>
             <button class="filter-btn" onclick="switchTab('appointments', event)">
-              <i class="fas fa-calendar-check" style="margin-right: 4px;"></i>View Appointments ({{ appointments.count }})
+              <i class="fas fa-calendar-check" style="margin-right: 4px;"></i>View Appointments ({{ appointments.count}})
             </button>
           </div>
         </div>
 
         <div class="table-responsive">
-          <table class="cases-table">
+          <table class="cases-table" id="patientDirectoryTable">
             <thead>
               <tr>
                 <th>Patient Name</th>
@@ -776,7 +959,7 @@
                 <th>Clinical Teeth Chart</th>
                 <th>Assigned Doctor</th>
                 <th>Latest Visit</th>
-                <th style="text-align: right;">Actions</th>
+                <th style="text-align: right; width: 85px;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -817,8 +1000,9 @@
                   <span style="font-weight: 600; color: #1e293b;">{{ p.preferred_date }}</span>
                   <div style="font-size: 0.725rem; color: #64748b;">{{ p.service_name }}</div>
                 </td>
-                <td>
-                  <div class="table-actions" style="justify-content: flex-end; gap: 6px;">
+                <td style="text-align: right; vertical-align: middle;">
+                  <div class="table-actions table-actions-2x3"
+                    style="display: inline-grid; grid-template-columns: repeat(2, 28px); grid-template-rows: repeat(3, 28px); gap: 5px; justify-content: flex-end;">
                     <button type="button" class="btn-action-icon" title="Open Teeth Chart"
                       style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;"
                       data-id="{{ p.appointment_id }}" data-code="{{ p.formatted_id }}" data-name="{{ p.name }}"
@@ -839,7 +1023,8 @@
                       onclick="openClinicalHubFromBtn(this, 'payment')">
                       <i class="fas fa-credit-card"></i>
                     </button>
-                    <button type="button" class="btn-action-icon" title="Prescribe Medicine &amp; View Table (Connected to Material Box 1)"
+                    <button type="button" class="btn-action-icon"
+                      title="Prescribe Medicine &amp; View Table (Connected to Material Box 1)"
                       style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;"
                       data-id="{{ p.appointment_id }}" data-code="{{ p.formatted_id }}" data-name="{{ p.name }}"
                       data-phone="{{ p.phone|default:'' }}" data-age="{{ p.age|default:'' }}"
@@ -855,19 +1040,24 @@
                       data-first-name="{{ p.first_name|default:'' }}" data-last-name="{{ p.last_name|default:'' }}"
                       data-phone="{{ p.phone|default:'' }}" data-phone2="{{ p.phone2|default:'' }}"
                       data-email="{{ p.email|default:'' }}" data-address="{{ p.address|default:'' }}"
-                      data-city="{{ p.city|default:'' }}" data-state="{{ p.state|default:'' }}" data-pincode="{{ p.pincode|default:'' }}"
-                      data-age="{{ p.age|default:'' }}" data-gender="{{ p.gender|default:'' }}"
+                      data-city="{{ p.city|default:'' }}" data-state="{{ p.state|default:'' }}"
+                      data-pincode="{{ p.pincode|default:'' }}" data-age="{{ p.age|default:'' }}"
+                      data-gender="{{ p.gender|default:'' }}"
                       data-service="{{ p.service_name|default:'General Consultation' }}"
                       data-doctor="{{ p.doctor_name|default:'Dr. Anoop' }}"
-                      data-date="{{ p.preferred_date|date:'Y-m-d'|default:'' }}"
-                      data-notes="{{ p.notes|default:'' }}"
+                      data-date="{{ p.preferred_date|date:'Y-m-d'|default:'' }}" data-notes="{{ p.notes|default:'' }}"
                       onclick="openEditPatientModalFromBtn(this)">
                       <i class="fas fa-user-edit"></i>
                     </button>
-                    <a href="{% url 'print_slip_grid' %}?name={{ p.name|urlencode }}&pid={{ p.formatted_id }}&single_card=1&source=patient"
-                      target="_blank" class="btn-action-icon" title="Print Patient Dental Card"
+                    <a href="{% url 'print_slip_grid' %}?id={{ p.appointment_id }}&reg_no={{ p.reg_no|default:p.formatted_id|urlencode }}&pid={{ p.formatted_id }}&name={{ p.name|urlencode }}&age={{ p.age|default:'' }}&gender={{ p.gender|default:'' }}&address={{ p.address|default:'West Gate, Vaikom'|urlencode }}&single_card=1&source=patient"
+                      class="btn-action-icon" title="Print Patient Dental Card"
                       style="color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe;">
                       <i class="fas fa-id-card"></i>
+                    </a>
+                    <a href="{% url 'print_clinical_notes' %}?id={{ p.appointment_id }}&pid={{ p.formatted_id }}&name={{ p.name|urlencode }}&age={{ p.age|default:'' }}&gender={{ p.gender|default:'' }}&doctor={{ p.doctor_name|default:'Dr. Anoop'|urlencode }}&date={{ p.preferred_date|date:'d/m/Y'|default:'' }}"
+                      class="btn-action-icon" title="Print Clinical Notes Pad (A5) for {{ p.name }}"
+                      style="color: #0f766e; background: #ecfdf5; border-color: #a7f3d0;" target="_blank">
+                      <i class="fas fa-notes-medical"></i>
                     </a>
                   </div>
                 </td>
@@ -891,6 +1081,12 @@
                 </td>
               </tr>
               {% endfor %}
+              <tr id="patientDirectoryNoResultsRow" style="display: none;">
+                <td colspan="7" style="text-align: center; padding: 25px 20px; color: #64748b; background: #f8fafc;">
+                  <i class="fas fa-search" style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 4px; display: block;"></i>
+                  No matching patients found. Try another search term.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -900,71 +1096,112 @@
     <!-- TAB 4: DOCTORS DIRECTORY VIEW -->
     <div id="section-doctors" class="content-section" style="display: none;">
       <div class="dash-panel" style="padding: 24px;">
-        <div class="panel-header" style="padding: 0 0 16px 0;">
-          <h2 class="panel-title">Clinic Doctors & Specialists</h2>
-          <button class="btn-primary-submit" onclick="openModal('addDoctorModal')">
-            <i class="fas fa-user-md"></i> Add New Doctor
-          </button>
+        <div class="panel-header"
+          style="padding: 0 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 class="panel-title" style="margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-user-md" style="color: #2563eb;"></i> Clinic Doctors &amp; Specialists
+            </h2>
+            <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0 0;">Dental Consultants Directory &bull; Connected to Prescription &amp; Clinical Notes Pad</p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button class="btn-primary-submit" onclick="openModal('addDoctorModal')">
+              <i class="fas fa-user-plus"></i> Add New Doctor
+            </button>
+          </div>
         </div>
+
         <div
-          style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 16px;">
+          style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 16px;">
           {% for doc in doctors %}
-          <div
-            style="background: #ffffff; border: 1px solid var(--border-darker); border-radius: var(--radius-md); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="doctor-card-item"
+            style="background: #ffffff; border: 1.5px solid {% if doc.is_chief %}#fcd34d{% else %}var(--border-darker){% endif %}; border-radius: var(--radius-md); padding: 20px; box-shadow: {% if doc.is_chief %}0 4px 12px rgba(245, 158, 11, 0.12){% else %}0 1px 3px rgba(0,0,0,0.05){% endif %}; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
             <div>
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div
-                  style="width: 52px; height: 52px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 2px solid #e2e8f0;">
-                  {% if doc.photo %}
-                  <img src="{{ doc.photo.url }}" alt="{{ doc.name }}"
-                    style="width: 100%; height: 100%; object-fit: cover;">
-                  {% else %}
-                  <i class="fas fa-user-md"></i>
-                  {% endif %}
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div
+                    style="width: 52px; height: 52px; border-radius: 50%; background: {% if doc.is_chief %}#fef3c7{% else %}#e0f2fe{% endif %}; color: {% if doc.is_chief %}#b45309{% else %}#0284c7{% endif %}; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 2px solid {% if doc.is_chief %}#fde68a{% else %}#e2e8f0{% endif %};">
+                    {% if doc.photo %}
+                    <img src="{{ doc.photo.url }}" alt="{{ doc.name }}"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <i class="fas {% if doc.is_chief %}fa-user-nurse{% else %}fa-user-md{% endif %}"></i>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <h3 style="font-size: 1.05rem; color: #0f172a; font-weight: 700; margin: 0 0 2px 0;">{{ doc.name }}</h3>
+                    <span style="font-size: 0.775rem; color: #64748b; font-weight: 600;">{{ doc.designation|default:doc.title }}</span>
+                  </div>
                 </div>
-                <div>
-                  <h3 style="font-size: 1.05rem; color: #0f172a; font-weight: 700; margin: 0 0 2px 0;">{{ doc.name }}
-                  </h3>
-                  <span style="font-size: 0.775rem; color: #64748b; font-weight: 500;">{{ doc.designation|default:doc.title }}</span>
-                </div>
+                {% if doc.is_chief %}
+                <span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap;">
+                  <i class="fas fa-crown" style="color: #f59e0b; margin-right: 3px;"></i> Chief
+                </span>
+                {% else %}
+                <span class="badge" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap;">
+                  <i class="fas fa-certificate" style="color: #16a34a; margin-right: 3px;"></i> Specialist
+                </span>
+                {% endif %}
               </div>
+
               {% if doc.reg_no %}
               <p style="font-size: 0.825rem; color: #334155; margin-bottom: 6px;"><strong>Reg No:</strong> <span
-                  style="color: #2563eb; font-weight: 600;">{{ doc.reg_no }}</span></p>
+                  style="color: #2563eb; font-weight: 600; background: #eff6ff; padding: 1px 6px; border-radius: 4px;">{{ doc.reg_no }}</span></p>
               {% endif %}
-              <p style="font-size: 0.825rem; color: #334155; margin-bottom: 6px;"><strong>Designation:</strong> {{ doc.designation|default:doc.specialization }}</p>
+              <p style="font-size: 0.825rem; color: #334155; margin-bottom: 6px;"><strong>Specialization:</strong> {{ doc.specialization|default:doc.designation }}</p>
               <p style="font-size: 0.825rem; color: #334155; margin-bottom: 6px;"><strong>Qualification:</strong> {{ doc.qualification }}</p>
-              <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;"><i class="far fa-clock"></i> {{ doc.available_days }}</p>
+              <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;"><i class="far fa-clock" style="color: #0284c7; margin-right: 4px;"></i><strong>Schedule:</strong> {{ doc.available_days }}</p>
               {% if doc.bio %}
               <p
-                style="font-size: 0.775rem; color: #64748b; font-style: italic; margin-bottom: 6px; line-height: 1.35;">
+                style="font-size: 0.775rem; color: #64748b; font-style: italic; margin-bottom: 6px; line-height: 1.35; background: #f8fafc; padding: 6px 10px; border-radius: 6px;">
                 "{{ doc.bio }}"</p>
               {% endif %}
             </div>
+
             <div
-              style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-darker);">
-              <button type="button" class="btn-sm"
-                style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;"
-                data-id="{{ doc.id }}" data-name="{{ doc.name }}" data-regno="{{ doc.reg_no|default:'' }}"
-                data-designation="{{ doc.designation|default:doc.title|default:'' }}"
-                data-qual="{{ doc.qualification|default:'' }}" data-days="{{ doc.available_days|default:'' }}"
-                data-bio="{{ doc.bio|default:'' }}" data-photo="{% if doc.photo %}{{ doc.photo.url }}{% endif %}"
-                onclick="openEditDoctorModalFromBtn(this)">
-                <i class="fas fa-edit"></i> Edit / Upload Photo
-              </button>
+              style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-darker);">
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn-sm"
+                  style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;"
+                  data-id="{{ doc.id }}" data-name="{{ doc.name }}" data-regno="{{ doc.reg_no|default:'' }}"
+                  data-designation="{{ doc.designation|default:doc.title|default:'' }}"
+                  data-qual="{{ doc.qualification|default:'' }}" data-days="{{ doc.available_days|default:'' }}"
+                  data-bio="{{ doc.bio|default:'' }}" data-photo="{% if doc.photo %}{{ doc.photo.url }}{% endif %}"
+                  onclick="openEditDoctorModalFromBtn(this)">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+              </div>
+
+              {% if not doc.is_chief %}
               <form action="{% url 'delete_doctor' doc.id %}" method="POST"
                 onsubmit="return confirm('Are you sure you want to remove doctor {{ doc.name|escapejs }}?');"
                 style="display: inline; margin: 0;">
                 {% csrf_token %}
                 <button type="submit" class="btn-sm"
-                  style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 0.775rem; font-weight: 600; cursor: pointer;"
+                  style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 9px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;"
                   title="Delete Doctor">
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </form>
+              {% endif %}
             </div>
           </div>
+          {% empty %}
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+            <div style="width: 50px; height: 50px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 10px;">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <h4 style="font-size: 1rem; color: #0f172a; margin: 0 0 6px 0;">No Doctors in Directory Yet</h4>
+            <p style="font-size: 0.825rem; color: #64748b; margin: 0 0 14px 0;">Add your clinical consultants and visiting specialists to connect them with prescriptions and clinical notes.</p>
+            <button type="button" class="btn-primary-submit" onclick="openModal('addDoctorModal')">
+              <i class="fas fa-user-plus"></i> Add Doctor
+            </button>
+          </div>
           {% endfor %}
+        </div>
+        <div id="doctorSearchEmptyBanner" style="display: none; text-align: center; padding: 30px 20px; color: #64748b; font-size: 0.9rem; margin-top: 14px;">
+          <i class="fas fa-user-slash" style="font-size: 1.6rem; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
+          No doctor matched your search. <a href="javascript:void(0)" onclick="document.getElementById('doctorSearchInput').value=''; filterDoctorsDirectory('');" style="color: #2563eb; font-weight: 600;">Clear search</a>
         </div>
       </div>
     </div>
@@ -989,7 +1226,7 @@
               <input type="text" id="serviceSearchInput" class="search-input" placeholder="Search services..."
                 onkeyup="filterDashboardServices()">
             </div>
-            <a href="{% url 'home' %}#services" target="_blank" class="btn-secondary"
+            <a href="{% url 'home' %}#services" class="btn-secondary"
               style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;"
               title="Open Website Live Services-Grid">
               <i class="fas fa-external-link-alt"></i> View on Website
@@ -1150,7 +1387,8 @@
               <tr>
                 <th>Invoice #</th>
                 <th>Patient</th>
-                <th>Treatment</th>
+                <th>Service</th>
+                <th>Doctor</th>
                 <th>Amount</th>
                 <th>Payment Mode</th>
                 <th>Status</th>
@@ -1163,6 +1401,7 @@
                 <td><strong>{{ inv.invoice_id }}</strong></td>
                 <td>{{ inv.patient_name }}</td>
                 <td>{{ inv.treatment }}</td>
+                <td><span style="font-size: 0.825rem; color: #334155;"><i class="fas fa-user-md" style="color: #0284c7; margin-right: 4px;"></i>{{ inv.doctor_name|default:"Dr. Anoop" }}</span></td>
                 <td style="font-weight: 700; color: #0f172a;">₹{{ inv.amount }}</td>
                 <td>{{ inv.payment_mode }}</td>
                 <td>
@@ -1175,7 +1414,7 @@
               </tr>
               {% empty %}
               <tr>
-                <td colspan="7" class="empty-row-td">No invoices generated yet.</td>
+                <td colspan="8" class="empty-row-td">No invoices generated yet.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -1386,20 +1625,30 @@
               </div>
 
               <!-- ACTION BUTTONS: ADD, UPDATE (NEW), NEW, REFRESH, DELETE, CLOSE -->
-              <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px solid #cbd5e1;">
-                <button type="button" id="btnMedAdd" style="background: #16a34a; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">ADD</button>
-                <button type="button" id="btnMedUpdate" style="background: #0d9488; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">UPDATE (NEW)</button>
-                <button type="button" id="btnMedRefresh" style="background: #06b6d4; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">REFRESH</button>
-                <button type="button" id="btnMedDelete" style="background: #dc2626; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">DELETE</button>
+              <div
+                style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px solid #cbd5e1;">
+                <button type="button" id="btnMedAdd"
+                  style="background: #16a34a; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">ADD</button>
+                <button type="button" id="btnMedUpdate"
+                  style="background: #0d9488; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">UPDATE
+                  (NEW)</button>
+                <button type="button" id="btnMedRefresh"
+                  style="background: #06b6d4; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">REFRESH</button>
+                <button type="button" id="btnMedDelete"
+                  style="background: #dc2626; color: #fff; font-weight: 700; font-size: 0.72rem; border: none; border-radius: 4px; padding: 6px 11px; cursor: pointer; letter-spacing: 0.3px;">DELETE</button>
               </div>
             </form>
           </div>
 
           <!-- RIGHT 6 LOOKUP SELECTION BOXES -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-content: start;">
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-content: start;">
             <!-- 1. Category -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">Category</div>
+            <div
+              style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div
+                style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">
+                Category</div>
               <div id="lookupContainerCategory" style="height: 100px; overflow-y: auto; padding: 4px;">
                 <div class="med-lookup-item" data-field="medCategory" data-val="Cat">Cat</div>
                 <div class="med-lookup-item" data-field="medCategory" data-val="Tablet">Tablet</div>
@@ -1412,8 +1661,11 @@
             </div>
 
             <!-- 2. Type -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">Type</div>
+            <div
+              style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div
+                style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">
+                Type</div>
               <div id="lookupContainerType" style="height: 100px; overflow-y: auto; padding: 4px;">
                 <div class="med-lookup-item" data-field="medType" data-val="re">re</div>
                 <div class="med-lookup-item" data-field="medType" data-val="Painkiller">Painkiller</div>
@@ -1425,20 +1677,28 @@
             </div>
 
             <!-- 3. Ingredients -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">Ingredients</div>
+            <div
+              style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div
+                style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">
+                Ingredients</div>
               <div id="lookupContainerIngredients" style="height: 100px; overflow-y: auto; padding: 4px;">
                 <div class="med-lookup-item" data-field="medIngredients" data-val="Paracetamol">Paracetamol</div>
                 <div class="med-lookup-item" data-field="medIngredients" data-val="Aceclofenac">Aceclofenac</div>
-                <div class="med-lookup-item" data-field="medIngredients" data-val="Amoxicillin + Clav">Amoxicillin + Clav</div>
-                <div class="med-lookup-item" data-field="medIngredients" data-val="Chlorhexidine 0.2%">Chlorhexidine 0.2%</div>
+                <div class="med-lookup-item" data-field="medIngredients" data-val="Amoxicillin + Clav">Amoxicillin +
+                  Clav</div>
+                <div class="med-lookup-item" data-field="medIngredients" data-val="Chlorhexidine 0.2%">Chlorhexidine
+                  0.2%</div>
                 <div class="med-lookup-item" data-field="medIngredients" data-val="Metronidazole">Metronidazole</div>
               </div>
             </div>
 
             <!-- 4. Product Name -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">Product Name</div>
+            <div
+              style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div
+                style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">
+                Product Name</div>
               <div id="lookupContainerProductName" style="height: 100px; overflow-y: auto; padding: 4px;">
                 <div class="med-lookup-item" data-field="medProductName" data-val="Oil">Oil</div>
                 <div class="med-lookup-item" data-field="medProductName" data-val="Aceclofenac">Aceclofenac</div>
@@ -1449,8 +1709,11 @@
             </div>
 
             <!-- 5. Brand Name -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">Brand Name</div>
+            <div
+              style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div
+                style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">
+                Brand Name</div>
               <div id="lookupContainerBrandName" style="height: 100px; overflow-y: auto; padding: 4px;">
                 <div class="med-lookup-item" data-field="medBrandName" data-val="Bakflex Plus">Bakflex Plus</div>
                 <div class="med-lookup-item" data-field="medBrandName" data-val="Dokasy">Dokasy</div>
@@ -1461,12 +1724,16 @@
             </div>
 
             <!-- 6. Contra Indications -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">Contra Indications</div>
+            <div
+              style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div
+                style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 5px; font-size: 0.78rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc;">
+                Contra Indications</div>
               <div id="lookupContainerContraIndications" style="height: 100px; overflow-y: auto; padding: 4px;">
                 <div class="med-lookup-item" data-field="medComments" data-val="Pregnancy">Pregnancy</div>
                 <div class="med-lookup-item" data-field="medComments" data-val="Peptic Ulcer">Peptic Ulcer</div>
-                <div class="med-lookup-item" data-field="medComments" data-val="Penicillin Allergy">Penicillin Allergy</div>
+                <div class="med-lookup-item" data-field="medComments" data-val="Penicillin Allergy">Penicillin Allergy
+                </div>
                 <div class="med-lookup-item" data-field="medComments" data-val="Renal Impairment">Renal Impairment</div>
                 <div class="med-lookup-item" data-field="medComments" data-val="Asthma">Asthma</div>
               </div>
@@ -1483,7 +1750,9 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               <span><i class="fas fa-table-list" style="color: #0284c7; margin-right: 6px;"></i>Medicine Inventory
                 List</span>
-              <span id="medInventoryCountBadge" style="font-size: 0.72rem; background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 999px; font-weight: 600;">{{ medicines.count|default:0 }} items</span>
+              <span id="medInventoryCountBadge"
+                style="font-size: 0.72rem; background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 999px; font-weight: 600;">{{
+                medicines.count|default:0 }} items</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <div style="position: relative; display: flex; align-items: center;">
@@ -1523,7 +1792,8 @@
                 <tr class="clickable-table-row" data-id="{{ med.id }}">
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.category|default:'-' }}</td>
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.item_type|default:'-' }}</td>
-                  <td style="padding: 7px 10px; border: 1px solid #e2e8f0; font-weight: 600;">{{ med.product_name }}</td>
+                  <td style="padding: 7px 10px; border: 1px solid #e2e8f0; font-weight: 600;">{{ med.product_name }}
+                  </td>
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.brand_name|default:'-' }}</td>
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.strength|default:'-' }}</td>
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.dosage|default:'-' }}</td>
@@ -1531,11 +1801,13 @@
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.frequency|default:'-' }}</td>
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.duration|default:'-' }}</td>
                   <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.ingredients|default:'-' }}</td>
-                  <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.contra_indications|default:'-' }}</td>
+                  <td style="padding: 7px 10px; border: 1px solid #e2e8f0;">{{ med.contra_indications|default:'-' }}
+                  </td>
                 </tr>
                 {% empty %}
                 <tr id="emptyMedNoticeRow">
-                  <td colspan="11" style="text-align: center; color: #94a3b8; padding: 20px;">No medicine inventory records yet in database. Use form above to add medicines.</td>
+                  <td colspan="11" style="text-align: center; color: #94a3b8; padding: 20px;">No medicine inventory
+                    records yet in database. Use form above to add medicines.</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -1649,7 +1921,8 @@
                 style="background: linear-gradient(180deg, #eaeaea 0%, #d5d5d5 100%); padding: 6px 10px; font-size: 0.82rem; font-weight: 700; color: #1e293b; text-align: center; border-bottom: 1px solid #bcbcbc; display: flex; align-items: center; justify-content: space-between;">
                 <span>Name</span>
                 <span id="labNameCountBadge"
-                  style="font-size: 0.68rem; background: #ffffff; color: #475569; padding: 1px 6px; border-radius: 999px;">{{ dental_labs.count }} labs</span>
+                  style="font-size: 0.68rem; background: #ffffff; color: #475569; padding: 1px 6px; border-radius: 999px;">{{
+                  dental_labs.count }} labs</span>
               </div>
               <div style="padding: 4px 6px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
                 <input type="text" id="searchLabNamesInput" placeholder="Filter lab name or city..."
@@ -1671,7 +1944,8 @@
                       <strong>{{ lab.name }}</strong>
                     </span>
                     {% if lab.city %}<small
-                      style="font-size: 0.68rem; color: #64748b; background: #f1f5f9; padding: 1px 5px; border-radius: 3px;">{{ lab.city }}</small>{% endif %}
+                      style="font-size: 0.68rem; color: #64748b; background: #f1f5f9; padding: 1px 5px; border-radius: 3px;">{{
+                      lab.city }}</small>{% endif %}
                   </span>
                 </div>
                 {% empty %}
@@ -2261,7 +2535,8 @@
             </div>
             <p
               style="font-size: 0.825rem; color: #475569; margin: 0; line-height: 1.45; font-family: 'Inter', sans-serif;">
-              {{ about_clinic.facility_location|default:"Anupam Dental Clinic, West Gate Vaikom, Kottayam Dist, Kerala" }}
+              {{ about_clinic.facility_location|default:"Anupam Dental Clinic, West Gate Vaikom, Kottayam Dist, Kerala"
+              }}
             </p>
             <div
               style="margin-top: 6px; font-size: 0.725rem; color: #dc2626; display: flex; align-items: center; gap: 4px;">
@@ -2625,7 +2900,8 @@
               style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
               <h3
                 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">
-                <i class="fas fa-images" style="color: #2563eb; margin-right: 6px;"></i> Active Gallery Photos ({{ gallery_photos|length }})
+                <i class="fas fa-images" style="color: #2563eb; margin-right: 6px;"></i> Active Gallery Photos ({{
+                gallery_photos|length }})
               </h3>
               <span style="font-size: 0.775rem; color: #64748b;">
                 Changes appear instantly on the live website
@@ -2643,7 +2919,8 @@
                 </div>
                 <div
                   style="padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; background: #fafafa;">
-                  <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-calendar-alt"></i> {{ p.created_at|date:"M d, Y" }}</span>
+                  <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-calendar-alt"></i> {{
+                    p.created_at|date:"M d, Y" }}</span>
                   <form action="{% url 'delete_gallery_photo' p.id %}" method="POST"
                     onsubmit="return confirm('Remove this photo from the website gallery?');" style="margin: 0;">
                     {% csrf_token %}
@@ -2771,7 +3048,8 @@
               style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
               <h3
                 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">
-                <i class="fas fa-images" style="color: #2563eb; margin-right: 6px;"></i> Active Gallery Photos ({{ gallery_photos|length }})
+                <i class="fas fa-images" style="color: #2563eb; margin-right: 6px;"></i> Active Gallery Photos ({{
+                gallery_photos|length }})
               </h3>
               <a href="{% url 'home' %}#gallery" target="_blank"
                 style="font-size: 0.775rem; color: #2563eb; text-decoration: none; font-weight: 600;">
@@ -2790,7 +3068,8 @@
                 </div>
                 <div
                   style="padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; background: #fafafa;">
-                  <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-calendar-alt"></i> {{ p.created_at|date:"M d, Y" }}</span>
+                  <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-calendar-alt"></i> {{
+                    p.created_at|date:"M d, Y" }}</span>
                   <form action="{% url 'delete_gallery_photo' p.id %}" method="POST"
                     onsubmit="return confirm('Remove this photo from the website gallery?');" style="margin: 0;">
                     {% csrf_token %}
@@ -2871,11 +3150,11 @@
             <button type="button" class="btn-primary-submit" onclick="openSlipGridModal()" style="background: #2563eb;">
               <i class="fas fa-th-large"></i> Patient Slips PDF
             </button>
-            <a href="{% url 'print_letterhead' %}" target="_blank" class="btn-secondary"
+            <a href="{% url 'print_letterhead' %}" class="btn-secondary"
               style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid #bfdbfe; color: #1e40af; background: #eff6ff;">
               <i class="fas fa-file-alt" style="color: #2563eb;"></i> Letterhead (A4)
             </a>
-            <a href="{% url 'print_clinical_notes' %}" target="_blank" class="btn-secondary"
+            <a href="{% url 'print_clinical_notes' %}" class="btn-secondary"
               style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; text-decoration: none; border: 1px solid #a7f3d0; color: #065f46; background: #ecfdf5;">
               <i class="fas fa-notes-medical" style="color: #059669;"></i> Clinical Notes (A5)
             </a>
@@ -2903,12 +3182,12 @@
                 style="flex: 1; justify-content: center; font-size: 0.8rem; padding: 8px 12px; background: #2563eb;">
                 <i class="fas fa-external-link-alt"></i> Print Registration Slip
               </button>
-              <a href="{% url 'print_slip_grid' %}?single_card=1&source=personal" target="_blank" class="btn-sm"
+              <a href="{% url 'print_slip_grid' %}?single_card=1&source=personal" class="btn-sm"
                 style="background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;"
                 title="Open Direct Blank Single Card">
                 <i class="fas fa-id-card"></i>
               </a>
-              <a href="{% url 'print_slip_grid' %}?single_card=0&source=personal" target="_blank" class="btn-sm"
+              <a href="{% url 'print_slip_grid' %}?single_card=0&source=personal" class="btn-sm"
                 style="background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;"
                 title="Open Direct Blank 8-Card Grid">
                 <i class="fas fa-th-large"></i>
@@ -2933,7 +3212,7 @@
               </p>
             </div>
             <div style="display: flex; gap: 8px;">
-              <a href="{% url 'print_letterhead' %}" target="_blank" class="btn-primary-submit"
+              <a href="{% url 'print_letterhead' %}" class="btn-primary-submit"
                 style="flex: 1; justify-content: center; font-size: 0.8rem; padding: 8px 12px; background: #2563eb; text-decoration: none;">
                 <i class="fas fa-file-alt"></i> Open Letterhead PDF (A4)
               </a>
@@ -2963,47 +3242,6 @@
               </a>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Treatments Table Panel -->
-      <div class="dash-panel" style="padding: 24px;">
-        <div class="panel-header"
-          style="padding: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h2 class="panel-title" style="display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-tooth" style="color: var(--primary-blue);"></i> Treatments
-            </h2>
-            <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Manage dental clinical procedures, standard
-              tariff rates, and billing amounts</p>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="search-box" style="margin: 0; width: 240px;">
-              <i class="fas fa-search"></i>
-              <input type="text" id="treatmentSearchInput" class="search-input" placeholder="Search ID, treatment..."
-                onkeyup="filterTreatmentsTable()">
-            </div>
-            <button type="button" class="btn-primary-submit" onclick="openNewTreatmentModal()">
-              <i class="fas fa-plus"></i> New Treatment
-            </button>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="cases-table" id="personalTreatmentsTable">
-            <thead>
-              <tr>
-                <th style="width: 140px;">ID</th>
-                <th>Treatment</th>
-                <th style="width: 160px;">Rate</th>
-                <th style="width: 160px;">Amount</th>
-                <th style="text-align: right; width: 180px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="personalTreatmentsTableBody">
-              <!-- Rendered via JavaScript from personalTreatments -->
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
@@ -3048,7 +3286,7 @@
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label for="case_type">Case / Treatment Type</label>
+              <label for="case_type">Case / Service Type</label>
               <select id="case_type" name="case_type" class="form-control">
                 <option value="Crown & Bridge">Crown & Bridge</option>
                 <option value="Titanium Dental Implant">Titanium Dental Implant</option>
@@ -3095,19 +3333,22 @@
         </h3>
         <button class="modal-close-btn" onclick="closeModal('addPatientModal')">&times;</button>
       </div>
-      <form action="{% url 'add_patient' %}" method="POST" id="formAddEditPatient" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+      <form action="{% url 'add_patient' %}" method="POST" id="formAddEditPatient"
+        style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
         {% csrf_token %}
         <input type="hidden" id="edit_patient_appointment_id" name="appointment_id" value="">
         <input type="hidden" id="edit_patient_return_tab" name="return_tab" value="appointments">
         <input type="hidden" id="edit_patient_reopen_hub" name="reopen_hub" value="0">
         <input type="hidden" id="new_patient_name" name="patient_name" value="">
         <div class="modal-body" style="overflow-y: auto; padding: 18px 22px; max-height: calc(92vh - 130px);">
-          <p id="addPatientModalDesc" style="font-size: 0.82rem; color: #64748b; margin: -4px 0 16px 0; line-height: 1.4;">
+          <p id="addPatientModalDesc"
+            style="font-size: 0.82rem; color: #64748b; margin: -4px 0 16px 0; line-height: 1.4;">
             Save patient profile details and manage appointment schedule.
           </p>
 
           <!-- SECTION 1: IDENTITY & REGISTRATION -->
-          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #2563eb; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <div
+            style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #2563eb; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
             <i class="fas fa-id-card"></i> Registration
           </div>
 
@@ -3147,11 +3388,13 @@
           <div class="form-grid-2" style="margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
               <label for="new_patient_first_name" style="font-size: 0.82rem; font-weight: 600;">First Name *</label>
-              <input type="text" id="new_patient_first_name" name="first_name" class="form-control" required oninput="syncPatientFullName()">
+              <input type="text" id="new_patient_first_name" name="first_name" class="form-control" required
+                oninput="syncPatientFullName()">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label for="new_patient_last_name" style="font-size: 0.82rem; font-weight: 600;">Last Name *</label>
-              <input type="text" id="new_patient_last_name" name="last_name" class="form-control" required oninput="syncPatientFullName()">
+              <input type="text" id="new_patient_last_name" name="last_name" class="form-control" required
+                oninput="syncPatientFullName()">
             </div>
           </div>
 
@@ -3162,12 +3405,13 @@
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label for="new_patient_email" style="font-size: 0.82rem; font-weight: 600;">Email</label>
-              <input type="email" id="new_patient_email" name="email" class="form-control" >
+              <input type="email" id="new_patient_email" name="email" class="form-control">
             </div>
           </div>
 
           <!-- SECTION 2: CONTACT INFORMATION -->
-          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #059669; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+          <div
+            style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #059669; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 6px;">
             <i class="fas fa-phone-alt"></i> Contact &amp; Numbers
           </div>
 
@@ -3183,7 +3427,8 @@
           </div>
 
           <!-- SECTION 3: ADDRESS DETAILS -->
-          <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7c3aed; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+          <div
+            style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7c3aed; margin: 14px 0 8px 0; display: flex; align-items: center; gap: 6px;">
             <i class="fas fa-map-marker-alt"></i> Address
           </div>
 
@@ -3208,7 +3453,8 @@
           </div>
 
         </div>
-        <div class="modal-footer" style="padding: 14px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+        <div class="modal-footer"
+          style="padding: 14px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
           <button type="button" class="btn-secondary" onclick="closeModal('addPatientModal')">Cancel</button>
           <button type="submit" id="btnSubmitAddPatient" class="btn-primary-submit" style="background: #2563eb;">
             <i class="fas fa-id-card"></i> Complete Registration &amp; Print Slip
@@ -3421,7 +3667,7 @@
           </div>
 
           <div class="form-group">
-            <label for="svc_title">Service / Treatment Title *</label>
+            <label for="svc_title">Service Title *</label>
             <input type="text" id="svc_title" name="title" class="form-control"
               placeholder="e.g. Single-Visit Root Canal (RCT) or Clear Aligners" required>
           </div>
@@ -3718,7 +3964,7 @@
               <span id="vcDoctor"></span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <span style="font-size: 0.8rem; color: #64748b;">TREATMENT TYPE</span>
+              <span style="font-size: 0.8rem; color: #64748b;">SERVICE TYPE</span>
               <span id="vcType"></span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
@@ -3751,56 +3997,6 @@
         <div class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeModal('viewCaseModal')">Close</button>
           <button type="submit" class="btn-primary-submit"><i class="fas fa-save"></i> Save Status</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL 6: NEW / EDIT PERSONAL TREATMENT -->
-  <div class="modal-backdrop" id="newTreatmentModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 id="treatmentModalTitle">
-          <i class="fas fa-tooth" style="color: #2563eb; margin-right: 8px;"></i>New Treatment
-        </h3>
-        <button type="button" class="modal-close-btn" onclick="closeModal('newTreatmentModal')">&times;</button>
-      </div>
-      <form id="treatmentForm" onsubmit="handleSaveTreatment(event)">
-        <div class="modal-body">
-          <input type="hidden" id="treatment_edit_index" value="-1">
-
-          <div class="form-group">
-            <label for="trt_id">ID *</label>
-            <input type="text" id="trt_id" class="form-control" placeholder="e.g. TRT-001" required>
-            <small style="color: #94a3b8; font-size: 0.75rem;">Treatment procedure unique ID</small>
-          </div>
-
-          <div class="form-group">
-            <label for="trt_name">Treatment *</label>
-            <input type="text" id="trt_name" class="form-control"
-              placeholder="e.g. Root Canal Treatment (Single-Visit RCT)" required>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label for="trt_rate">Rate (₹) *</label>
-              <input type="number" step="0.01" min="0" id="trt_rate" class="form-control" placeholder="e.g. 3500"
-                required oninput="handleRateInput(this.value)">
-              <small style="color: #94a3b8; font-size: 0.75rem;">Tariff rate per unit</small>
-            </div>
-            <div class="form-group">
-              <label for="trt_amount">Amount (₹) *</label>
-              <input type="number" step="0.01" min="0" id="trt_amount" class="form-control" placeholder="e.g. 3500"
-                required>
-              <small style="color: #94a3b8; font-size: 0.75rem;">Total treatment amount</small>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" onclick="closeModal('newTreatmentModal')">Cancel</button>
-          <button type="submit" class="btn-primary-submit">
-            <i class="fas fa-save"></i> Save Treatment
-          </button>
         </div>
       </form>
     </div>
@@ -3869,7 +4065,8 @@
                 data-name="{% if apt.first_name %}{{ apt.first_name }} {{ apt.last_name }}{% else %}{{ apt.patient_name }}{% endif %}"
                 data-age="{{ apt.age|default:'' }}" data-gender="{{ apt.gender|default:'Male' }}"
                 data-address="{{ apt.address|default:apt.city|default:'' }}">
-                {{ apt.formatted_id }} - {% if apt.first_name %}{{ apt.first_name }} {{ apt.last_name }}{% else %}{{ apt.patient_name }}{% endif %}
+                {{ apt.formatted_id }} - {% if apt.first_name %}{{ apt.first_name }} {{ apt.last_name }}{% else %}{{
+                apt.patient_name }}{% endif %}
               </option>
               {% endfor %}
             </select>
@@ -4028,9 +4225,25 @@
           <div class="hub-title-block">
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <h3 id="hubPatientName" style="margin: 0;">Patient Name</h3>
-              <button type="button" class="btn-hub-edit" id="btnHubEditPatient" onclick="openEditPatientFromHub()" title="Edit Patient Details / Book Appointment"
+              <button type="button" class="btn-hub-edit" id="btnHubEditPatient" onclick="openEditPatientFromHub()"
+                title="Edit Patient Details / Book Appointment"
                 style="background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe; font-size: 0.76rem; font-weight: 700; padding: 4px 11px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
-                <i class="fas fa-edit" style="color: #2563eb;"></i> Edit / Book Appointment
+                <i class="fas fa-edit" style="color: #2563eb;"></i> Edit Appointment
+              </button>
+              <button type="button" class="btn-hub-print" id="btnHubPrintSlip" onclick="printPatientSlipFromHub()"
+                title="Print Patient Registration Slip"
+                style="background: #f0fdf4; color: #15803d; border: 1.5px solid #bbf7d0; font-size: 0.76rem; font-weight: 700; padding: 4px 11px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <i class="fas fa-print" style="color: #16a34a;"></i> Print Slip
+              </button>
+              <button type="button" class="btn-hub-print" id="btnHubPrintClinicalNotes"
+                onclick="printPatientClinicalNotes()" title="Print Clinical Notes Pad (A5)"
+                style="background: #ecfdf5; color: #0f766e; border: 1.5px solid #a7f3d0; font-size: 0.76rem; font-weight: 700; padding: 4px 11px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <i class="fas fa-notes-medical" style="color: #059669;"></i> Clinical Notes (A5)
+              </button>
+              <button type="button" class="btn-hub-print" id="btnHubPrintPrescription"
+                onclick="printPatientPrescription()" title="Print Doctor Prescription (A4)"
+                style="background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe; font-size: 0.76rem; font-weight: 700; padding: 4px 11px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <i class="fas fa-file-prescription" style="color: #2563eb;"></i> Prescription (A4)
               </button>
             </div>
             <div class="hub-meta-tags">
@@ -4053,15 +4266,15 @@
           <!-- TAB SWITCHER: TEETH CHART & PAYMENTS -->
           <div class="hub-tab-bar">
             <button type="button" class="hub-tab-btn active" id="tabBtnTeethChart" onclick="switchHubTab('chart')">
-              <i class="fas fa-tooth"></i> Teeth Chart <span class="tab-badge-num" id="hubToothCountBadge">32</span>
+              <i class="fas fa-tooth"></i> Teeth Chart 
+              <!-- <span class="tab-badge-num" id="hubToothCountBadge">32</span> -->
             </button>
             <button type="button" class="hub-tab-btn" id="tabBtnPayment" onclick="switchHubTab('payment')">
-              <i class="fas fa-file-invoice-dollar"></i> Billing &amp; Payment <span class="tab-badge-num"
+              <i class="fas fa-file-invoice-dollar"></i> Payment <span class="tab-badge-num"
                 id="hubPaymentCountBadge">0</span>
             </button>
             <button type="button" class="hub-tab-btn" id="tabBtnMedicine" onclick="switchHubTab('medicine')">
-              <i class="fas fa-pills"></i> Medicines &amp; Rx <span class="tab-badge-num"
-                id="hubMedCountBadge">0</span>
+              <i class="fas fa-pills"></i> Medicines<span class="tab-badge-num" id="hubMedCountBadge">0</span>
             </button>
           </div>
 
@@ -4102,16 +4315,16 @@
                   style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
                   <i class="fas fa-heartbeat" style="color: #ef4444;"></i>Disease
                 </label>
-                <input type="text" id="chartDiagDisease" class="form-control" placeholder="e.g. Diabetes, Hypertension"
+                <input type="text" id="chartDiagDisease" class="form-control" 
                   style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" oninput="saveChartVitalsData()">
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
                 <label for="chartDiagUnit"
                   style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
-                  <i class="fas fa-ruler" style="color: #0284c7;"></i>Unit
+                  <i class="fas fa-ruler" style="color: #0284c7;"></i>Value
                 </label>
-                <input type="text" id="chartDiagUnit" class="form-control" placeholder="e.g. mg/dL, mmHg, mm"
+                <input type="text" id="chartDiagUnit" class="form-control" 
                   style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" oninput="saveChartVitalsData()">
               </div>
 
@@ -4120,7 +4333,7 @@
                   style="font-size: 0.775rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
                   <i class="fas fa-file-medical-alt" style="color: #10b981;"></i>Reading
                 </label>
-                <input type="text" id="chartDiagReading" class="form-control" placeholder="e.g. 120/80, 140, 4mm"
+                <input type="text" id="chartDiagReading" class="form-control" 
                   style="font-size: 0.825rem; padding: 7px 10px; font-weight: 600;" oninput="saveChartVitalsData()">
               </div>
             </div>
@@ -4132,9 +4345,9 @@
               <span style="font-size: 0.825rem; font-weight: 700; color: #0f172a;">Dentition:</span>
               <div class="dentition-toggle-group">
                 <button type="button" class="btn-dentition active" id="btnDentAdult"
-                  onclick="setDentitionMode('adult')">Adult (32 Teeth)</button>
+                  onclick="setDentitionMode('adult')">Adult(32 Teeth)</button>
                 <button type="button" class="btn-dentition" id="btnDentPediatric"
-                  onclick="setDentitionMode('pediatric')">Child / Primary (20 Teeth)</button>
+                  onclick="setDentitionMode('pediatric')">Child(20 Teeth)</button>
               </div>
               <span style="font-size: 0.75rem; color: #64748b;">Notation: <strong>Universal # (FDI
                   Notation)</strong></span>
@@ -4311,9 +4524,9 @@
             <!-- PROCEDURE RECOMMENDATION & BILLING QUICK CONNECT -->
             <div class="form-grid-2" style="margin-bottom: 14px;">
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="selToothProcedure">Dental Treatment</label>
+                <label for="selToothProcedure">Dental Service</label>
                 <select id="selToothProcedure" class="form-control" onchange="handleProcedureSelect(this.value)">
-                  <option value="">-- Choose Dental Treatment / Procedure --</option>
+                  <option value="">-- Choose Dental Service / Procedure --</option>
                   <option value="Single-Visit Root Canal Treatment (RCT)" data-price="3500">Single-Visit Root Canal
                     Treatment (RCT) - ₹3,500</option>
                   <option value="Multi-layer Zirconia Crown" data-price="5500">Multi-layer Zirconia Crown - ₹5,500
@@ -4454,7 +4667,8 @@
                     <tr>
                       <th>Invoice #</th>
                       <th>Date</th>
-                      <th>Treatment</th>
+                      <th>Service</th>
+                      <th>Doctor</th>
                       <th>Amount</th>
                       <th>Mode</th>
                       <th>Status</th>
@@ -4483,7 +4697,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="hubPayTreatment">Procedure / Treatment *</label>
+                  <label for="hubPayTreatment">Procedure / Service *</label>
                   <input type="text" id="hubPayTreatment" class="form-control" placeholder="e.g. Single-Visit RCT"
                     required>
                 </div>
@@ -4529,14 +4743,18 @@
         <!-- TAB CONTENT 3: PATIENT MEDICINES & PRESCRIPTIONS (CONNECTED WITH MATERIAL BOX 1) -->
         <div id="hubSectionMedicine" style="display: none;">
           <div style="display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start;">
-            
+
             <!-- LEFT: PRESCRIBE MEDICINE FORM (CONNECTED DIRECTLY WITH MATERIAL BOX 1) -->
-            <div class="payment-card-panel" style="background: #ffffff; border: 1.5px solid #0284c7; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
-                <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 7px;">
+            <div class="payment-card-panel"
+              style="background: #ffffff; border: 1.5px solid #0284c7; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                <h4
+                  style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 7px;">
                   <i class="fas fa-pills" style="color: #0284c7;"></i> Prescribe Medicine
                 </h4>
-                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;">
+                <span class="badge"
+                  style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;">
                   <i class="fas fa-link"></i> Material Box 1 Connected
                 </span>
               </div>
@@ -4544,25 +4762,27 @@
               <form id="hubNewMedicineForm" onsubmit="handleHubAddPatientMedicine(event)">
                 <!-- 1. MATERIAL BOX 1 SELECTOR DROPDOWN -->
                 <div class="form-group" style="margin-bottom: 12px;">
-                  <label for="hubMedSelectBox1" style="font-size: 0.775rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="fas fa-boxes" style="color: #0284c7; margin-right: 4px;"></i> Select from Material Box 1</span>
+                  <label for="hubMedSelectBox1"
+                    style="font-size: 0.775rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fas fa-boxes" style="color: #0284c7; margin-right: 4px;"></i> Select from Material
+                      Box 1</span>
                     <span style="font-size: 0.68rem; color: #0284c7; font-weight: 600;">(Auto-fills details)</span>
                   </label>
-                  <select id="hubMedSelectBox1" class="form-control" onchange="onSelectMaterialBox1Med(this)" style="font-size: 0.8rem; font-weight: 600; padding: 6px 8px; border: 1.5px solid #0284c7; background: #f0f9ff;">
+                  <select id="hubMedSelectBox1" class="form-control" onchange="onSelectMaterialBox1Med(this)"
+                    style="font-size: 0.8rem; font-weight: 600; padding: 6px 8px; border: 1.5px solid #0284c7; background: #f0f9ff;">
                     <option value="">-- Choose from Material Box 1 --</option>
                     {% for m in medicines %}
-                    <option value="{{ m.id }}" 
-                      data-category="{{ m.category|default:''|escape }}" 
-                      data-type="{{ m.item_type|default:''|escape }}" 
-                      data-product="{{ m.product_name|default:''|escape }}" 
-                      data-brand="{{ m.brand_name|default:''|escape }}" 
-                      data-strength="{{ m.strength|default:''|escape }}" 
-                      data-dosage="{{ m.dosage|default:''|escape }}" 
-                      data-frequency="{{ m.frequency|default:'1-0-1'|escape }}" 
-                      data-duration="{{ m.duration|default:'5 Days'|escape }}" 
-                      data-ingredients="{{ m.ingredients|default:''|escape }}" 
+                    <option value="{{ m.id }}" data-category="{{ m.category|default:''|escape }}"
+                      data-type="{{ m.item_type|default:''|escape }}"
+                      data-product="{{ m.product_name|default:''|escape }}"
+                      data-brand="{{ m.brand_name|default:''|escape }}"
+                      data-strength="{{ m.strength|default:''|escape }}" data-dosage="{{ m.dosage|default:''|escape }}"
+                      data-frequency="{{ m.frequency|default:'1-0-1'|escape }}"
+                      data-duration="{{ m.duration|default:'5 Days'|escape }}"
+                      data-ingredients="{{ m.ingredients|default:''|escape }}"
                       data-contra="{{ m.contra_indications|default:''|escape }}">
-                      {{ m.product_name }}{% if m.brand_name %} ({{ m.brand_name }}){% endif %} - {{ m.category|default:'Med' }} / {{ m.item_type|default:'' }}
+                      {{ m.product_name }}{% if m.brand_name %} ({{ m.brand_name }}){% endif %} - {{
+                      m.category|default:'Med' }} / {{ m.item_type|default:'' }}
                     </option>
                     {% endfor %}
                   </select>
@@ -4570,46 +4790,62 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Category</label>
-                    <input type="text" id="hubMedCategory" class="form-control" placeholder="e.g. Tablet, Cap" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Category</label>
+                    <input type="text" id="hubMedCategory" class="form-control" placeholder="e.g. Tablet, Cap"
+                      style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Type</label>
-                    <input type="text" id="hubMedType" class="form-control" placeholder="e.g. Painkiller" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Type</label>
+                    <input type="text" id="hubMedType" class="form-control" placeholder="e.g. Painkiller"
+                      style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
                   </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 8px;">
-                  <label style="font-size: 0.725rem; font-weight: 700; color: #1e293b; margin-bottom: 2px;">Product / Medicine Name *</label>
-                  <input type="text" id="hubMedProductName" class="form-control" placeholder="e.g. Aceclofenac" required style="font-size: 0.8rem; padding: 5px 8px; height: 30px; font-weight: 600;">
+                  <label style="font-size: 0.725rem; font-weight: 700; color: #1e293b; margin-bottom: 2px;">Product /
+                    Medicine Name *</label>
+                  <input type="text" id="hubMedProductName" class="form-control" placeholder="e.g. Aceclofenac" required
+                    style="font-size: 0.8rem; padding: 5px 8px; height: 30px; font-weight: 600;">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Brand Name</label>
-                    <input type="text" id="hubMedBrandName" class="form-control" placeholder="e.g. Dokasy" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
+                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Brand
+                      Name</label>
+                    <input type="text" id="hubMedBrandName" class="form-control" placeholder="e.g. Dokasy"
+                      style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Strength</label>
-                    <input type="text" id="hubMedStrength" class="form-control" placeholder="e.g. 100mg" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
-                  </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                  <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Dosage</label>
-                    <input type="text" id="hubMedDosage" class="form-control" placeholder="e.g. 1 Tablet" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
-                  </div>
-                  <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Frequency</label>
-                    <input type="text" id="hubMedFrequency" class="form-control" placeholder="1-0-1" value="1-0-1" style="font-size: 0.78rem; padding: 5px 8px; height: 30px; font-weight: 600;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Strength</label>
+                    <input type="text" id="hubMedStrength" class="form-control" placeholder="e.g. 100mg"
+                      style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
                   </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Duration</label>
-                    <select id="hubMedDuration" class="form-control" style="font-size: 0.78rem; padding: 4px 8px; height: 30px;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Dosage</label>
+                    <input type="text" id="hubMedDosage" class="form-control" placeholder="e.g. 1 Tablet"
+                      style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Frequency</label>
+                    <input type="text" id="hubMedFrequency" class="form-control" placeholder="1-0-1" value="1-0-1"
+                      style="font-size: 0.78rem; padding: 5px 8px; height: 30px; font-weight: 600;">
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Duration</label>
+                    <select id="hubMedDuration" class="form-control"
+                      style="font-size: 0.78rem; padding: 4px 8px; height: 30px;">
                       <option value="3 Days">3 Days</option>
                       <option value="5 Days" selected>5 Days</option>
                       <option value="7 Days">7 Days</option>
@@ -4619,43 +4855,59 @@
                     </select>
                   </div>
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Instructions</label>
-                    <input type="text" id="hubMedInstructions" class="form-control" placeholder="After Food" value="After Food" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
+                    <label
+                      style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Instructions</label>
+                    <input type="text" id="hubMedInstructions" class="form-control" placeholder="After Food"
+                      value="After Food" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
                   </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 12px;">
-                  <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Ingredients / Notes</label>
-                  <input type="text" id="hubMedIngredients" class="form-control" placeholder="e.g. Paracetamol" style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
+                  <label style="font-size: 0.725rem; font-weight: 600; color: #475569; margin-bottom: 2px;">Ingredients
+                    / Notes</label>
+                  <input type="text" id="hubMedIngredients" class="form-control" placeholder="e.g. Paracetamol"
+                    style="font-size: 0.78rem; padding: 5px 8px; height: 30px;">
                 </div>
 
-                <button type="submit" id="btnHubAddMedSubmit" class="btn-primary-submit" style="width: 100%; justify-content: center; padding: 8px; background: #0284c7; font-size: 0.825rem; border-radius: 6px; font-weight: 700;">
+                <button type="submit" id="btnHubAddMedSubmit" class="btn-primary-submit"
+                  style="width: 100%; justify-content: center; padding: 8px; background: #0284c7; font-size: 0.825rem; border-radius: 6px; font-weight: 700;">
                   <i class="fas fa-plus-circle"></i> Add to Patient Table
                 </button>
               </form>
             </div>
 
             <!-- RIGHT: CONNECTED PATIENT MEDICINES TABLE -->
-            <div class="hub-ledger-card" style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+            <div class="hub-ledger-card"
+              style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
                 <div>
-                  <h4 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 7px;">
+                  <h4
+                    style="font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 7px;">
                     <i class="fas fa-file-prescription" style="color: #0284c7;"></i> Prescribed Medicines Table
                   </h4>
-                  <p style="font-size: 0.75rem; color: #64748b; margin: 2px 0 0 0;">Connected with Material Box 1 &bull; Auto-saves to Patient Record</p>
+                  <p style="font-size: 0.75rem; color: #64748b; margin: 2px 0 0 0;">Connected with Material Box 1 &bull;
+                    Auto-saves to Patient Record</p>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                  <span id="hubMedTableCountBadge" class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px;">
+                  <span id="hubMedTableCountBadge" class="badge"
+                    style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px;">
                     0 Prescriptions
                   </span>
-                  <button type="button" class="btn-primary-submit" onclick="printPatientPrescription()" style="background: #0f766e; font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; font-weight: 700;">
+                  <button type="button" class="btn-primary-submit" onclick="printPatientClinicalNotes()"
+                    style="background: #0284c7; font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; font-weight: 700;">
+                    <i class="fas fa-notes-medical"></i> Clinical Notes (A5)
+                  </button>
+                  <button type="button" class="btn-primary-submit" onclick="printPatientPrescription()"
+                    style="background: #0f766e; font-size: 0.75rem; padding: 5px 12px; border-radius: 6px; font-weight: 700;">
                     <i class="fas fa-print"></i> Print Prescription
                   </button>
                 </div>
               </div>
 
               <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
-                <table class="cases-table" id="hubPatientMedicinesTable" style="margin: 0; font-size: 0.78rem; width: 100%;">
+                <table class="cases-table" id="hubPatientMedicinesTable"
+                  style="margin: 0; font-size: 0.78rem; width: 100%;">
                   <thead>
                     <tr style="background: #f8fafc;">
                       <th style="width: 35px; padding: 8px 6px;">#</th>
@@ -4704,8 +4956,7 @@
           <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
             <h2 style="font-size: 1.35rem; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">Dr. Anoop's
               Anupam Dental Clinic</h2>
-            <p style="font-size: 0.775rem; color: #64748b; margin: 2px 0 0 0;">Specialized Smile Care &amp; Implant
-              Centre &bull; Ph: +91 94460 46868</p>
+            <p style="font-size: 0.775rem; color: #64748b; margin: 2px 0 0 0;">Ph: +91 94460 46868</p>
           </div>
 
           <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px;">
@@ -4715,7 +4966,7 @@
 
           <div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem;">
             <div><strong>Patient Name:</strong> <span id="recPatient">Rajesh Kumar</span></div>
-            <div><strong>Treatment / Service:</strong> <span id="recTreatment">Single-Visit RCT</span></div>
+            <div><strong>Service:</strong> <span id="recTreatment">Single-Visit RCT</span></div>
             <div><strong>Payment Mode:</strong> <span id="recMode">UPI</span> &bull; <strong>Status:</strong> <span
                 id="recStatus" style="color: #059669; font-weight: 700;">Paid</span></div>
           </div>
@@ -5319,6 +5570,7 @@
         "invoice_id": "{{ inv.invoice_id|escapejs }}",
         "patient_name": "{{ inv.patient_name|escapejs }}",
         "treatment": "{{ inv.treatment|escapejs }}",
+        "doctor": "{{ inv.doctor_name|default:'Dr. Anoop'|escapejs }}",
         "amount": "{{ inv.amount }}",
         "payment_status": "{{ inv.payment_status|escapejs }}",
         "payment_mode": "{{ inv.payment_mode|escapejs }}",

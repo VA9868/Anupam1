@@ -383,7 +383,7 @@
         <div class="slip-body">
           <div class="slip-fields">
             <div class="field-row">
-              <span class="field-label">Reg No :</span>
+              <span class="field-label" style="min-width: 75px;">Reg No :</span>
               <span class="field-value">{{ reg_no|default:"" }}</span>
             </div>
             <div class="field-row">
@@ -405,8 +405,8 @@
               <span class="field-value">{{ name|default:"" }}</span>
             </div>
             <div class="field-row">
-              <span class="field-label">Address :</span>
-              <span class="field-value">{{ address|default:"" }}</span>
+              <span class="field-label" style="min-width: 80px;">Address :</span>
+              <span class="field-value" >{{ address|default:"" }}</span>
             </div>
           </div>
 
@@ -455,8 +455,7 @@
             </div>
             <div class="field-row">
               <span class="field-label">Age :</span>
-              <span class="field-value" style="width: 20px; flex: none;">{% if forloop.first or prefill_all %}{{
-                age|default:"" }}{% endif %}</span>
+              <span class="field-value" style="width: 20px; flex: none;">{% if forloop.first or prefill_all %}{{ age|default:"" }}{% endif %}</span>
               <span class="field-label" style="width: auto; margin-left: 10px; margin-right: 6px;">Gender :</span>
               <span class="field-value">{% if forloop.first or prefill_all %}{{ gender|default:"" }}{% endif %}</span>
             </div>

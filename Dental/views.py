@@ -901,6 +901,7 @@ def dashboard_view(request):
                     'created_at': a.created_at,
                     'latest_appointment': a,
                     'appointment_id': a.id,
+                    'reg_no': getattr(a, 'reg_no', '') or '',
                     'formatted_id': a.formatted_id,
                     'has_chart': True,
                     'teeth_count': a.chart_teeth_count,
@@ -1305,6 +1306,8 @@ def add_patient_view(request):
             first_name = parts[0]
             last_name = parts[1] if len(parts) > 1 else ''
 
+        reg_no = request.POST.get('reg_no', '').strip()
+        pid_input = request.POST.get('PID', request.POST.get('pid', '')).strip()
         phone = request.POST.get('phone', '').strip()
         phone2 = request.POST.get('phone2', '').strip()
         age = request.POST.get('age', '').strip()
@@ -1314,6 +1317,8 @@ def add_patient_view(request):
         city = request.POST.get('city', '').strip()
         state = request.POST.get('state', '').strip()
         pincode = request.POST.get('pincode', '').strip()
+
+        # Address not entered: leave empty without forcing any address
 
         service_name = request.POST.get('service_name', 'General Consultation').strip()
         doctor_name = request.POST.get('doctor_name', 'Dr. Anoop').strip()
@@ -1328,6 +1333,8 @@ def add_patient_view(request):
             if appointment_id and appointment_id.isdigit():
                 appt = Appointment.objects.filter(id=int(appointment_id)).first()
                 if appt:
+                    if reg_no:
+                        appt.reg_no = reg_no
                     appt.first_name = first_name
                     appt.last_name = last_name
                     appt.patient_name = patient_name or f"{first_name} {last_name}".strip() or appt.patient_name
@@ -1354,7 +1361,7 @@ def add_patient_view(request):
                     if request.POST.get('print_slip') == '1':
                         from urllib.parse import urlencode
                         addr_parts = [p for p in [appt.address, appt.city, appt.state, appt.pincode] if p]
-                        reg_val = request.POST.get('reg_no', '').strip() or appt.formatted_id
+                        reg_val = request.POST.get('reg_no', '').strip() or getattr(appt, 'reg_no', '') or ''
                         pid_val = request.POST.get('PID', request.POST.get('pid', '')).strip() or appt.formatted_id
                         d_val = str(appt.preferred_date or '')
                         if hasattr(appt.preferred_date, 'strftime'):
@@ -1371,7 +1378,7 @@ def add_patient_view(request):
                             'age': str(appt.age or ''),
                             'gender': appt.gender or '',
                             'date': d_val,
-                            'address': ', '.join(addr_parts),
+                            'address': format_card_address(appt.address or address, appt.city or city),
                             'single_card': '1',
                             'source': 'registration',
                         }
@@ -1397,6 +1404,7 @@ def add_patient_view(request):
                 first_name=first_name,
                 last_name=last_name,
                 patient_name=patient_name or f"{first_name} {last_name}".strip() or 'New Patient',
+                reg_no=reg_no or '',
                 phone=phone or '9999999999',
                 phone2=phone2,
                 email=email,
@@ -1416,7 +1424,7 @@ def add_patient_view(request):
             messages.success(request, f"Registration complete for {patient_name}!")
             from urllib.parse import urlencode
             addr_parts = [p for p in [address, city, state, pincode] if p]
-            reg_val = request.POST.get('reg_no', '').strip() or appt.formatted_id
+            reg_val = request.POST.get('reg_no', '').strip() or getattr(appt, 'reg_no', '') or ''
             pid_val = request.POST.get('PID', request.POST.get('pid', '')).strip() or appt.formatted_id
             d_val = str(appt.preferred_date or '')
             if hasattr(appt.preferred_date, 'strftime'):
@@ -1433,7 +1441,7 @@ def add_patient_view(request):
                 'age': str(appt.age or ''),
                 'gender': appt.gender or '',
                 'date': d_val,
-                'address': ', '.join(addr_parts),
+                'address': format_card_address(appt.address or address, appt.city or city),
                 'single_card': '1',
                 'source': 'registration',
             }
@@ -1711,6 +1719,7 @@ def new_invoice_view(request):
     if request.method == 'POST':
         patient_name = request.POST.get('patient_name', '').strip()
         treatment = request.POST.get('treatment', 'Dental Treatment').strip()
+        doctor_name = request.POST.get('doctor_name', request.POST.get('doctor', 'Dr. Anoop')).strip() or 'Dr. Anoop'
         amount = request.POST.get('amount', '0').strip() or '0'
         payment_status = request.POST.get('payment_status', 'Paid').strip()
         payment_mode = request.POST.get('payment_mode', 'UPI').strip()
@@ -1723,6 +1732,7 @@ def new_invoice_view(request):
                 invoice_id=invoice_id,
                 patient_name=patient_name or 'Patient',
                 treatment=treatment,
+                doctor_name=doctor_name,
                 amount=float(amount),
                 payment_status=payment_status,
                 payment_mode=payment_mode
@@ -1737,6 +1747,7 @@ def new_invoice_view(request):
                         'invoice_id': inv.invoice_id,
                         'patient_name': inv.patient_name,
                         'treatment': inv.treatment,
+                        'doctor': inv.doctor_name,
                         'amount': float(inv.amount),
                         'payment_status': inv.payment_status,
                         'payment_mode': inv.payment_mode,
@@ -1812,6 +1823,28 @@ def delete_case_view(request, case_id):
     return redirect('dashboard')
 
 
+def format_card_address(address_str, city_str):
+    """
+    Format address for registration slip card:
+    address, city without state, pincode.
+    """
+    parts = []
+    if address_str:
+        clean = address_str.strip()
+        for unwanted in [', Kerala', 'Kerala', ', 686141', '686141', '- 686141']:
+            clean = clean.replace(unwanted, '').strip(' ,-')
+        if clean:
+            parts.append(clean)
+    if city_str:
+        clean_city = city_str.strip()
+        for unwanted in [', Kerala', 'Kerala', ', 686141', '686141', '- 686141']:
+            clean_city = clean_city.replace(unwanted, '').strip(' ,-')
+        if clean_city and not any(clean_city.lower() in p.lower() for p in parts):
+            parts.append(clean_city)
+    res = ', '.join([p for p in parts if p]).strip(' ,-')
+    return res if res else ""
+
+
 def print_slip_grid_view(request):
     appointment_id = request.GET.get('id', request.GET.get('appointment_id', '')).strip()
     reg_no = request.GET.get('reg_no', '').strip()
@@ -1827,29 +1860,65 @@ def print_slip_grid_view(request):
     if source in ['appointment', 'patient', 'registration']:
         single_card = True
 
+    appt = None
     if appointment_id and appointment_id.isdigit():
         appt = Appointment.objects.filter(id=int(appointment_id)).first()
-        if appt:
-            if not pid:
-                pid = appt.formatted_id
-            if not reg_no:
-                reg_no = appt.formatted_id
-            if not name:
-                name = (appt.first_name and f"{appt.first_name} {appt.last_name or ''}".strip()) or appt.patient_name or 'Patient'
-            if not age and appt.age:
-                age = str(appt.age)
-            if not gender and appt.gender:
-                gender = appt.gender
-            if not date_val:
-                date_val = appt.preferred_date.strftime('%d/%m/%Y') if appt.preferred_date else ''
-            if not address:
-                addr_parts = [p for p in [appt.address, appt.city, appt.state, appt.pincode] if p]
-                address = ', '.join(addr_parts)
-            single_card = True
+
+    # Fallback lookup if id was not provided
+    if not appt and pid:
+        appt = Appointment.objects.filter(Q(reg_no=pid) | Q(id__iexact=pid.split('-')[-1] if '-' in pid and pid.split('-')[-1].isdigit() else -1)).first()
+        if not appt:
+            for cand in Appointment.objects.order_by('-created_at')[:30]:
+                if cand.formatted_id == pid:
+                    appt = cand
+                    break
+
+    if not appt and reg_no:
+        appt = Appointment.objects.filter(reg_no=reg_no).order_by('-created_at').first()
+
+    if not appt and name:
+        appt = Appointment.objects.filter(
+            Q(patient_name__iexact=name) | Q(first_name__iexact=name.split()[0])
+        ).order_by('-created_at').first()
+
+    if appt:
+        if not reg_no and appt:
+            reg_no = getattr(appt, 'reg_no', '') or ''
+        if not pid:
+            pid = appt.formatted_id
+        if not name:
+            name = (appt.first_name and f"{appt.first_name} {appt.last_name or ''}".strip()) or appt.patient_name or 'Patient'
+        if not age and appt.age:
+            age = str(appt.age)
+        if not gender and appt.gender:
+            gender = appt.gender
+        if not date_val:
+            if hasattr(appt.preferred_date, 'strftime'):
+                date_val = appt.preferred_date.strftime('%d/%m/%Y')
+            elif appt.preferred_date:
+                d_str = str(appt.preferred_date)
+                if '-' in d_str:
+                    parts = d_str.split('-')
+                    if len(parts) == 3:
+                        date_val = f"{parts[2]}/{parts[1]}/{parts[0]}"
+                else:
+                    date_val = d_str
+                # address, city without state, pincode
+        address = format_card_address(appt.address, appt.city)
+        single_card = True
+
+    if not date_val:
+        date_val = datetime.date.today().strftime('%d/%m/%Y')
+
+    # Guaranteed address fallback: address, city without state, pincode
+    if not address or address.strip() == '':
+        address = ""
+    else:
+        address = format_card_address(address, '')
 
     context = {
-        'reg_no': reg_no or pid,
-        'pid': pid or reg_no,
+        'reg_no': reg_no or '',
+        'pid': pid or (appt.formatted_id if appt else ''),
         'date': date_val,
         'name': name,
         'age': age,
@@ -1863,13 +1932,80 @@ def print_slip_grid_view(request):
 
 
 def print_letterhead_view(request):
-    return render(request, 'Dental/print_letterhead.html', {})
+    consultants = list(Doctor.objects.filter(is_chief=True).order_by('id'))
+    if not consultants and Doctor.objects.exists():
+        consultants = [Doctor.objects.first()]
+        visiting_doctors = list(Doctor.objects.exclude(id=consultants[0].id).order_by('id'))
+    else:
+        visiting_doctors = list(Doctor.objects.filter(is_chief=False).order_by('id'))
+
+    chief_doctor = consultants[0] if consultants else None
+    all_doctors = Doctor.objects.all().order_by('-is_chief', 'id')
+    about_clinic = AboutClinic.objects.first()
+    context = {
+        'consultants': consultants,
+        'chief_doctor': chief_doctor,
+        'visiting_doctors': visiting_doctors,
+        'all_doctors': all_doctors,
+        'about_clinic': about_clinic,
+    }
+    return render(request, 'Dental/print_letterhead.html', context)
 
 
 def print_clinical_notes_view(request):
+    appointment_id = request.GET.get('id', request.GET.get('appointment_id', '')).strip()
+    name = request.GET.get('name', '').strip()
+    age = request.GET.get('age', '').strip()
+    gender = request.GET.get('gender', '').strip()
+    pid = request.GET.get('pid', '').strip()
+    doctor = request.GET.get('doctor', '').strip()
     date_val = request.GET.get('date', datetime.date.today().strftime('%d/%m/%Y')).strip()
+
+    medicines = []
+    if appointment_id and appointment_id.isdigit():
+        appt = Appointment.objects.filter(id=int(appointment_id)).first()
+        if appt:
+            if not name:
+                name = (appt.first_name and f"{appt.first_name} {appt.last_name or ''}".strip()) or appt.patient_name or 'Patient'
+            if not age and appt.age:
+                age = str(appt.age)
+            if not gender and appt.gender:
+                gender = appt.gender
+            if not pid:
+                pid = appt.formatted_id
+            if not doctor and appt.doctor_name:
+                doctor = appt.doctor_name
+            if hasattr(appt.preferred_date, 'strftime'):
+                date_val = appt.preferred_date.strftime('%d/%m/%Y')
+            medicines = list(appt.prescribed_medicines.all().order_by('id'))
+
+    if not medicines and name:
+        medicines = list(PatientMedicine.objects.filter(patient_name__iexact=name).order_by('id'))
+
+    consultants = list(Doctor.objects.filter(is_chief=True).order_by('id'))
+    if not consultants and Doctor.objects.exists():
+        consultants = [Doctor.objects.first()]
+        visiting_doctors = list(Doctor.objects.exclude(id=consultants[0].id).order_by('id'))
+    else:
+        visiting_doctors = list(Doctor.objects.filter(is_chief=False).order_by('id'))
+
+    chief_doctor = consultants[0] if consultants else None
+    all_doctors = Doctor.objects.all().order_by('-is_chief', 'id')
+
     context = {
+        'appointment_id': appointment_id,
+        'name': name,
+        'patient_name': name,
+        'age': age,
+        'gender': gender,
+        'pid': pid,
+        'doctor': doctor or 'Dr. Anoop',
         'date': date_val,
+        'medicines': medicines,
+        'consultants': consultants,
+        'chief_doctor': chief_doctor,
+        'visiting_doctors': visiting_doctors,
+        'all_doctors': all_doctors,
     }
     return render(request, 'Dental/print_clinical_notes.html', context)
 
@@ -1904,7 +2040,17 @@ def print_prescription_view(request):
     if not medicines and patient_name:
         medicines = list(PatientMedicine.objects.filter(patient_name__iexact=patient_name).order_by('id'))
 
+    consultants = list(Doctor.objects.filter(is_chief=True).order_by('id'))
+    if not consultants and Doctor.objects.exists():
+        consultants = [Doctor.objects.first()]
+        visiting_doctors = list(Doctor.objects.exclude(id=consultants[0].id).order_by('id'))
+    else:
+        visiting_doctors = list(Doctor.objects.filter(is_chief=False).order_by('id'))
+
+    chief_doctor = consultants[0] if consultants else None
+    all_doctors = Doctor.objects.all().order_by('-is_chief', 'id')
     about_clinic = AboutClinic.objects.first()
+
     context = {
         'appointment_id': appointment_id,
         'name': patient_name,
@@ -1915,6 +2061,10 @@ def print_prescription_view(request):
         'pid': pid,
         'date': date_val,
         'medicines': medicines,
+        'consultants': consultants,
+        'chief_doctor': chief_doctor,
+        'visiting_doctors': visiting_doctors,
+        'all_doctors': all_doctors,
         'about_clinic': about_clinic,
     }
     return render(request, 'Dental/print_prescription.html', context)

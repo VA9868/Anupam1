@@ -159,7 +159,7 @@ textarea {
   height: 100%;
   object-fit: contain;
   background: transparent;
-  transition: transform 0.3s ease;
+  transition: transform 0.1s ease;
 }
 
 .brand-logo:hover .brand-logo-img {
@@ -2539,11 +2539,11 @@ textarea {
 }
 
 /* NAVBAR BRAND LOGO HOVER & RELOAD ACCENT */
-.brand-logo:hover .logo-icon-wrap {
+/* .brand-logo:hover .logo-icon-wrap {
   box-shadow: 0 0 0 3px #facc15, 0 6px 16px rgba(245, 158, 11, 0.35);
   transform: scale(1.05);
   transition: all 0.3s ease;
-}
+} */
 
 /* ANIMATIONS */
 @keyframes moveYellowClockwise {

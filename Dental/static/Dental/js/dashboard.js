@@ -930,7 +930,7 @@ function generateSlipGridPDF() {
   let url = `/dashboard/print-slip-grid/?single_card=${isSingle ? '1' : '0'}&source=personal`;
 
   if (mode === 'blank') {
-    window.open(url, '_blank');
+    window.location.href = url;
     closeModal('slipGridModal');
     return;
   }
@@ -945,7 +945,7 @@ function generateSlipGridPDF() {
   const prefillAll = document.getElementById('grid_prefill_all')?.checked ? '1' : '0';
 
   url += `&reg_no=${reg}&pid=${pid}&date=${date}&name=${name}&age=${age}&gender=${gender}&address=${address}&prefill_all=${prefillAll}`;
-  window.open(url, '_blank');
+  window.location.href = url;
   closeModal('slipGridModal');
 }
 window.generateSlipGridPDF = generateSlipGridPDF;
@@ -1111,6 +1111,7 @@ function openPatientClinicalHub(apptId, apptCode, patientName, phone, age, gende
   activeHubPatient = {
     id: apptId || (matchedAppt ? matchedAppt.id : ''),
     code: apptCode || (matchedAppt ? matchedAppt.code : ('#APT-' + (apptId || '001'))),
+    regNo: (matchedAppt && matchedAppt.reg_no) || '',
     name: patientName || (matchedAppt ? matchedAppt.patient : 'Patient'),
     firstName: (matchedAppt && matchedAppt.first_name) || '',
     lastName: (matchedAppt && matchedAppt.last_name) || '',
@@ -2262,7 +2263,7 @@ function renderPatientBillingLedger() {
   if (totalItemsCount === 0) {
     tbody.innerHTML = `
           <tr>
-            <td colspan="7" class="empty-row-td">
+            <td colspan="8" class="empty-row-td">
               <i class="fas fa-file-invoice-dollar" style="font-size: 1.8rem; margin-bottom: 6px; display: block; color: #cbd5e1;"></i>
               No billing entries recorded for ${escapeHtml(activeHubPatient.name)}. Select tooth conditions and save procedures on the Teeth Chart, or record payment on the right.
             </td>
@@ -2282,7 +2283,10 @@ function renderPatientBillingLedger() {
             <td><span style="font-size: 0.75rem; color: #059669; font-weight: 600;"><i class="fas fa-check-circle"></i> Chart Saved</span></td>
             <td>
               <strong>${escapeHtml(ci.procedure)}</strong>
-              <div style="font-size: 0.725rem; color: #64748b;">${escapeHtml(ci.doctor)} &bull; <strong style="color: #475569;">Teeth:</strong> ${escapeHtml(ci.purpose || ('Tooth #' + ci.toothId))}</div>
+              <div style="font-size: 0.725rem; color: #64748b;"><strong style="color: #475569;">Teeth:</strong> ${escapeHtml(ci.purpose || ('Tooth #' + ci.toothId))}</div>
+            </td>
+            <td>
+              <span style="font-size: 0.8rem; color: #334155; font-weight: 600;"><i class="fas fa-user-md" style="color: #0284c7; margin-right: 4px;"></i>${escapeHtml(ci.doctor || activeHubPatient.doctor || 'Dr. Anoop')}</span>
             </td>
             <td style="font-weight: 800; color: #0f172a;">₹${amtFormatted}</td>
             <td><span style="font-size: 0.775rem; color: #94a3b8;">Pending Bill</span></td>
@@ -2310,6 +2314,9 @@ function renderPatientBillingLedger() {
             <td><strong style="color: #2563eb; font-weight: 700;">${escapeHtml(inv.invoice_id)}</strong></td>
             <td>${escapeHtml(inv.created_at || 'Today')}</td>
             <td><strong>${escapeHtml(inv.treatment)}</strong></td>
+            <td>
+              <span style="font-size: 0.8rem; color: #334155; font-weight: 600;"><i class="fas fa-user-md" style="color: #0284c7; margin-right: 4px;"></i>${escapeHtml(inv.doctor || activeHubPatient.doctor || 'Dr. Anoop')}</span>
+            </td>
             <td style="font-weight: 800; color: #0f172a;">₹${amtFormatted}</td>
             <td><span style="font-size: 0.775rem; color: #64748b;">${escapeHtml(inv.payment_mode || 'UPI')}</span></td>
             <td>
@@ -4672,6 +4679,18 @@ async function deletePatientMedicine(item_id) {
   }
 }
 
+function printPatientClinicalNotes() {
+  if (!activeHubPatient) return;
+  const apptId = activeHubPatient.id || '';
+  const pName = encodeURIComponent(activeHubPatient.name || '');
+  const pid = encodeURIComponent(activeHubPatient.code || '');
+  const age = encodeURIComponent(activeHubPatient.age || '');
+  const gender = encodeURIComponent(activeHubPatient.gender || '');
+  const url = `/dashboard/print-clinical-notes/?appointment_id=${apptId}&name=${pName}&pid=${pid}&age=${age}&gender=${gender}`;
+  window.location.href = url;
+}
+window.printPatientClinicalNotes = printPatientClinicalNotes;
+
 function printPatientPrescription() {
   if (!activeHubPatient) return;
   const apptId = activeHubPatient.id || '';
@@ -4682,7 +4701,7 @@ function printPatientPrescription() {
   const gender = encodeURIComponent(activeHubPatient.gender || '');
 
   const url = `/dashboard/print-prescription/?appointment_id=${apptId}&name=${pName}&doctor=${doctor}&pid=${pid}&age=${age}&gender=${gender}`;
-  window.open(url, '_blank');
+  window.location.href = url;
 }
 
 
@@ -4699,13 +4718,29 @@ function syncPatientFullName() {
 window.syncPatientFullName = syncPatientFullName;
 
 function syncRegNo() {
-  const regNoInp = document.getElementById('new_patient_reg_no');
-  const pidInp = document.getElementById('new_patient_PID');
-  if (regNoInp && pidInp && !pidInp.value) {
-    pidInp.placeholder = regNoInp.value || 'Auto-generated upon save';
-  }
+  // Pure text field - no automatic hijacking
 }
 window.syncRegNo = syncRegNo;
+
+function printPatientSlipFromHub() {
+  if (activeHubPatient && activeHubPatient.id) {
+    window.location.href = '/dashboard/print-slip-grid/?id=' + encodeURIComponent(activeHubPatient.id) + '&single_card=1&source=patient';
+  } else if (activeHubPatient) {
+    const addr = [activeHubPatient.address, activeHubPatient.city].filter(Boolean).join(', ') || '';
+    const params = new URLSearchParams({
+      name: activeHubPatient.name || '',
+      pid: activeHubPatient.code || '',
+      reg_no: activeHubPatient.regNo || '',
+      phone: activeHubPatient.phone || '',
+      age: activeHubPatient.age || '',
+      gender: activeHubPatient.gender || '',
+      address: addr,
+      single_card: '1',
+      source: 'patient'
+    });
+    window.location.href = '/dashboard/print-slip-grid/?' + params.toString();
+  }
+}
 
 function openEditPatientFromHub() {
   if (!activeHubPatient) return;
@@ -4715,6 +4750,7 @@ function openEditPatientFromHub() {
   openEditPatientModal({
     id: activeHubPatient.id,
     code: activeHubPatient.code,
+    regNo: activeHubPatient.regNo || '',
     name: activeHubPatient.name,
     firstName: activeHubPatient.firstName,
     lastName: activeHubPatient.lastName,
@@ -4739,6 +4775,7 @@ function openEditPatientModalFromBtn(btn) {
   if (!btn) return;
   const id = btn.getAttribute('data-id') || '';
   const code = btn.getAttribute('data-code') || '';
+  const regNo = btn.getAttribute('data-reg-no') || '';
   const name = btn.getAttribute('data-name') || '';
   const firstName = btn.getAttribute('data-first-name') || '';
   const lastName = btn.getAttribute('data-last-name') || '';
@@ -4757,7 +4794,7 @@ function openEditPatientModalFromBtn(btn) {
   const notes = btn.getAttribute('data-notes') || '';
 
   openEditPatientModal({
-    id, code, name, firstName, lastName,
+    id, code, regNo, name, firstName, lastName,
     phone, phone2, email, address, city, state, pincode,
     age, gender, doctor, service, date, notes
   });
@@ -4790,6 +4827,7 @@ function openEditPatientModal(patientDataOrId, patientName, phone, age, gender, 
     if (match) {
       if (!data.id) data.id = match.id;
       if (!data.code) data.code = match.code;
+      if (!data.regNo && match.reg_no) data.regNo = match.reg_no;
       if (!data.firstName) data.firstName = match.first_name;
       if (!data.lastName) data.lastName = match.last_name;
       if (!data.phone) data.phone = match.phone;
@@ -4825,7 +4863,7 @@ function openEditPatientModal(patientDataOrId, patientName, phone, age, gender, 
 
   const regNoInput = document.getElementById('new_patient_reg_no');
   if (regNoInput) {
-    regNoInput.value = data.regNo || data.code || (data.id ? ('#' + data.id) : '');
+    regNoInput.value = data.regNo || '';
   }
 
   const fnInput = document.getElementById('new_patient_first_name');

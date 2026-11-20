@@ -32,34 +32,48 @@
       <div class="preloader-text-wrap">
         <h3 class="preloader-clinic-title"><i>Dr.Anoop's</i> ANUPAM</h3>
         <p class="preloader-clinic-subtitle">DENTAL CLINIC</p>
-        <!-- <div class="preloader-progress-track">
-          <div class="preloader-progress-bar"></div>
-        </div> -->
       </div>
     </div>
   </div>
   <script>
-    (function() {
+    (function () {
       const loader = document.getElementById('pageReloadPreloader');
       if (!loader) return;
       function hideLoader() {
         if (!loader.classList.contains('fade-out')) {
           loader.classList.add('fade-out');
-          setTimeout(function() {
+          setTimeout(function () {
             loader.style.display = 'none';
           }, 550);
         }
       }
       if (document.readyState === 'complete') {
-        setTimeout(hideLoader, 600);
+        setTimeout(hideLoader, 550);
       } else {
-        window.addEventListener('load', function() {
-          setTimeout(hideLoader, 650);
+        window.addEventListener('load', function () {
+          setTimeout(hideLoader, 600);
         });
       }
-      // Safety fallback: maximum 2.4s
+      // Safety fallback
       setTimeout(hideLoader, 2400);
     })();
+
+    function triggerDashboardPreloader(e, targetUrl) {
+      const loader = document.getElementById('pageReloadPreloader');
+      if (loader) {
+        loader.classList.remove('fade-out');
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
+        loader.style.visibility = 'visible';
+        loader.style.pointerEvents = 'all';
+      }
+      if (targetUrl) {
+        if (e && e.preventDefault) e.preventDefault();
+        setTimeout(function() {
+          window.location.href = targetUrl;
+        }, 120);
+      }
+    }
   </script>
 
   <!-- TOP ANNOUNCEMENT BAR -->
@@ -117,8 +131,8 @@
         </button>
         {% if user.is_authenticated or patient_name %}
           <div class="user-profile-menu">
-            <a href="{% url 'dashboard' %}" class="circle-login-btn logged-in" title="My Dashboard">
-              <i class="fas fa-user-check"></i>
+            <a href="{% url 'dashboard' %}" class="circle-login-btn logged-in" title="My Dashboard" onclick="triggerDashboardPreloader(event, '{% url 'dashboard' %}')">
+              <i class="fas fa-user-circle"></i>
             </a>
             <div class="user-dropdown-card">
               <div class="dropdown-header">
@@ -128,7 +142,7 @@
                   <span style="display: block; font-size: 0.75rem; color: var(--slate-body);">{% if user.is_staff %}Clinic Staff{% else %}Patient Account{% endif %}</span>
                 </div>
               </div>
-              <a href="{% url 'dashboard' %}" class="dropdown-dashboard-btn" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: var(--dark-navy); font-weight: 600; border-bottom: 1px solid var(--gray-border);">
+              <a href="{% url 'dashboard' %}" class="dropdown-dashboard-btn" onclick="triggerDashboardPreloader(event, '{% url 'dashboard' %}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; color: var(--dark-navy); font-weight: 600; border-bottom: 1px solid var(--gray-border);">
                 <i class="fas fa-columns" style="color: var(--primary);"></i> My Dashboard
               </a>
               {% if user.is_staff %}
@@ -143,7 +157,7 @@
           </div>
         {% else %}
           <button class="circle-login-btn open-login-modal" title="Patient / Staff Login" aria-label="Login">
-            <i class="fas fa-user"></i>
+            <i class="fas fa-user-circle"></i>
           </button>
         {% endif %}
         <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
@@ -383,8 +397,8 @@
   <section class="section section-bg-light" id="services">
     <div class="section-header">
       <span class="subtitle-pill">Comprehensive Care</span>
-      <h2 class="section-title">Our Dental Services & Treatments</h2>
-      <p class="section-desc">From routine hygiene cleanings to complex dental implants and cosmetic smile makeovers, Dr. Anoop provides state-of-the-art treatments.</p>
+      <h2 class="section-title">Our Dental Services</h2>
+      <p class="section-desc">From routine hygiene cleanings to complex dental implants and cosmetic smile makeovers, Dr. Anoop provides state-of-the-art dental services.</p>
     </div>
 
     <!-- Category Tabs -->
@@ -969,7 +983,7 @@
       <div id="loginAlert" style="display: none; padding: 12px; margin-bottom: 16px; border-radius: 8px; font-size: 0.875rem;"></div>
 
       <!-- LOGIN FORM -->
-      <form id="loginForm" action="{% url 'login' %}" method="POST">
+      <form id="loginForm" action="{% url 'login' %}" method="POST" onsubmit="triggerDashboardPreloader(null, null);">
         {% csrf_token %}
         <div class="form-group">
           <label class="form-label" for="login_username">Mobile Number / Email *</label>

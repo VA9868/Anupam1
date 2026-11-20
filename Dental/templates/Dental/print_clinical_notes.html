@@ -100,9 +100,9 @@
     .a5-sheet {
       width: 148mm;
       min-height: 210mm;
-      height: 210mm;
+      height: 200mm;
       background: #ffffff;
-      padding: 7mm 8mm 6mm 8mm;
+      padding: 7mm 5mm 6mm 5mm;
       box-shadow: 0 6px 24px rgba(0,0,0,0.35);
       display: flex;
       flex-direction: column;
@@ -120,7 +120,7 @@
     }
 
     .rx-logo-wrap {
-      width: 50px;
+      width: 100px;
       height: 50px;
       flex-shrink: 0;
       display: flex;
@@ -129,8 +129,8 @@
     }
 
     .rx-logo-wrap img {
-      width: 50px;
-      height: 50px;
+      width: 150px;
+      height: 150px;
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
@@ -157,7 +157,7 @@
     }
 
     .rx-contacts {
-      width: 105px;
+      width: 100px;
       text-align: right;
       font-size: 9.5px;
       line-height: 1.4;
@@ -166,17 +166,17 @@
 
     /* Main Box with 2 columns */
     .rx-main-box {
-      border: 1.2px solid #000;
+      border: 1px solid #000;
       flex: 1;
       display: flex;
       min-height: 155mm;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .rx-left-col {
       width: 35%;
-      border-right: 1.2px solid #000;
-      padding: 6px 7px;
+      border-right: 1px solid #000;
+      padding: 6px 6px;
       font-size: 8.5px;
       line-height: 1.28;
     }
@@ -189,6 +189,7 @@
 
     .doc-entry {
       margin-bottom: 5px;
+      text-indent: 1em;
     }
 
     .doc-name {
@@ -205,7 +206,7 @@
     }
 
     .rx-right-col {
-      width: 65%;
+      width: 80%;
       padding: 6px 9px 8px 9px;
       display: flex;
       flex-direction: column;
@@ -224,13 +225,53 @@
       position: relative;
     }
 
+    .rx-symbol {
+      font-size: 15px;
+      font-weight: 800;
+      font-family: serif;
+      margin-bottom: 3px;
+      color: #000;
+    }
+
+    .rx-space {
+      height: 25px;     
+    }
+
+    .rx-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    .rx-table th {
+      background: #ffffff;
+      border-top: 2px solid #000000;
+      border-bottom: 1.5px solid #000000;
+      padding: 5px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: left;
+      color: #000000;
+      letter-spacing: 0.2px;
+    }
+
+    .rx-table td {
+      padding: 6px 6px;
+      border-bottom: 1px dotted #94a3b8;
+      font-size: 9.5px;
+      vertical-align: top;
+      color: #000000;
+    }
+
     .doctors-notes-box {
       border: 1px solid #000;
       text-align: center;
       font-weight: bold;
       font-size: 9.5px;
       padding: 3px 6px;
-      margin-bottom: 22mm;
+      margin-bottom: 50mm !important;
     }
 
     /* Bottom Footer */
@@ -273,6 +314,10 @@
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+
+      .doctors-notes-box {
+        margin-bottom: 50mm !important;
+      }
     }
   </style>
 </head>
@@ -286,12 +331,15 @@
       <span class="badge-a5">A5 Paper</span>
     </div>
     <div class="toolbar-actions">
-      <a href="{% url 'print_letterhead' %}" class="btn btn-back" style="color: #2563eb;">
-        <i class="fas fa-file-alt"></i> View Letterhead (A4)
-      </a>
-      <a href="{% url 'dashboard' %}" class="btn btn-back">
+      <a href="{% url 'dashboard' %}#patient" class="btn btn-back">
         <i class="fas fa-arrow-left"></i> Dashboard
       </a>
+      <!-- <a href="{% url 'print_prescription' %}{% if appointment_id %}?appointment_id={{ appointment_id }}{% elif name %}?name={{ name|urlencode }}&pid={{ pid|urlencode }}&age={{ age|urlencode }}&gender={{ gender|urlencode }}{% endif %}" class="btn btn-back" style="color: #0f766e; font-weight: 700; background: #ecfdf5; border-color: #a7f3d0;">
+        <i class="fas fa-file-prescription"></i> Doctor Prescription (1-Page Print)
+      </a>
+      <a href="{% url 'print_letterhead' %}" class="btn btn-back" style="color: #2563eb;">
+        <i class="fas fa-file-alt"></i> Letterhead (A4)
+      </a> -->
       <button type="button" class="btn btn-print" onclick="window.print()">
         <i class="fas fa-print"></i> Print / Save as PDF (A5)
       </button>
@@ -323,66 +371,98 @@
       <!-- Left Column: Doctors List -->
       <div class="rx-left-col">
         <h3 style="margin-bottom: 5px;">Consultants :</h3>
+        {% for doc in consultants %}
         <div class="doc-entry">
-          <div class="doc-name">Dr. Anoop Kumar. BDS</div>
-          <div class="doc-sub">Cheif Surgan</div>
+          <div class="doc-name">{{ doc.name }}</div>
+          {% if doc.designation or doc.specialization or doc.title or doc.qualification %}
+          <div class="doc-sub">{{ doc.designation|default:doc.specialization|default:doc.title|default:doc.qualification }}</div>
+          {% endif %}
+          {% if doc.reg_no %}<div class="doc-reg">Reg.No. {{ doc.reg_no }}</div>{% endif %}
+        </div>
+        {% empty %}
+        <div class="doc-entry">
+          <div class="doc-name">Dr. Anoop Kumar, BDS</div>
+          <div class="doc-sub">Chief Dental Surgeon</div>
           <div class="doc-reg">Reg.No. 1234</div>
         </div>
+        {% endfor %}
 
-        <h3 style="margin-top: 10px; margin-bottom: 5px;">Visiting :</h3>
-
+        <h3 style="margin-top: 8px; margin-bottom: 5px;">Visiting :</h3>
+        {% for doc in visiting_doctors %}
         <div class="doc-entry">
-          <div class="doc-name">Dr.JUSTIN MATHEW. MDS</div>
+          <div class="doc-name">{{ doc.name }}</div>
+          {% if doc.designation or doc.specialization or doc.title or doc.qualification %}
+          <div class="doc-sub">{{ doc.designation|default:doc.specialization|default:doc.title|default:doc.qualification }}</div>
+          {% endif %}
+          {% if doc.reg_no %}<div class="doc-reg">Reg.No. {{ doc.reg_no }}</div>{% endif %}
+        </div>
+        {% empty %}
+        <div class="doc-entry">
+          <div class="doc-name">Dr. JUSTIN MATHEW, MDS</div>
           <div class="doc-sub">Oral &amp; Maxillo Facial Surgeon</div>
           <div class="doc-reg">Reg.No. 5492</div>
         </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.KRISHNA KUMAR. MDS</div>
-          <div class="doc-sub">Paedodontist</div>
-          <div class="doc-reg">Reg.No. 7729</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.JOSEPH J PULIKKOTTIL. MDS</div>
-          <div class="doc-sub">Periodontist &amp; Implantologist</div>
-          <div class="doc-reg">Reg.No. 2418</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.TERRY THOMAS. MDS</div>
-          <div class="doc-sub">Orthodontist</div>
-          <div class="doc-reg">Reg.No. 4807</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.SHIBHU SREEDHAR. MDS</div>
-          <div class="doc-sub">Endodontist</div>
-          <div class="doc-reg">Reg.No. 15619-A</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.RENJITH RAJ. MDS</div>
-          <div class="doc-sub">Endodontist</div>
-          <div class="doc-reg">Reg.No. 8171</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.SIJO P MATHEW. MDS</div>
-          <div class="doc-sub">Endodontist</div>
-          <div class="doc-reg">Reg.No. 8982</div>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Right Column: Date, Blank Notes Area, Doctor's Notes -->
       <div class="rx-right-col">
-        <div class="rx-date-line">
-          Date : {{ date|default:"________________" }}
+        <div class="rx-date-line" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; margin-bottom: 6px;">
+          <div>
+            {% if name %}
+            <span style="font-size: 11px; font-weight: 700; color: #0f172a;">{{ name }}</span>
+            {% if age or gender %}
+            <span style="font-size: 10px; color: #475569; margin-left: 4px;">({{ age|default:"" }}{% if age and gender %} / {% endif %}{{ gender|default:"" }})</span>
+            {% endif %}
+            {% if pid %}
+            <span style="font-size: 9.5px; color: #64748b; margin-left: 4px;">(PID: {{ pid }})</span>
+            {% endif %}
+            {% if doctor %}
+            <span style="font-size: 9.5px; font-weight: 700; color: #0f766e; margin-left: 6px;">Doctor: {{ doctor }}</span>
+            {% endif %}
+            {% endif %}
+          </div>
+          <div style="font-size: 9.5px; font-weight: bold;">
+            Date : {{ date|default:"________________" }}
+          </div>
         </div>
 
-        <div class="rx-body-blank"></div>
+        <div class="rx-body-blank">
+          <!-- <div class="rx-symbol">&#8478;</div> -->
+          <div class="rx-space"></div>
+          {% if medicines %}
+          <table class="rx-table">
+            <thead>
+              <tr>
+                <th style="width: 24px;">#</th>
+                <th>Medicine &amp; Brand</th>
+                <th>Strength / Dosage</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>Instructions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in medicines %}
+              <tr>
+                <td style="font-weight: 700; font-size: 10.5px;">{{ forloop.counter }}</td>
+                <td>
+                  <strong style="color: #000000; font-size: 10.5px; display: block; font-weight: 700;">{{ m.product_name }}</strong>
+                  {% if m.brand_name %}<span style="color: #334155; font-size: 9.5px; display: block;">({{ m.brand_name }})</span>{% endif %}
+                  {% if m.category or m.item_type %}<div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">{{ m.category }}{% if m.category and m.item_type %} - {% endif %}{{ m.item_type }}</div>{% endif %}
+                </td>
+                <td style="font-size: 10px;">{{ m.strength|default:m.dosage|default:"-" }}</td>
+                <td style="font-weight: 700; font-size: 10px; color: #000000;">{{ m.frequency|default:"1-0-1" }}</td>
+                <td style="font-size: 10px;">{{ m.duration|default:"5 Days" }}</td>
+                <td style="color: #334155; font-size: 9.5px;">{{ m.instructions|default:"After Food" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+        </div>
 
-        <div class="doctors-notes-box">
+        <div class="doctors-notes-box" style="margin-bottom: 50mm !important;">
           Doctor's Notes
         </div>
       </div>

@@ -268,8 +268,11 @@
       <span class="badge-a4">A4 Paper</span>
     </div>
     <div class="toolbar-actions">
+      <a href="{% url 'print_prescription' %}" class="btn btn-back" style="color: #0f766e; font-weight: 700; background: #ecfdf5; border-color: #a7f3d0;">
+        <i class="fas fa-file-prescription"></i> Doctor Prescription (1-Page)
+      </a>
       <a href="{% url 'print_clinical_notes' %}" class="btn btn-back" style="color: #0f766e;">
-        <i class="fas fa-notes-medical"></i> View Clinical Notes (A5)
+        <i class="fas fa-notes-medical"></i> Clinical Notes Pad (A5)
       </a>
       <a href="{% url 'dashboard' %}" class="btn btn-back">
         <i class="fas fa-arrow-left"></i> Dashboard
@@ -305,54 +308,38 @@
       <!-- Left Column: Doctors List -->
       <div class="lh-left-col">
         <h3 style="margin-bottom: 8px;">Consultants :</h3>
+        {% for doc in consultants %}
         <div class="doc-entry">
-          <div class="doc-name">Dr. Anoop Kumar</div>
+          <div class="doc-name">{{ doc.name }}</div>
+          {% if doc.designation or doc.specialization or doc.title or doc.qualification %}
+          <div class="doc-sub">{{ doc.designation|default:doc.specialization|default:doc.title|default:doc.qualification }}</div>
+          {% endif %}
+          {% if doc.reg_no %}<div class="doc-reg">Reg.No. {{ doc.reg_no }}</div>{% endif %}
+        </div>
+        {% empty %}
+        <div class="doc-entry">
+          <div class="doc-name">Dr. Anoop Kumar, BDS</div>
+          <div class="doc-sub">Chief Dental Surgeon</div>
           <div class="doc-reg">Reg.No. 1234</div>
         </div>
+        {% endfor %}
 
-        <h3 style="margin-top: 16px; margin-bottom: 8px;">Visiting :</h3>
-
+        <h3 style="margin-top: 14px; margin-bottom: 8px;">Visiting :</h3>
+        {% for doc in visiting_doctors %}
         <div class="doc-entry">
-          <div class="doc-name">Dr.JUSTIN MATHEW. MDS</div>
+          <div class="doc-name">{{ doc.name }}</div>
+          {% if doc.designation or doc.specialization or doc.title or doc.qualification %}
+          <div class="doc-sub">{{ doc.designation|default:doc.specialization|default:doc.title|default:doc.qualification }}</div>
+          {% endif %}
+          {% if doc.reg_no %}<div class="doc-reg">Reg.No. {{ doc.reg_no }}</div>{% endif %}
+        </div>
+        {% empty %}
+        <div class="doc-entry">
+          <div class="doc-name">Dr. JUSTIN MATHEW, MDS</div>
           <div class="doc-sub">Oral &amp; Maxillo Facial Surgeon</div>
           <div class="doc-reg">Reg.No. 5492</div>
         </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.KRISHNA KUMAR. MDS</div>
-          <div class="doc-sub">Paedodontist</div>
-          <div class="doc-reg">Reg.No. 7729</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.JOSEPH J PULIKKOTTIL. MDS</div>
-          <div class="doc-sub">Periodontist &amp; Implantologist</div>
-          <div class="doc-reg">Reg.No. 2418</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.TERRY THOMAS. MDS</div>
-          <div class="doc-sub">Orthodontist</div>
-          <div class="doc-reg">Reg.No. 4807</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.SHIBHU SREEDHAR. MDS</div>
-          <div class="doc-sub">Endodontist</div>
-          <div class="doc-reg">Reg.No. 15619-A</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.RENJITH RAJ. MDS</div>
-          <div class="doc-sub">Endodontist</div>
-          <div class="doc-reg">Reg.No. 8171</div>
-        </div>
-
-        <div class="doc-entry">
-          <div class="doc-name">Dr.SIJO P MATHEW. MDS</div>
-          <div class="doc-sub">Endodontist</div>
-          <div class="doc-reg">Reg.No. 8982</div>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Right Column: Blank Letterhead Body -->
